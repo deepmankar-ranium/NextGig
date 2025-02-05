@@ -19,5 +19,11 @@ class Employer extends Model
     {
         return $this->hasMany(JobListing::class);
     }
+    
+    // Define the relationship: One Employer belongs to one User
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
 

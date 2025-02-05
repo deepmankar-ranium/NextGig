@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\grayprint;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 class AddEmployerIdToJobListingsTable extends Migration
@@ -11,7 +11,7 @@ class AddEmployerIdToJobListingsTable extends Migration
      */
     public function up()
     {
-        Schema::table('job_listings', function (grayprint $table) {
+        Schema::table('job_listings', function (Blueprint $table) {
             $table->foreignId('employer_id')->constrained()->onDelete('cascade')->after('id'); // Add foreign key
         });
     }
@@ -21,7 +21,7 @@ class AddEmployerIdToJobListingsTable extends Migration
      */
     public function down()
     {
-        Schema::table('job_listings', function (grayprint $table) {
+        Schema::table('job_listings', function (Blueprint $table) {
             $table->dropColumn('employer_id'); // Drop the employer_id column if rolling back
         });
     }
