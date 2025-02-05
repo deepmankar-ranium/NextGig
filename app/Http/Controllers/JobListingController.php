@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\JobListing;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-
+use Illuminate\Support\Facades\Auth;
 class JobListingController extends Controller
 {
     public function index()
@@ -51,11 +51,16 @@ class JobListingController extends Controller
         return redirect('/Jobs')->with('success', 'Job listing created successfully!');
     }
 
-    public function edit($id)
-    {
-        $job = JobListing::findOrFail($id);
-        return Inertia::render('Jobs/Edit', compact('job'));
+  public function edit($id)
+{
+    $job = JobListing::findOrFail($id);
+
+    if ($job->employer->user->isNot(Auth::user())) {
+        abort(403);
     }
+
+    return Inertia::render('Jobs/Edit', compact('job'));
+}
 
     public function update(Request $request, $id)
     {
