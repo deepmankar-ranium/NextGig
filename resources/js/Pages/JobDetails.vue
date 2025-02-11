@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { CalendarIcon, CurrencyDollarIcon, MapPinIcon } from '@heroicons/vue/24/outline';
 import AppLayout from '@/Layout/AppLayout.vue';
 import { Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
   job: {
@@ -10,6 +12,7 @@ const props = defineProps({
     required: true
   }
 });
+const isOwner = ref(usePage().props.isOwner);
 
 const formattedSalary = computed(() => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(props.job.salary);
@@ -18,9 +21,7 @@ const formattedSalary = computed(() => {
 
 <template>
   <AppLayout>
-    <!-- Navigation Buttons -->
     <div class="w-full flex justify-between items-center mt-8 px-6">
-      <!-- Back Button -->
       <Link href="/Jobs"
         class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all
                bg-white text-gray-700 hover:bg-gray-100 border-gray-300">
@@ -54,8 +55,7 @@ const formattedSalary = computed(() => {
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="mt-6 flex justify-end">
+      <div v-if="isOwner"  class="mt-6 flex justify-end">
         <Link 
           :href="`/Jobs/job/${job.id}/edit`"
           class="px-6 py-3 text-sm font-medium border rounded-lg shadow-md transition-all

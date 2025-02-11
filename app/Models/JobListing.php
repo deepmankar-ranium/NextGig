@@ -9,6 +9,8 @@ class JobListing extends Model
 {
     use HasFactory;
 
+
+
     protected $fillable = ['title', 'description', 'salary', 'employer_id'];
 
     // Define the inverse relationship: Many JobListings belong to one Employer

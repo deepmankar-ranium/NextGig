@@ -1,8 +1,8 @@
 <script setup>
-import AppLayout from '@/Layout/AppLayout.vue';
+import AppLayout from '../Layout/AppLayout.vue';
 import { Link } from '@inertiajs/vue3';
 import { BriefcaseIcon, MapPinIcon, CurrencyDollarIcon, BuildingOfficeIcon } from '@heroicons/vue/24/outline';
-import Pagination from '@/Components/Pagination.vue';
+import Pagination from '../Components/Pagination.vue';
 
 const props = defineProps({
   jobListings: {
@@ -15,7 +15,6 @@ const formatSalary = (salary) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(salary);
 };
 
-
 const truncate = (text, length) => {
   if (!text) return "";
   return text.length > length ? text.substring(0, length) + '...' : text;
@@ -25,25 +24,13 @@ const truncate = (text, length) => {
 <template>
   <AppLayout>
     <div class="w-full flex justify-between items-center mt-8 px-6">
-      <!-- Back Button -->
-      <Link href="/Home"
-        class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all
-               bg-white text-gray-700 hover:bg-gray-100 border-gray-300">
-        ← Go Back
-    </Link>
-
-      <!-- Create Job Button -->
-      <Link href="/Jobs/create" 
-        class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all
-               bg-black text-white hover:bg-gray-900">
-        + Create Job
-      </Link>
+      <Link href="/Home" class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all bg-white text-gray-700 hover:bg-gray-100 border-gray-300">← Go Back</Link>
+      <Link href="/Jobs/create" class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all bg-black text-white hover:bg-gray-900">+ Create Job</Link>
     </div>
 
     <div class="max-w-7xl mx-auto px-6 py-10">
       <h1 class="text-3xl font-bold text-gray-900 mb-8">Available Positions</h1>
 
-      <!-- Job Listings -->
       <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Link 
           v-for="job in props.jobListings.data" 
@@ -80,7 +67,6 @@ const truncate = (text, length) => {
         </Link>
       </div>
 
-      <!-- Pagination -->
       <Pagination v-if="props.jobListings.links" :links="props.jobListings.links" class="mt-10" />
     </div>
   </AppLayout>

@@ -11,14 +11,20 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/Home', [JobListingController::class, 'index']);
+    Route::get('/Home', [JobListingController::class, 'index'])->name('home');
+    Route::get('/search', [JobListingController::class, 'search'])->name('search');
     Route::get('/Jobs', [JobListingController::class, 'jobs']);
     Route::get('/Jobs/create', [JobListingController::class, 'create']);
     Route::post('/Jobs', [JobListingController::class, 'store']);
-    Route::get('/Jobs/job/{id}', [JobListingController::class, 'show']);
-    Route::get('/Jobs/job/{id}/edit', [JobListingController::class, 'edit']);
-    Route::patch('/Jobs/job/{id}/edit', [JobListingController::class, 'update']);
-    Route::delete('/Jobs/job/{id}', [JobListingController::class, 'destroy']);
+    Route::get('/Jobs/job/{jobListing}', [JobListingController::class, 'show']);
+   
+});
+
+Route::middleware(['auth'])->group(function () {
+
+    Route::get('/Jobs/job/{jobListing}/edit', [JobListingController::class, 'edit']);
+    Route::patch('/Jobs/job/{jobListing}', [JobListingController::class, 'update']);
+    Route::delete('/Jobs/job/{jobListing}', [JobListingController::class, 'destroy']);
 });
 
 // Authentication routes (no middleware)

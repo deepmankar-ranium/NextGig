@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\JobListing;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Response;
+
 class JobListingController extends Controller
 {
     public function index()
@@ -26,17 +30,23 @@ class JobListingController extends Controller
 
     public function show($id)
     {
-        $job = JobListing::findOrFail($id);
+        $job = JobListing::with('employer.user')->findOrFail($id);
+    
+        
+        $isOwner = Gate::allows('edit', $job);
+    
         return Inertia::render('JobDetails', [
             'job' => $job,
+            'isOwner' => $isOwner, 
         ]);
     }
+    
 
     public function create()
     {
+        $this->authorize('create', JobListing::class);
         return Inertia::render('Jobs/Create');
     }
-
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -51,38 +61,59 @@ class JobListingController extends Controller
         return redirect('/Jobs')->with('success', 'Job listing created successfully!');
     }
 
-  public function edit($id)
-{
-    $job = JobListing::findOrFail($id);
-
-    if ($job->employer->user->isNot(Auth::user())) {
-        abort(403);
-    }
-
-    return Inertia::render('Jobs/Edit', compact('job'));
-}
-
-    public function update(Request $request, $id)
+    public function edit(JobListing $jobListing)  
     {
-        $job = JobListing::findOrFail($id);
-
+        $jobListing->load('employer.user'); 
+    
+        $this->authorize('edit', $jobListing);
+    
+        return Inertia::render('Jobs/Edit', ['job' => $jobListing]);
+    }
+    
+    
+    public function update(Request $request, JobListing $jobListing)  
+    {
+        $this->authorize('edit', $jobListing);
+        
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'salary' => 'required|numeric|min:0',
             'employer_id' => 'required|exists:employers,id',
         ]);
-
-        $job->update($validatedData);
-
-        return redirect("/Jobs/job/{$id}")->with('success', 'Job listing updated successfully!');
+        
+        $jobListing->update($validatedData);
+        
+        return redirect("/Jobs/job/{$jobListing->id}")->with('success', 'Job listing updated successfully!');
     }
-
-    public function destroy($id)
+    
+    public function destroy(JobListing $jobListing)  
     {
-        $job = JobListing::findOrFail($id);
-        $job->delete();
-
+        $this->authorize('edit', $jobListing); 
+        
+        $jobListing->delete();
+        
         return redirect("/Jobs")->with('success', 'Job deleted successfully!');
     }
+    
+   public function search(Request $request)
+{
+    $query = $request->validate([
+        'q' => 'nullable|string|max:255'
+    ])['q'] ?? '';
+
+    if (empty($query)) {
+        return response()->json(['searchResults' => []]);
+    }
+
+    $searchResults = JobListing::with('employer.user')
+        ->where('title', 'LIKE', "%{$query}%")
+        ->orWhere('description', 'LIKE', "%{$query}%")
+        ->paginate(10);
+
+    return response()->json(['searchResults' => $searchResults]);
 }
+    }
+    
+ 
+
