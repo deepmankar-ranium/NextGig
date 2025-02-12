@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+
 </script>
 
 <template>
@@ -37,6 +38,7 @@ import { Link } from '@inertiajs/vue3';
       <p class="mt-4 text-lg opacity-90">
         Explore thousands of job listings and connect with top employers.
       </p>
+ 
       <div class="mt-6 flex justify-center space-x-4">
         <Link
           href="/Jobs"
@@ -114,4 +116,4 @@ import { Link } from '@inertiajs/vue3';
       </div>
     </footer>
   </div>
-</template> 
+</template>

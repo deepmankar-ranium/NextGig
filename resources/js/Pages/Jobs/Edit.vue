@@ -36,7 +36,7 @@ const submit = () => {
 };
 
 const confirmEdit = () => {
-    form.patch(`/Jobs/job/${props.job.id}/edit`);
+    form.patch(`/Jobs/job/${props.job.id}`);
     showEditModal.value = false;
 };
 </script>

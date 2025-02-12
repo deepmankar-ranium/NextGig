@@ -7,11 +7,15 @@
         <div class="space-y-4">
           <p class="text-gray-600 text-lg">
             <span class="font-semibold text-gray-900">Name:</span> 
-            {{ $page.props.auth.user.full_name }}
+            {{ user.full_name }}
           </p>
           <p class="text-gray-600 text-lg">
             <span class="font-semibold text-gray-900">Email:</span> 
-            {{ $page.props.auth.user.email }}
+            {{ user.email }}
+          </p>
+          <p class="text-gray-600 text-lg">
+            <span class="font-semibold text-gray-900">Role :</span> 
+            {{  user.role.name }}
           </p>
         </div>
   
@@ -54,6 +58,9 @@
   import AppLayout from '@/Layout/AppLayout.vue';
 
   const showLogoutConfirm = ref(false);
+  const props = defineProps({
+    user: Object
+  })
   
   const logout = () => {
     router.post('/logout');
