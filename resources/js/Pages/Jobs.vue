@@ -7,7 +7,12 @@ import Pagination from '../Components/Pagination.vue';
 const props = defineProps({
   jobListings: {
     type: Object,
-    required: true
+    required: true,
+    default: () => ({})
+  },
+  isEmployer: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -25,7 +30,7 @@ const truncate = (text, length) => {
   <AppLayout>
     <div class="w-full flex justify-between items-center mt-8 px-6">
       <Link href="/Home" class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all bg-white text-gray-700 hover:bg-gray-100 border-gray-300">← Go Back</Link>
-      <Link href="/Jobs/create" class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all bg-black text-white hover:bg-gray-900">+ Create Job</Link>
+      <Link v-if="isEmployer" href="/Jobs/create" class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all bg-black text-white hover:bg-gray-900">+ Create Job</Link>
     </div>
 
     <div class="max-w-7xl mx-auto px-6 py-10">

@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,7 +9,7 @@ class Employer extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'email', 'description'];
+    protected $fillable = ['user_id', 'name', 'email', 'description', 'address', 'phone'];
 
     // Define the relationship: One Employer has many JobListings
     public function jobListings()
@@ -26,4 +23,3 @@ class Employer extends Model
         return $this->belongsTo(User::class);
     }
 }
-

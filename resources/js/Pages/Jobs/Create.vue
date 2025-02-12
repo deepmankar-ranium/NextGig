@@ -28,8 +28,9 @@
               <label for="employer_id" class="block text-sm font-medium text-gray-700 mb-1">
                 Employer ID:
               </label>
-              <input type="number" v-model="form.employer_id" id="employer_id"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+              <input type="number" v-model="form.employer_id" id="employer_id" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" 
+                readonly />
               <p v-if="form.errors.employer_id" class="text-red-500 text-sm mt-1">{{ form.errors.employer_id }}</p>
             </div>
 
@@ -56,11 +57,14 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layout/AppLayout.vue';
+const props=defineProps({
+  employer:Object,
+})
 
 const form = useForm({
   title: '',
   description: '',
-  employer_id: '',
+  employer_id: props.employer.id || null,
   salary: '',
 });
 

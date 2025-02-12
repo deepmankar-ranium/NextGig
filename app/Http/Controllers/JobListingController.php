@@ -22,9 +22,14 @@ class JobListingController extends Controller
 
     public function jobs()
     {
+        $user = Auth::user();
         $jobListings = JobListing::with('employer')->latest()->paginate(6);
+        $isEmployer = $user && $user->role && $user->role->name === "Employer";
+
+
         return Inertia::render('Jobs', [
             'jobListings' => $jobListings,
+            'isEmployer' => $isEmployer,
         ]);
     }
 
@@ -44,8 +49,18 @@ class JobListingController extends Controller
 
     public function create()
     {
-        $this->authorize('create', JobListing::class);
-        return Inertia::render('Jobs/Create');
+        $user = Auth::user();
+    
+        if ($user->role->name !== 'Employer') {
+            abort(403, 'Unauthorized action.');
+        }
+    
+        $employer = $user->employer; 
+      
+    
+        return Inertia::render('Jobs/Create', [
+            'employer' => $employer,
+        ]);
     }
     public function store(Request $request)
     {

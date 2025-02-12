@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             JobListingTagSeeder::class,
             JobseekerSeeder::class,
             RoleSeeder::class,
+            EmployerSeeder::class,
           
         ]);
     }

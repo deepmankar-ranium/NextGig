@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JobListingController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegisterUserController;
 use Inertia\Inertia;
 
@@ -43,6 +44,4 @@ Route::get('/contact', function () {
     return Inertia::render('Contact');
 });
 
-Route::get('/profile', function () {
-    return Inertia::render('Profile');
-})->middleware(['auth']);
+Route::get('/profile', [ProfileController::class,'profile'])->middleware(['auth']);
