@@ -13,6 +13,9 @@ const props = defineProps({
   }
 });
 const isOwner = ref(usePage().props.isOwner);
+const handleBack = () => {
+  window.history.back();
+};
 
 const formattedSalary = computed(() => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(props.job.salary);
@@ -22,11 +25,11 @@ const formattedSalary = computed(() => {
 <template>
   <AppLayout>
     <div class="w-full flex justify-between items-center mt-8 px-6">
-      <Link href="/Jobs"
+      <button @click="handleBack"
         class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all
                bg-white text-gray-700 hover:bg-gray-100 border-gray-300">
         ← Go Back
-    </Link>
+    </button>
     </div>
 
     <div class="max-w-4xl mx-auto px-6 py-10">
