@@ -22,6 +22,12 @@ const props = defineProps({
   }
 });
 
+const handleBack = () => {
+  window.history.back();
+};
+
+
+
 // Reactive state
 const jobListingsData = ref(props.jobListings);
 const isLoading = ref(false);
@@ -121,15 +127,14 @@ const showPagination = computed(() =>
   <AppLayout>
     <!-- Header Section -->
     <div class="w-full flex justify-between items-center mt-8 px-6">
-      <Link 
-        href="/home" 
+      <button @click="handleBack"
         class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all bg-white text-gray-700 hover:bg-gray-100 border-gray-300"
       >
         ← Go Back
-      </Link>
+    </button>
       <Link 
         v-if="isEmployer" 
-        href="/jobs/create" 
+        href="/Jobs/create" 
         class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all bg-black text-white hover:bg-gray-900"
       >
         + Create Job
