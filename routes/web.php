@@ -17,6 +17,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/Jobs', [JobListingController::class, 'jobs']);
     Route::get('/Jobs/create', [JobListingController::class, 'create']);
     Route::post('/Jobs', [JobListingController::class, 'store']);
+    Route::get('/filter', [JobListingController::class, 'filterJobs']);
     Route::get('/Jobs/job/{jobListing}', [JobListingController::class, 'show']);
    
 });

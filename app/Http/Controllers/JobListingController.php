@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\JobListing;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,24 +15,46 @@ class JobListingController extends Controller
 {
     public function index()
     {
-        $jobListings = JobListing::with('employer')->paginate(6);
+        $jobListings = JobListing::with(['employer', 'tags'])->paginate(6);
+  
         return Inertia::render('Welcome', [
             'jobListings' => $jobListings,
         ]);
     }
+    
 
-    public function jobs()
-    {
-        $user = Auth::user();
-        $jobListings = JobListing::with('employer')->latest()->paginate(6);
-        $isEmployer = $user && $user->role && $user->role->name === "Employer";
+public function jobs()
+{
+    $user = Auth::user();
+    $jobListings = JobListing::with(['employer', 'tags'])->latest()->paginate(6);
+    $isEmployer = $user && $user->role && $user->role->name === "Employer";
+    $tags = Tag::all();
 
+    return Inertia::render('Jobs', [
+        'jobListings' => $jobListings,
+        'isEmployer' => $isEmployer,
+        'tags' => $tags,
+    ]);
+}
 
-        return Inertia::render('Jobs', [
-            'jobListings' => $jobListings,
-            'isEmployer' => $isEmployer,
-        ]);
-    }
+public function filterJobs(Request $request)
+{
+    $tag = $request->query('tag');
+
+    $jobListings = JobListing::with(['employer', 'tags'])
+        ->when($tag, function ($query) use ($tag) {
+            return $query->whereHas('tags', function ($q) use ($tag) {
+                $q->where('name', $tag);
+            });
+        })
+        ->latest()
+        ->paginate(6);
+
+    return response()->json([
+        'jobListings' => $jobListings
+    ]);
+}
+
 
     public function show($id)
     {

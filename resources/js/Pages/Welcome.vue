@@ -143,6 +143,9 @@ watch(searchQuery, (newValue) => {
             <p class="mt-3 text-gray-600 line-clamp-3">
               {{ job.description.length > 120 ? job.description.substring(0, 120) + '...' : job.description }}
             </p>
+            <p class="mt-2 text-gray-500">
+              Tags: <span v-for="(tag, index) in job.tags" :key="tag.id">{{ tag.name }}<span v-if="index < job.tags.length - 1">, </span></span>
+            </p>
             <Link :href="`/Jobs/job/${job.id}`" class="inline-block mt-4 text-blue-600 font-medium hover:text-blue-700 transition">
               View Details →
             </Link>

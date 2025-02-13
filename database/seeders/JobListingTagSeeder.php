@@ -11,7 +11,7 @@ class JobListingTagSeeder extends Seeder
     {
         // Create 20 job listings and attach random tags using the factory
         JobListing::factory()
-            ->count(20)
+            ->count(10)
             ->create()
             ->each(function ($jobListing) {
                 // Attach between 1 to 3 random tags to each job listing
