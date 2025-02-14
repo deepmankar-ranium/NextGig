@@ -59,13 +59,16 @@ public function filterJobs(Request $request)
     public function show($id)
     {
         $job = JobListing::with('employer.user')->findOrFail($id);
+        $user = Auth::user();
     
+        $isJobSeeker = $user && $user->role && $user->role->name === "Job Seeker";
         
         $isOwner = Gate::allows('edit', $job);
     
         return Inertia::render('JobDetails', [
             'job' => $job,
             'isOwner' => $isOwner, 
+            'isJobSeeker' => $isJobSeeker,
         ]);
     }
     

@@ -2,12 +2,15 @@
 import { ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { HomeIcon, SearchIcon, BriefcaseIcon, UserIcon, MenuIcon, XIcon, InfoIcon, MailIcon } from 'lucide-vue-next';
+import { usePage } from '@inertiajs/vue3';
 
 const isMenuOpen = ref(false);
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
 };
+const isEmployer = usePage().props.auth.user?.role?.name === "Employer";
+
 
 const navItems = [
   { name: 'Home', icon: HomeIcon, href: '/Home' },
@@ -15,6 +18,7 @@ const navItems = [
   { name: 'Profile', icon: UserIcon, href: '/profile' },
   { name: 'About', icon: InfoIcon, href: '/about' },
   { name: 'Contact', icon: MailIcon, href: '/contact' },
+  ...(isEmployer ? [{ name: 'Applications', icon: BriefcaseIcon, href: '/view-applications' }] : [])
 ];
 
 const currentYear = new Date().getFullYear();

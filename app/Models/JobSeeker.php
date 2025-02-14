@@ -9,7 +9,7 @@ class Jobseeker extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'resume', 'skills'];
+    protected $fillable = ['user_id','name', 'resume', 'skills'];
 
     public function user()
     {

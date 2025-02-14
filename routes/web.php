@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JobListingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegisterUserController;
+use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\ViewJobApplications;
 use Inertia\Inertia;
 
 
@@ -14,11 +16,14 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/Home', [JobListingController::class, 'index'])->name('home');
     Route::get('/search', [JobListingController::class, 'search'])->name('search');
-    Route::get('/Jobs', [JobListingController::class, 'jobs']);
+    Route::get('/Jobs', [JobListingController::class, 'jobs'])->name('Jobs');
     Route::get('/Jobs/create', [JobListingController::class, 'create']);
     Route::post('/Jobs', [JobListingController::class, 'store']);
     Route::get('/filter', [JobListingController::class, 'filterJobs']);
     Route::get('/Jobs/job/{jobListing}', [JobListingController::class, 'show']);
+    Route::get('/view-applications', [ViewJobApplications::class, 'show']);
+    Route::post('/apply/{jobListing}', [ViewJobApplications::class, 'apply']);
+
    
 });
 

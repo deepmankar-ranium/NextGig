@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('jobseekers', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('resume')->nullable();
             $table->text('skills')->nullable();

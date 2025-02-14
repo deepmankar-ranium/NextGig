@@ -65,6 +65,7 @@ class RegisterUserController extends Controller
         elseif ($user->role_id == 3) {
             JobSeeker::create([
                 'user_id' => $user->id,
+                'name' => $request->input('name', $user->full_name),
                 'resume_link' => $request->input('resume_link', null),
             ]);
         }

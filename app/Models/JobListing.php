@@ -13,15 +13,18 @@ class JobListing extends Model
 
     protected $fillable = ['title', 'description', 'salary', 'employer_id'];
 
-    // Define the inverse relationship: Many JobListings belong to one Employer
+   
     public function employer()
     {
         return $this->belongsTo(Employer::class);
     }
 
-    // Define the relationship with tags
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'job_listing_tag');
+    }
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
     }
 }

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 
 namespace Database\Seeders;
 
+use App\Models\Application;
 use App\Models\JobListing;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -24,8 +25,8 @@ class DatabaseSeeder extends Seeder
             TagSeeder::class,
             JobListingTagSeeder::class,
             JobseekerSeeder::class,
-            RoleSeeder::class,
             EmployerSeeder::class,
+            JobApplicationSeeder::class,
           
         ]);
     }

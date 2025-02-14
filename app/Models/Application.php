@@ -10,15 +10,16 @@ class Application extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['job_id', 'jobseeker_id', 'status'];
+    protected $table = 'applications';
+    protected $fillable = ['jobListing_id', 'jobSeeker_id', 'resume_text','cover_letter'];
 
-    public function job()
+    public function jobListing()
     {
-        return $this->belongsTo(JobListing::class);
+        return $this->belongsTo(JobListing::class, 'jobListing_id');
     }
 
-    public function jobseeker()
+    public function jobSeeker()
     {
-        return $this->belongsTo(JobSeeker::class);
+        return $this->belongsTo(JobSeeker::class,'jobSeeker_id');
     }
 }
