@@ -70,7 +70,8 @@ const confirmEdit = () => {
                                 Employer ID:
                             </label>
                             <input type="number" v-model="form.employer_id" id="employer_id"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" 
+                                readonly />
                             <p v-if="form.errors.employer_id" class="text-red-500 text-sm mt-1">{{
                                 form.errors.employer_id }}</p>
                         </div>

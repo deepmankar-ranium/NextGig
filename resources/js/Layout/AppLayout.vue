@@ -1,15 +1,29 @@
 <script setup>
-import { ref } from 'vue';
+import { ref,watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { HomeIcon, SearchIcon, BriefcaseIcon, UserIcon, MenuIcon, XIcon, InfoIcon, MailIcon } from 'lucide-vue-next';
 import { usePage } from '@inertiajs/vue3';
+
 
 const isMenuOpen = ref(false);
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
 };
-const isEmployer = usePage().props.auth.user?.role?.name === "Employer";
+const page = usePage();
+
+const isEmployer = ref(page.props.auth.user?.role?.name === "Employer");
+
+// Watch for changes in `page.props.auth.user`
+watch(
+  () => page.props.auth.user?.role?.name,
+  (newRole) => {
+    isEmployer.value = newRole === "Employer";
+  },
+  { immediate: true }  // Ensure the watch is triggered immediately
+);
+
+
 
 
 const navItems = [
@@ -17,8 +31,8 @@ const navItems = [
   { name: 'Jobs', icon: BriefcaseIcon, href: '/Jobs' },
   { name: 'Profile', icon: UserIcon, href: '/profile' },
   { name: 'About', icon: InfoIcon, href: '/about' },
-  { name: 'Contact', icon: MailIcon, href: '/contact' },
-  ...(isEmployer ? [{ name: 'Applications', icon: BriefcaseIcon, href: '/view-applications' }] : [])
+  // { name: 'Contact', icon: MailIcon, href: '/contact' },
+  ...(isEmployer ? [{ name: 'Posted Jobs', icon: BriefcaseIcon, href: '/postedJobs' }] : [])
 ];
 
 const currentYear = new Date().getFullYear();

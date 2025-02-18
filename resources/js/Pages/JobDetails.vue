@@ -78,7 +78,7 @@ const formattedSalary = computed(() => {
         </button>
         <Link 
           v-if="isOwner"
-          :href="route('jobs.edit', job.id)"
+          :href="`/Jobs/job/${job.id}/edit`"
           class="px-6 py-3 text-sm font-medium border rounded-lg shadow-md transition-all
                  bg-black text-white hover:bg-gray-900">
           Edit Job
