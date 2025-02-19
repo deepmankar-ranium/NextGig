@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Application;
 use App\Models\JobListing;
 use App\Models\Tag;
 use App\Models\User;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+
 use Inertia\Response;
 
 class JobListingController extends Controller
@@ -56,22 +58,36 @@ public function filterJobs(Request $request)
 }
 
 
-    public function show($id)
-    {
-        $job = JobListing::with('employer.user')->findOrFail($id);
-        $user = Auth::user();
-    
-        $isJobSeeker = $user && $user->role && $user->role->name === "Job Seeker";
-        
-        $isOwner = Gate::allows('edit', $job);
-    
-        return Inertia::render('JobDetails', [
-            'job' => $job,
-            'isOwner' => $isOwner, 
-            'isJobSeeker' => $isJobSeeker,
-        ]);
-    }
-    
+public function show($id)
+{
+    $job = JobListing::with('employer.user')->findOrFail($id);
+    $user = Auth::user();
+
+    // Check if the user is a job seeker
+    $isJobSeeker = optional($user->role)->name === "Job Seeker";
+
+    // Fetch the application where the authenticated job seeker has applied
+    $application = $isJobSeeker && $user->jobseeker 
+        ? Application::where('jobseeker_id', $user->jobseeker->id)
+            ->where('joblisting_id', $id)
+            ->first()
+        : null;
+
+    // Get application status safely using model constants
+    $applicationStatus = $application ? $application->application_status : null;
+
+    // Check if the user is authorized to edit the job listing
+    $isOwner = Gate::allows('edit', $job);
+
+    return Inertia::render('JobDetails', [
+        'job' => $job,
+        'isOwner' => $isOwner,
+        'isJobSeeker' => $isJobSeeker,
+        'applicationStatus' => $applicationStatus,
+    ]);
+}
+
+
 
     public function create()
     {
