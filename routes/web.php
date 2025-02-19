@@ -7,6 +7,7 @@ use App\Http\Controllers\RegisterUserController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ViewJobApplications;
 use App\Http\Controllers\EmployerJobListingController;
+use App\Http\Controllers\AppliedJobsController;
 use Inertia\Inertia;
 
 
@@ -33,7 +34,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/Jobs/job/{jobListing}/edit', [JobListingController::class, 'edit']);
     Route::patch('/Jobs/job/{jobListing}', [JobListingController::class, 'update']);
     Route::delete('/Jobs/job/{jobListing}', [JobListingController::class, 'destroy']);
-    Route::get('/postedJobs',[EmployerJobListingController::class,'show']);
+    Route::get('/posted-jobs',[EmployerJobListingController::class,'show']);
+    Route::get('/applied-jobs',[AppliedJobsController::class,'show']);
 });
 
 // Authentication routes (no middleware)
