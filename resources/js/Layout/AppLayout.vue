@@ -3,6 +3,7 @@ import { ref,watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { HomeIcon, SearchIcon, BriefcaseIcon, UserIcon, MenuIcon, XIcon, InfoIcon, MailIcon } from 'lucide-vue-next';
 import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 
 const isMenuOpen = ref(false);
@@ -10,30 +11,25 @@ const isMenuOpen = ref(false);
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
 };
+
+
+// Get the auth user from Inertia.js page props
 const page = usePage();
 
-const isEmployer = ref(page.props.auth.user?.role?.name === "Employer");
-
-// Watch for changes in `page.props.auth.user`
-watch(
-  () => page.props.auth.user?.role?.name,
-  (newRole) => {
-    isEmployer.value = newRole === "Employer";
-  },
-  { immediate: true }  // Ensure the watch is triggered immediately
-);
+const isEmployer = computed(() => page.props.auth.user?.role_id=== 2);
+const isJobSeeker = computed(() => page.props.auth.user?.role_id === 3);
 
 
-
-
-const navItems = [
+// Use `.value` when spreading into `navItems`
+const navItems = computed(() => [
   { name: 'Home', icon: HomeIcon, href: '/Home' },
   { name: 'Jobs', icon: BriefcaseIcon, href: '/Jobs' },
   { name: 'Profile', icon: UserIcon, href: '/profile' },
   { name: 'About', icon: InfoIcon, href: '/about' },
-  // { name: 'Contact', icon: MailIcon, href: '/contact' },
-  ...(isEmployer ? [{ name: 'Posted Jobs', icon: BriefcaseIcon, href: '/postedJobs' }] : [])
-];
+  ...(isEmployer.value ? [{ name: 'Posted Jobs', icon: BriefcaseIcon, href: '/posted-jobs' }] : []),
+  ...(isJobSeeker.value ? [{ name: 'Applied Jobs', icon: BriefcaseIcon, href: '/applied-jobs' }] : [])
+]);
+
 
 const currentYear = new Date().getFullYear();
 </script>
