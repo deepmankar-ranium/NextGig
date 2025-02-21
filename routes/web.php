@@ -8,6 +8,7 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ViewJobApplications;
 use App\Http\Controllers\EmployerJobListingController;
 use App\Http\Controllers\AppliedJobsController;
+use App\Http\Controllers\GoogleAuthController;
 use Inertia\Inertia;
 
 
@@ -23,8 +24,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/Jobs', [JobListingController::class, 'store']);
     Route::get('/filter', [JobListingController::class, 'filterJobs']);
     Route::get('/Jobs/job/{jobListing}', [JobListingController::class, 'show']);
-    Route::get('/view-applications', [ViewJobApplications::class, 'show']);
-    Route::post('/apply/{jobListing}', [ViewJobApplications::class, 'apply']);
+
+
+    // View all applications
+    Route::get('/view-applications', [ViewJobApplications::class, 'show'])
+        ->middleware('auth'); 
+    
+    // Apply for a job
+    Route::post('/apply/{jobListing}', [ViewJobApplications::class, 'apply'])
+        ->middleware('auth');
+    
+    // Update application status
+    Route::put('/applications/{application}', [ViewJobApplications::class, 'update'])
+        ->middleware('auth');
+    
 
    
 });
@@ -40,11 +53,14 @@ Route::middleware(['auth'])->group(function () {
 
 // Authentication routes (no middleware)
 Route::get('/register', [RegisterUserController::class, 'show']);
-Route::post('/register', [RegisterUserController::class, 'register']);
+Route::post('/register/store-role', [RegisterUserController::class, 'storeRole']);
+Route::get('/register-2', [RegisterUserController::class, 'showRegister2'])->name('register-2');
+Route::post('/register-2/register', [RegisterUserController::class, 'register']);
 Route::get('/login', [RegisterUserController::class, 'logIn']);
 Route::post('/login', [RegisterUserController::class, 'authenticate'])->name('login');
 Route::post('/logout', [RegisterUserController::class, 'logout'])->name('logout');
-
+Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 // Static Pages
 Route::get('/about', function () {
     return Inertia::render('About');

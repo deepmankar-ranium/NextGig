@@ -24,6 +24,7 @@ class JobseekerFactory extends Factory
         return [
             'user_id' => $user->id,
             'resume' => fake()->filePath(), // Simulating a resume file path
+            'email'=>fake()->email(),
             'skills' => implode(',', fake()->randomElements([
                 'PHP', 'Laravel', 'JavaScript', 'React', 'Vue.js', 
                 'Python', 'Java', 'SQL', 'Node.js', 'Docker'

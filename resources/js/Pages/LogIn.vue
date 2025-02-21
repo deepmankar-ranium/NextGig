@@ -89,25 +89,107 @@ const submit = () => {
             </label>
             <a href="/forgot-password" class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300">Forgot password?</a>
           </div>
-
-          <div>
-            <button
-              :disabled="form.processing"
-              type="submit"
-              class="border bg-gray-900 text-white border-white px-6 py-3 rounded-lg shadow-md font-medium hover:bg-white hover:text-gray-600 transition">
-              <span v-if="!form.processing">Log in</span>
-              <svg v-else class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span v-if="form.processing">Logging in...</span>
-            </button>
+          <div class="max-w-md mx-auto space-y-6">
+            <!-- Main Login Button Section -->
+            <div class="flex justify-center">
+              <button
+                :disabled="isProcessing"
+                type="submit"
+                @click="handleLogin"
+                class="w-full relative inline-flex items-center justify-center border bg-gray-900 text-white 
+                       border-white px-6 py-3 rounded-lg shadow-md font-medium 
+                       hover:bg-white hover:text-gray-600 
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                       transition-all duration-200"
+              >
+                <template v-if="!isProcessing">
+                  <span>Log in</span>
+                </template>
+                <template v-else>
+                  <svg 
+                    class="animate-spin h-5 w-5 mr-3" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24"
+                  >
+                    <circle 
+                      class="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      stroke-width="4"
+                    />
+                    <path 
+                      class="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  <span>Logging in...</span>
+                </template>
+              </button>
+            </div>
+        
+            <!-- Divider -->
+            <div class="relative">
+              <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-300"></div>
+              </div>
+              <div class="relative flex justify-center text-sm">
+                <span class="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+        
+            <!-- Google Login Button -->
+            <div class="flex justify-center">
+              <a
+                href="/auth/google"
+                class="w-full flex items-center justify-center px-6 py-3 border border-gray-300 
+                       rounded-lg shadow-sm bg-white text-gray-700 font-medium
+                       hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                       transition-all duration-200"
+              >
+                <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48">
+                  <path
+                    fill="#4285F4"
+                    d="M24 9.5c3.4 0 6.5 1.2 9 3.6l6.7-6.7C34.8 2 29.7 0 24 0 14.8 0 6.9 5.6 3 13.8l7.9 6.2C13.1 13.4 18.1 9.5 24 9.5z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M46.5 24.5c0-1.6-.2-3.2-.5-4.6H24v9.3h13c-.6 3-2.2 5.5-4.7 7.2l7.3 5.7c4.2-3.9 6.9-9.7 6.9-17.6z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M11.1 28.5c-1.4-2-2.1-4.4-2.1-7s.8-5 2.1-7L3 8.2C.8 12.2 0 17 0 24s.8 11.8 3 15.8l8.1-6.3z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M24 48c6.5 0 12-2.2 16-5.8l-7.3-5.7c-2.2 1.5-5 2.4-8.7 2.4-5.9 0-10.9-4-12.8-9.4l-8.1 6.3C7 42.4 14.8 48 24 48z"
+                  />
+                </svg>
+                <span>Continue with Google</span>
+              </a>
+            </div>
+        
+            <!-- Sign Up Link Section -->
+            <div class="text-sm text-center">
+              <span class="text-gray-600 dark:text-gray-800">
+                Don't have an account?
+              </span>
+              <a 
+                href="/register" 
+                class="ml-1 font-medium text-blue-600 hover:text-blue-500 
+                       focus:outline-none focus:underline
+                       transition duration-150 ease-in-out"
+              >
+                Sign up
+              </a>
+            </div>
           </div>
 
-          <div class="text-sm text-center text-gray-00 dark:text-gray-800">
-            Don't have an account? 
-            <a href="/register" class="font-medium text-blue-600 hover:text-blue-500  transition duration-150 ease-in-out">Sign up</a>
-          </div>
+          
         </form>
       </div>
     </div>

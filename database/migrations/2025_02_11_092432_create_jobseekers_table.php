@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('email')->unique()->comment('JobSeeker Email');
             $table->string('resume')->nullable();
             $table->text('skills')->nullable();
             $table->timestamps();

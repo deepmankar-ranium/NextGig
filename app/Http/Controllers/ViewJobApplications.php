@@ -85,5 +85,17 @@ class ViewJobApplications extends Controller
     
         return redirect()->route('Jobs')->with('success', 'Application submitted successfully.');
     }
+    public function update(Request $request, Application $application)
+    {
+        $request->validate([
+            'application_status' => 'required|in:pending,approved,rejected'
+        ]);
+
+        $application->update([
+            'application_status' => $request->application_status
+        ]);
+
+        return redirect()->back()->with('success', 'Application status updated successfully.');
+    }
     
 }
