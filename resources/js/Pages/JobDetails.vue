@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { CalendarIcon, CurrencyDollarIcon, MapPinIcon } from '@heroicons/vue/24/outline';
 import { Link, useForm } from '@inertiajs/vue3';
-import { usePage } from '@inertiajs/vue3';
+
 import AppLayout from '@/Layout/AppLayout.vue';
 
 const props = defineProps({
@@ -10,14 +10,39 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  isJobSeeker:{
-    type:Boolean,
+  isJobSeeker: {
+    type: Boolean,
+    default: false
+  },
+  applicationStatus: {
+    type: String,
+
+  },
+  isOwner: {
+    type: Boolean,
+    default: false
   }
 });
 
-const isOwner = computed(() => usePage().props.isOwner);
-
 const showApplyForm = ref(false);
+const handleApplyClick = () => {
+  if (!showApplyForm.value) {
+    showApplyForm.value = true; // Open form when clicking "Apply Now"
+  } else {
+    showApplyForm.value = false; // Close form when clicking "Cancel"
+  }
+};
+const submitApplication = () => {
+  form.post(`/apply/${props.job.id}`
+    , {
+    preserveScroll: true,
+    onSuccess: () => {
+      showApplyForm.value = false; 
+      form.reset();
+    }
+  });
+};
+
 
 const form = useForm({
   resume_text: '',
@@ -69,13 +94,26 @@ const formattedSalary = computed(() => {
       </div>
 
       <div class="mt-6 flex justify-end space-x-4">
-        <button v-if="isJobSeeker" 
- 
-          @click="showApplyForm = !showApplyForm"
-          class="px-6 py-3 text-sm font-medium border rounded-lg shadow-md transition-all
-                 bg-blue-600 text-white hover:bg-blue-700">
-          {{ showApplyForm ? 'Cancel' : 'Apply Now' }}
+        <button 
+          v-if="isJobSeeker"
+          :disabled="applicationStatus === 'approved' || applicationStatus === 'pending'"
+          class="px-6 py-3 text-sm font-medium border rounded-lg shadow-md transition-all text-white"
+          :class="{
+            'bg-gray-400 cursor-not-allowed': applicationStatus === 'pending' || applicationStatus === 'approved',
+            'bg-green-600 hover:bg-green-700': applicationStatus === 'approved',
+            'bg-red-600 hover:bg-red-700': applicationStatus === 'rejected',
+            'bg-blue-600 hover:bg-blue-700': !applicationStatus || applicationStatus === 'rejected'
+          }"
+          @click="handleApplyClick"
+        >
+          {{
+            applicationStatus === 'pending' ? 'Pending' 
+            : applicationStatus === 'approved' ? 'Approved' 
+            : applicationStatus === 'rejected' ? 'Rejected - Apply Again' 
+            : (showApplyForm ? 'Cancel' : 'Apply Now') 
+          }}
         </button>
+      
         <Link 
           v-if="isOwner"
           :href="`/Jobs/job/${job.id}/edit`"
@@ -84,17 +122,11 @@ const formattedSalary = computed(() => {
           Edit Job
         </Link>
       </div>
-
+      
+      <!-- Application Form -->
       <div v-if="showApplyForm" class="mt-6 bg-white p-6 rounded-lg shadow">
         <h2 class="text-lg font-semibold mb-4">Apply for this position</h2>
-        <form @submit.prevent="form.post(`/apply/${job.id}`, {
-          preserveScroll: true,
-          onSuccess: () => {
-              showApplyForm.value = false;
-              form.reset();
-          }
-      })">
-      
+        <form @submit.prevent="submitApplication">
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Resume Text</label>
             <textarea
@@ -143,6 +175,7 @@ const formattedSalary = computed(() => {
           </div>
         </form>
       </div>
+      
     </div>
   </AppLayout>
 </template>
