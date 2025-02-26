@@ -12,7 +12,7 @@ const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
 };
 
-
+ 
 // Get the auth user from Inertia.js page props
 const page = usePage();
 
@@ -27,7 +27,8 @@ const navItems = computed(() => [
   { name: 'Profile', icon: UserIcon, href: '/profile' },
   { name: 'About', icon: InfoIcon, href: '/about' },
   ...(isEmployer.value ? [{ name: 'Posted Jobs', icon: BriefcaseIcon, href: '/posted-jobs' }] : []),
-  ...(isJobSeeker.value ? [{ name: 'Applied Jobs', icon: BriefcaseIcon, href: '/applied-jobs' }] : [])
+  ...(isJobSeeker.value ? [{ name: 'Applied Jobs', icon: BriefcaseIcon, href: '/applied-jobs' }] : []),
+  { name: 'Chat With AI', href: '/chat' },
 ]);
 
 
@@ -81,7 +82,7 @@ const currentYear = new Date().getFullYear();
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 shadow-md mt-8">
+    <footer class="bg-gray-900 shadow-md">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <div class="text-center md:text-left mb-4 md:mb-0">
