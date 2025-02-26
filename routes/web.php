@@ -10,6 +10,7 @@ use App\Http\Controllers\EmployerJobListingController;
 use App\Http\Controllers\AppliedJobsController;
 use App\Http\Controllers\GoogleAuthController;
 use Inertia\Inertia;
+use App\Http\Controllers\GPTController;
 
 
 Route::get('/', function () {
@@ -49,9 +50,12 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/Jobs/job/{jobListing}', [JobListingController::class, 'destroy']);
     Route::get('/posted-jobs',[EmployerJobListingController::class,'show']);
     Route::get('/applied-jobs',[AppliedJobsController::class,'show']);
+    Route::post('/chat', [GPTController::class, 'chat'])->name('chat');
+    Route::get('/chat', [GPTController::class, 'getChat']);
+    Route::post('/clear-chat', [GPTController::class, 'clearChat']);
 });
 
-// Authentication routes (no middleware)
+// Authentication routes (no middleware)]
 Route::get('/register', [RegisterUserController::class, 'show']);
 Route::post('/register/store-role', [RegisterUserController::class, 'storeRole']);
 Route::get('/register-2', [RegisterUserController::class, 'showRegister2'])->name('register-2');
@@ -61,6 +65,7 @@ Route::post('/login', [RegisterUserController::class, 'authenticate'])->name('lo
 Route::post('/logout', [RegisterUserController::class, 'logout'])->name('logout');
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+
 // Static Pages
 Route::get('/about', function () {
     return Inertia::render('About');
