@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/chat', [GPTController::class, 'chat'])->name('chat');
     Route::get('/chat', [GPTController::class, 'getChat']);
     Route::post('/clear-chat', [GPTController::class, 'clearChat']);
+    Route::get('/chat-history', [GPTController::class, 'getChatHistory']);
 });
 
 // Authentication routes (no middleware)]

@@ -21,7 +21,7 @@
         </header>
 
         <!-- Chat Messages -->
-        <div ref="chatBox" class="flex-1 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth min-h-80" >
+        <div ref="chatBox" class="flex-1 overflow-y-auto px-4 py-6 pb-20 space-y-4 scroll-smooth min-h-80" >
           <div v-for="(msg, index) in messages" 
                :key="index"
                :class="['transition-all duration-300 ease-out animate-message']">
@@ -71,6 +71,7 @@ import { ref, onMounted, nextTick } from "vue";
 import { Send, Trash2, Loader2, MessageCircle } from 'lucide-vue-next';
 import ConfirmModal from "@/Components/ConfirmModal.vue";
 import axios from "axios";
+import { get } from "lodash";
 
 const chatBox = ref(null);
 const message = ref("");
@@ -114,8 +115,32 @@ const clearChat = async () => {
   try {
     await axios.post('/clear-chat');
     messages.value = [];
+    getChat();
   } catch (error) {
     console.error("Error clearing chat:", error);
+  }
+};
+const getChat = async () => {
+  try {
+    const { data } = await axios.get('/chat-history');
+    messages.value = data.history.map(item => createMessage(item.role, item.content));
+
+    // Check if the first message is already the welcome message
+    const hasWelcomeMessageAtStart = 
+      messages.value.length > 0 && 
+      messages.value[0].role === "bot" && 
+      messages.value[0].content === "Hello! How can I help you today?";
+
+    // If welcome message is not at index 0, remove it if it exists elsewhere and add it at the beginning
+    if (!hasWelcomeMessageAtStart) {
+      // Add welcome message at the beginning
+      messages.value.unshift(createMessage("bot", "Hello! How can I help you today?"));
+    }
+
+    console.log(messages.value);
+    await scrollToBottom();
+  } catch (error) {
+    console.error("Error fetching chat history:", error);
   }
 };
 
@@ -144,9 +169,11 @@ const sendMessage = async () => {
   }
 };
 
-onMounted(() => {
-  messages.value.push(createMessage("bot", "👋 Hello! How can I assist you today?"));
+onMounted(async() => {
+  await getChat();
 });
+
+
 </script>
 
 <style scoped>
