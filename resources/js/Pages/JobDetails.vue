@@ -90,7 +90,7 @@ const formattedSalary = computed(() => {
                 Tags :- 
               </dt>
               <dd>
-                <ul v-if="job.tag>0" class="flex flex-wrap gap-2">
+                <ul v-if="job.tags.length>0" class="flex flex-wrap gap-2">
                   <li v-for="tag in job.tags" :key="tag.id"
                     class="px-2 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
                     {{ tag.name }}
