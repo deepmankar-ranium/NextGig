@@ -11,6 +11,7 @@ use App\Http\Controllers\AppliedJobsController;
 use App\Http\Controllers\GoogleAuthController;
 use Inertia\Inertia;
 use App\Http\Controllers\GPTController;
+use App\Http\Controllers\TagController;
 
 
 Route::get('/', function () {
@@ -54,6 +55,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/chat', [GPTController::class, 'getChat']);
     Route::post('/clear-chat', [GPTController::class, 'clearChat']);
     Route::get('/chat-history', [GPTController::class, 'getChatHistory']);
+    Route::get('/tags',[TagController::class,'index']);
+    Route::post('/create-tags',[TagController::class,'store']);
+    Route::post('/delete-tags',[TagController::class,'destroy']);
 });
 
 // Authentication routes (no middleware)]

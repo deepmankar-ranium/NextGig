@@ -43,9 +43,45 @@
               <p v-if="form.errors.salary" class="text-red-500 text-sm mt-1">{{ form.errors.salary }}</p>
             </div>
 
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Select Tags:</label>
+                
+                <div class="flex flex-wrap gap-4 mt-4">
+                 
+
+                    <div class="flex flex-wrap gap-3">
+                        <div v-for="tag in props.tags" :key="tag.id" 
+                            class="flex items-center px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm hover:border-blue-400 transition-colors">
+                            <input 
+                                type="checkbox"
+                                :id="'tag-' + tag.id"
+                                :value="tag.id"
+                                v-model="form.tags"
+                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <label :for="'tag-' + tag.id" class="ml-2 text-gray-700 cursor-pointer select-none">
+                                {{ tag.name }}
+                            </label>
+                        </div>
+
+                        <div v-if="props.tags.length === 0" 
+                            class="w-full text-center py-4 text-gray-500 bg-white rounded-lg border border-gray-200">
+                            <span class="block mb-1">No tags available</span>
+                            <span class="text-sm">Create some tags in the Tag Manager</span>
+                        </div>
+                    </div>
+                    <div class="w-full">
+                      <p class="text-gray-600 mb-4">
+                          Want to add custom tags? Visit the <Link href="/tags" class="text-blue-600 hover:text-blue-800 underline">Tag Manager</Link>
+                      </p>
+                  </div>
+                </div>
+            </div>
+
             <button type="submit" 
-            class="border bg-gray-900 text-white border-white px-6 py-3 rounded-lg shadow-md font-medium hover:bg-white hover:text-gray-600 transition">
-              Create Job Listing
+              class="border bg-gray-900 text-white border-white px-6 py-3 rounded-lg shadow-md font-medium hover:bg-white hover:text-gray-600 transition"
+              :disabled="form.processing">
+              {{ form.processing ? 'Creating...' : 'Create Job Listing' }}
             </button>
           </form>
         </div>
@@ -57,15 +93,25 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layout/AppLayout.vue';
-const props=defineProps({
-  employer:Object,
-})
+import { Link } from '@inertiajs/vue3';
+
+const props = defineProps({
+  employer: {
+    type: Object,
+    required: true
+  },
+  tags: {
+    type: Array,
+    required: true
+  }
+});
 
 const form = useForm({
   title: '',
   description: '',
-  employer_id: props.employer.id || null,
+  employer_id: props.employer.id,
   salary: '',
+  tags: [],
 });
 
 const submit = () => {

@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
+
 use Inertia\Response;
 
 class JobListingController extends Controller
@@ -42,6 +43,8 @@ public function jobs()
 public function filterJobs(Request $request)
 {
     $tag = $request->query('tag');
+
+
 
     $jobListings = JobListing::with(['employer', 'tags'])
         ->when($tag, function ($query) use ($tag) {
@@ -98,10 +101,12 @@ public function show($id)
         }
     
         $employer = $user->employer; 
+        $tags = Tag::all();
       
     
         return Inertia::render('Jobs/Create', [
             'employer' => $employer,
+            'tags' => $tags,
         ]);
     }
     public function store(Request $request)
@@ -111,21 +116,38 @@ public function show($id)
             'description' => 'required|string',
             'salary' => 'required|numeric|min:0',
             'employer_id' => 'required|exists:employers,id',
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id', // Ensures each tag exists in the `tags` table
         ]);
-
-        JobListing::create($validatedData);
-
+    
+        // Create the job listing
+        $jobListing = JobListing::create([
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+            'salary' => $validatedData['salary'],
+            'employer_id' => $validatedData['employer_id'],
+        ]);
+    
+        // Handle tags if provided
+        if (isset($validatedData['tags'])) {
+            $jobListing->tags()->sync($validatedData['tags']);
+        }
+    
         return redirect('/Jobs')->with('success', 'Job listing created successfully!');
     }
 
     public function edit(JobListing $jobListing)  
     {
-        $jobListing->load('employer.user'); 
+        $jobListing->load(['employer', 'tags']); // Load employer & tags
     
         $this->authorize('edit', $jobListing);
-    
-        return Inertia::render('Jobs/Edit', ['job' => $jobListing]);
+
+        return Inertia::render('Jobs/Edit', [
+            'job' => $jobListing,
+            'tags' => Tag::all(), // Fetch all tags for checkboxes
+        ]);
     }
+    
     
     
     public function update(Request $request, JobListing $jobListing)  
@@ -137,9 +159,22 @@ public function show($id)
             'description' => 'required|string',
             'salary' => 'required|numeric|min:0',
             'employer_id' => 'required|exists:employers,id',
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id',
         ]);
         
-        $jobListing->update($validatedData);
+        // Update the job listing basic info
+        $jobListing->update([
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+            'salary' => $validatedData['salary'],
+            'employer_id' => $validatedData['employer_id'],
+        ]);
+        
+        // Handle tags if provided
+        if (isset($validatedData['tags'])) {
+            $jobListing->tags()->sync($validatedData['tags']);
+        }
         
         return redirect("/Jobs/job/{$jobListing->id}")->with('success', 'Job listing updated successfully!');
     }
@@ -167,7 +202,6 @@ public function show($id)
         ->where('title', 'LIKE', "%{$query}%")
         ->orWhere('description', 'LIKE', "%{$query}%")
         ->paginate(10);
-
     return response()->json(['searchResults' => $searchResults]);
 }
     }
