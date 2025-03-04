@@ -10,7 +10,7 @@ defineProps({
 </script>
 
 <template>
-  <nav class="mt-6 flex justify-center space-x-1">
+  <nav class="mt-6 flex flex-wrap justify-center space-x-1">
     <template v-for="link in links" :key="link.label">
       <Link 
         preserve-scroll
