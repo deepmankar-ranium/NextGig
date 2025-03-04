@@ -63,7 +63,8 @@ public function filterJobs(Request $request)
 
 public function show($id)
 {
-    $job = JobListing::with('employer.user')->findOrFail($id);
+    $job = JobListing::with(['employer.user', 'tags'])->findOrFail($id);
+
     $user = Auth::user();
 
     // Check if the user is a job seeker
