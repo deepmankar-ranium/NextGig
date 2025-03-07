@@ -23,7 +23,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/search', [JobListingController::class, 'search'])->name('search');
     Route::get('/Jobs', [JobListingController::class, 'jobs'])->name('Jobs');
     Route::get('/Jobs/create', [JobListingController::class, 'create']);
-    Route::post('/Jobs', [JobListingController::class, 'store']);
+    Route::post('/Jobs/create', [JobListingController::class, 'store'])->name('jobs.store');
     Route::get('/filter', [JobListingController::class, 'filterJobs']);
     Route::get('/Jobs/job/{jobListing}', [JobListingController::class, 'show']);
 
@@ -58,6 +58,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/tags',[TagController::class,'index']);
     Route::post('/create-tags',[TagController::class,'store']);
     Route::post('/delete-tags',[TagController::class,'destroy']);
+    Route::post('/create-intro-message', [GPTController::class, 'createIntroMessage'])->name('chat.intro');
+    Route::get('/search',[JobListingController::class,'search']);
 });
 
 // Authentication routes (no middleware)]
@@ -81,3 +83,24 @@ Route::get('/contact', function () {
 });
 
 Route::get('/profile', [ProfileController::class,'profile'])->middleware(['auth']);
+
+
+
+
+
+
+
+
+// private $systemPrompt = "You are a helpful AI assistant. Your name is Chat Assistant.
+// - Be friendly and conversational
+// - Maintain context of the conversation
+// - Provide concise, relevant responses
+// - Be consistent in your personality
+// - Remember previous messages in the conversation
+// - Keep responses focused and on-topic";
+// - Always remember the user's name: {USERNAME}
+// - Maintain conversation context 
+// - Provide concise, relevant responses
+// - Reference the user by their name when appropriate
+// - Remember previous messages in the conversation;
+// - Don't repeat user's name: {USERNAME}";

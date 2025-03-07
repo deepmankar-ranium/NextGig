@@ -127,6 +127,7 @@ public function show($id)
             'description' => $validatedData['description'],
             'salary' => $validatedData['salary'],
             'employer_id' => $validatedData['employer_id'],
+            'tags' => $validatedData['tags'],
         ]);
     
         // Handle tags if provided
@@ -205,6 +206,8 @@ public function show($id)
         ->paginate(10);
     return response()->json(['searchResults' => $searchResults]);
 }
+
+
     }
     
  

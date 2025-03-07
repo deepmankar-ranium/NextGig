@@ -10,13 +10,9 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  query: {
-    type: String,
-    default: '',
-  },
-});
 
-const searchQuery = ref(props.query || '');
+});
+const searchQuery = ref('');
 const isSearching = ref(false);
 const hasSearched = ref(false);
 const searchResults = ref([]); 
@@ -105,7 +101,6 @@ watch(searchQuery, (newValue) => {
       </li>
     </ul>
   </div>
-
   <p v-else class="text-lg text-gray-500">No jobs found matching your search.</p>
 </div>
 </div>

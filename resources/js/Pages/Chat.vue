@@ -1,5 +1,3 @@
-
-
 <template>
   <AppLayout>
     <div class="min-h-screen bg-gray-900 py-5">
@@ -28,7 +26,7 @@
             <div :class="msg.role === 'user' ? 'flex flex-col items-end' : 'flex flex-col items-start'">
               <div :class="[
                 'max-w-[80%] p-3 rounded-2xl shadow-sm',
-                msg.role === 'user' ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
+                msg.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
               ]">
                 <p class="whitespace-pre-line">{{ msg.content }}</p>
               </div>
@@ -115,64 +113,87 @@ const clearChat = async () => {
   try {
     await axios.post('/clear-chat');
     messages.value = [];
-    getChat();
+    await getChat();
   } catch (error) {
     console.error("Error clearing chat:", error);
   }
 };
+
 const getChat = async () => {
   try {
     const { data } = await axios.get('/chat-history');
-    messages.value = data.history.map(item => createMessage(item.role, item.content));
+    
+    messages.value = data.history.map(item => ({
+        role: item.sender === 'user' ? 'user' : 'bot',
+        content: item.message,
+        time: new Date(item.created_at).toLocaleTimeString("en-US", { 
+            hour: "numeric", 
+            minute: "2-digit", 
+            hour12: true 
+        })
+    }));
 
-    // Check if the first message is already the welcome message
-    const hasWelcomeMessageAtStart = 
-      messages.value.length > 0 && 
-      messages.value[0].role === "bot" && 
-      messages.value[0].content === "Hello! How can I help you today?";
-
-    // If welcome message is not at index 0, remove it if it exists elsewhere and add it at the beginning
-    if (!hasWelcomeMessageAtStart) {
-      // Add welcome message at the beginning
-      messages.value.unshift(createMessage("bot", "Hello! How can I help you today?"));
+    if (messages.value.length === 0) {
+        await createIntroMessage();
     }
 
-    console.log(messages.value);
     await scrollToBottom();
   } catch (error) {
     console.error("Error fetching chat history:", error);
   }
 };
 
-const sendMessage = async () => {
-  if (!message.value.trim() || isLoading.value) return;
+const createIntroMessage = async () => {
+  try {
+    const { data } = await axios.post('/create-intro-message');
+    if (data.status === 'success' && data.message) {
+      messages.value.push({
+        role: 'bot',
+        content: data.message,
+        time: new Date().toLocaleTimeString("en-US", { 
+          hour: "numeric", 
+          minute: "2-digit", 
+          hour12: true 
+        })
+      });
+    }
+  } catch (error) {
+    console.error("Error creating intro message:", error);
+  }
+};
 
-  const userMsg = message.value.trim();
-  messages.value.push(createMessage("user", userMsg));
+const sendMessage = async () => {
+  if (!message.value.trim()) return;
+
+  const userMessage = message.value;
   message.value = "";
-  isLoading.value = true;
 
   try {
-    const botMsg = createMessage("bot", "Typing...");
-    messages.value.push(botMsg);
+    isLoading.value = true;
+    
+    messages.value.push(createMessage("user", userMessage));
     await scrollToBottom();
 
-    const { data } = await axios.post("/chat", { message: userMsg });
-    botMsg.content = Array.isArray(data.response) 
-      ? data.response.map(item => `• ${item}`).join("\n")
-      : data.response || "I didn't understand that.";
-  } catch {
-    messages.value.push(createMessage("bot", "Error: Unable to respond."));
+    const response = await axios.post('/chat', { message: userMessage });
+    
+    if (response.data.status === 'success') {
+      messages.value.push(createMessage("bot", response.data.response));
+      await scrollToBottom();
+    } else {
+      messages.value.push(createMessage("bot", "Sorry, I encountered an error. Please try again."));
+    }
+  } catch (error) {
+    console.error('Request failed:', error);
+    messages.value.push(createMessage("bot", "Sorry, I encountered an error. Please try again."));
   } finally {
     isLoading.value = false;
     await scrollToBottom();
   }
 };
 
-onMounted(async() => {
-  await getChat();
+onMounted(() => {
+    getChat();
 });
-
 
 </script>
 
