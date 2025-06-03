@@ -10,15 +10,20 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-
-
+use App\Services\JobListingService;
+use App\Services\JobFilterService;
 use Inertia\Response;
+use App\Actions\UpdateJobListing;
+use App\Http\Requests\UpdateJobListingRequest;
+use App\Http\Requests\StoreJobRequest;
+use App\Actions\StoreJob;
 
 class JobListingController extends Controller
 {
-    public function index()
+    public function index(JobListingService $jobListingService)
     {
-        $jobListings = JobListing::with(['employer', 'tags'])->paginate(6);
+        $jobListings = $jobListingService->index();
+        
   
         return Inertia::render('Welcome', [
             'jobListings' => $jobListings,
@@ -26,44 +31,38 @@ class JobListingController extends Controller
     }
     
 
-public function jobs()
+
+    public function jobs(JobListingService $jobListingService){
+        $user = Auth::user();
+    
+        $jobListings = $jobListingService->getJobListingsWithRelations();
+        $tags = $jobListingService->getAllTags();
+    
+        $isEmployer = $user && $user->role && $user->role->name === "Employer";
+    
+        return Inertia::render('Jobs', [
+            'jobListings' => $jobListings,
+            'isEmployer' => $isEmployer,
+            'tags' => $tags,
+        ]);
+    }
+
+    public function filterJobs(Request $request, JobFilterService $jobFilterService)
+    {
+        $tag = $request->query('tag');
+    
+        $jobListings = $jobFilterService->filterByTag($tag);
+        dd($tag,$jobListings);
+    
+        return response()->json([
+            'jobListings' => $jobListings
+        ]);
+    }
+
+
+    public function show($id, JobListingService $jobListingService)
 {
-    $user = Auth::user();
-    $jobListings = JobListing::with(['employer', 'tags'])->latest()->paginate(6);
-    $isEmployer = $user && $user->role && $user->role->name === "Employer";
-    $tags = Tag::all();
-
-    return Inertia::render('Jobs', [
-        'jobListings' => $jobListings,
-        'isEmployer' => $isEmployer,
-        'tags' => $tags,
-    ]);
-}
-
-public function filterJobs(Request $request)
-{
-    $tag = $request->query('tag');
-
-
-
-    $jobListings = JobListing::with(['employer', 'tags'])
-        ->when($tag, function ($query) use ($tag) {
-            return $query->whereHas('tags', function ($q) use ($tag) {
-                $q->where('name', $tag);
-            });
-        })
-        ->latest()
-        ->paginate(6);
-
-    return response()->json([
-        'jobListings' => $jobListings
-    ]);
-}
-
-
-public function show($id)
-{
-    $job = JobListing::with(['employer.user', 'tags'])->findOrFail($id);
+    $job = $jobListingService->getJobById($id);
 
     $user = Auth::user();
 
@@ -110,35 +109,20 @@ public function show($id)
             'tags' => $tags,
         ]);
     }
-    public function store(Request $request)
+    public function store(StoreJobRequest $request, StoreJob $storeJob)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'salary' => 'required|numeric|min:0',
-            'employer_id' => 'required|exists:employers,id',
-            'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id', // Ensures each tag exists in the `tags` table
-        ]);
-    
-        // Create the job listing
-        $jobListing = JobListing::create([
-            'title' => $validatedData['title'],
-            'description' => $validatedData['description'],
-            'salary' => $validatedData['salary'],
-            'employer_id' => $validatedData['employer_id'],
-            'tags' => $validatedData['tags'],
-        ]);
-    
+        $validatedData = $request->validated();
+        $jobListing = $storeJob->store($validatedData);
+
         // Handle tags if provided
         if (isset($validatedData['tags'])) {
             $jobListing->tags()->sync($validatedData['tags']);
         }
-    
+
         return redirect('/Jobs')->with('success', 'Job listing created successfully!');
     }
 
-    public function edit(JobListing $jobListing)  
+    public function edit(JobListing $jobListing, JobListingService $jobListingService)  
     {
         $jobListing->load(['employer', 'tags']); // Load employer & tags
     
@@ -152,33 +136,14 @@ public function show($id)
     
     
     
-    public function update(Request $request, JobListing $jobListing)  
+    public function update(UpdateJobListingRequest $request, JobListing $jobListing, UpdateJobListing $updateJobListing)
     {
         $this->authorize('edit', $jobListing);
-        
-        $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'salary' => 'required|numeric|min:0',
-            'employer_id' => 'required|exists:employers,id',
-            'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id',
-        ]);
-        
-        // Update the job listing basic info
-        $jobListing->update([
-            'title' => $validatedData['title'],
-            'description' => $validatedData['description'],
-            'salary' => $validatedData['salary'],
-            'employer_id' => $validatedData['employer_id'],
-        ]);
-        
-        // Handle tags if provided
-        if (isset($validatedData['tags'])) {
-            $jobListing->tags()->sync($validatedData['tags']);
-        }
-        
-        return redirect("/Jobs/job/{$jobListing->id}")->with('success', 'Job listing updated successfully!');
+    
+        $updateJobListing->handle($jobListing, $request->validated());
+    
+        return redirect("/Jobs/job/{$jobListing->id}")
+            ->with('success', 'Job listing updated successfully!');
     }
     
     public function destroy(JobListing $jobListing)  
@@ -190,22 +155,12 @@ public function show($id)
         return redirect("/Jobs")->with('success', 'Job deleted successfully!');
     }
     
-   public function search(Request $request)
-{
-    $query = $request->validate([
-        'q' => 'nullable|string|max:255'
-    ])['q'] ?? '';
+   public function search(Request $request, JobListingService $jobListingService)
+   {
+    $searchResults = $jobListingService->search($request);
 
-    if (empty($query)) {
-        return response()->json(['searchResults' => []]);
-    }
-
-    $searchResults = JobListing::with('employer.user')
-        ->where('title', 'LIKE', "%{$query}%")
-        ->orWhere('description', 'LIKE', "%{$query}%")
-        ->paginate(10);
     return response()->json(['searchResults' => $searchResults]);
-}
+   }
 
 
     }
