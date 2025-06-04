@@ -53,7 +53,6 @@ class JobListingController extends Controller
         $tag = $request->query('tag');
     
         $jobListings = $jobFilterService->filterByTag($tag);
-        dd($tag,$jobListings);
     
         return response()->json([
             'jobListings' => $jobListings
