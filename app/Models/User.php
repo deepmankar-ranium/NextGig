@@ -63,4 +63,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Jobseeker::class);
     }
+    public function isEmployer(): bool
+    {
+
+    return $this->role->name === 'Employer';
+    }
+    public function isJobseeker(): bool
+    {
+        return $this->role?->name === 'Job Seeker';
+    }
+
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\JobListing;
 use App\Models\Tag;
 use App\Models\Employer;
+use App\Models\Application;
 
 class JobListingService
 {
@@ -46,6 +47,16 @@ class JobListingService
             ->paginate(10);
         return $searchResults;
     
+
+    }
+
+    public function appliedJobs($isJobSeeker,$user,$id){
+            // Fetch the application where the authenticated job seeker has applied
+    return $application = $isJobSeeker && $user->jobseeker 
+    ? Application::where('jobseeker_id', $user->jobseeker->id)
+        ->where('joblisting_id', $id)
+        ->first()
+    : null;
 
     }
 

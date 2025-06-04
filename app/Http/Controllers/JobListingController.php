@@ -18,6 +18,7 @@ use App\Http\Requests\UpdateJobListingRequest;
 use App\Http\Requests\StoreJobRequest;
 use App\Actions\StoreJob;
 
+
 class JobListingController extends Controller
 {
     public function index(JobListingService $jobListingService)
@@ -38,7 +39,7 @@ class JobListingController extends Controller
         $jobListings = $jobListingService->getJobListingsWithRelations();
         $tags = $jobListingService->getAllTags();
     
-        $isEmployer = $user && $user->role && $user->role->name === "Employer";
+        $isEmployer = $user->isEmployer();
     
         return Inertia::render('Jobs', [
             'jobListings' => $jobListings,
@@ -67,14 +68,9 @@ class JobListingController extends Controller
     $user = Auth::user();
 
     // Check if the user is a job seeker
-    $isJobSeeker = optional($user->role)->name === "Job Seeker";
+    $isJobSeeker = $user->isJobSeeker();
 
-    // Fetch the application where the authenticated job seeker has applied
-    $application = $isJobSeeker && $user->jobseeker 
-        ? Application::where('jobseeker_id', $user->jobseeker->id)
-            ->where('joblisting_id', $id)
-            ->first()
-        : null;
+    $application = $jobListingService->appliedJobs($isJobSeeker, $user,$id);
 
     // Get application status safely using model constants
     $applicationStatus = $application ? $application->application_status : null;
@@ -96,13 +92,14 @@ class JobListingController extends Controller
     {
         $user = Auth::user();
     
-        if ($user->role->name !== 'Employer') {
+        if (!$user || !$user->isEmployer()) {
+
             abort(403, 'Unauthorized action.');
         }
     
         $employer = $user->employer; 
         $tags = Tag::all();
-      
+       
     
         return Inertia::render('Jobs/Create', [
             'employer' => $employer,
