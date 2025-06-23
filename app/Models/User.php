@@ -65,10 +65,10 @@ class User extends Authenticatable
     }
     public function isEmployer(): bool
     {
-
-    return $this->role->name === 'Employer';
+        return $this->role?->name === 'Employer';
     }
-    public function isJobseeker(): bool
+    
+    public function isJobSeeker(): bool
     {
         return $this->role?->name === 'Job Seeker';
     }

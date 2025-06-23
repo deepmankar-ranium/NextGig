@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateTags;
 use App\Models\Application;
 use App\Models\JobListing;
 use App\Models\Tag;
@@ -17,6 +18,8 @@ use App\Actions\UpdateJobListing;
 use App\Http\Requests\UpdateJobListingRequest;
 use App\Http\Requests\StoreJobRequest;
 use App\Actions\StoreJob;
+use App\Services\TagService;
+use App\Actions\DeleteJob;
 
 
 class JobListingController extends Controller
@@ -87,17 +90,20 @@ class JobListingController extends Controller
 
 
 
-    public function create()
+    public function create( TagService $tagService)
     {
         $user = Auth::user();
+        $isEmployer = $user->isEmployer();
     
-        if (!$user || !$user->isEmployer()) {
+        if (!$isEmployer) {
 
             abort(403, 'Unauthorized action.');
         }
     
         $employer = $user->employer; 
-        $tags = Tag::all();
+        $tags = $tagService->index(); // Fetch all tags for checkboxes
+
+
        
     
         return Inertia::render('Jobs/Create', [
@@ -120,7 +126,7 @@ class JobListingController extends Controller
 
     public function edit(JobListing $jobListing, JobListingService $jobListingService)  
     {
-        $jobListing->load(['employer', 'tags']); // Load employer & tags
+        $jobListingService->Loadrelations($jobListing);
     
         $this->authorize('edit', $jobListing);
 
@@ -142,13 +148,17 @@ class JobListingController extends Controller
             ->with('success', 'Job listing updated successfully!');
     }
     
-    public function destroy(JobListing $jobListing)  
+    public function destroy(JobListing $jobListing, DeleteJob $deleteJob)
     {
-        $this->authorize('edit', $jobListing); 
-        
-        $jobListing->delete();
-        
-        return redirect("/Jobs")->with('success', 'Job deleted successfully!');
+        $this->authorize('edit', $jobListing);
+
+        $success = $deleteJob->handle($jobListing);
+
+        if ($success) {
+            return redirect("/Jobs")->with('success', 'Job deleted successfully!');
+        } else {
+            return redirect("/Jobs")->with('error', 'Failed to delete job.');
+        }
     }
     
    public function search(Request $request, JobListingService $jobListingService)
