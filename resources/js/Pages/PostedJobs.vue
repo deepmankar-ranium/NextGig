@@ -3,12 +3,11 @@
       <div class="py-12 bg-gray-50">
         <div class="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8">
           
-          <div v-if="isEmployer" class="mt-4 mb-6 ">
+          <div  class="mt-4 mb-6 ">
             <p class="text-3xl text-gray-900 font-semibold">Here are your job postings:</p>
             <div class="flex items-center justify-between mt-10">
       
             <Link
-            v-if="isEmployer"
             href="/tags"
             class="px-5 py-2 text-sm font-medium border rounded-lg shadow-md transition-all
                    bg-white text-gray-700 hover:bg-gray-100 border-gray-300">
@@ -49,14 +48,10 @@
 import { Link } from '@inertiajs/vue3';
   const props = defineProps({
     jobListings: Object,
-    isEmployer: Boolean,
+
   });
   
-  const goToPage = (pageNumber) => {
-    // Update the page in your API call to reflect the pagination changes
-    // This could either be done using Vue Router, or by updating an API call
-    console.log(`Navigating to page ${pageNumber}`);
-  };
+
   </script>
   
   <style scoped>
