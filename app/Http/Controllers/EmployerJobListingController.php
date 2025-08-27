@@ -5,33 +5,26 @@ use App\Models\JobListing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Services\PostedJobService;
+use App\Models\User;
 
 class EmployerJobListingController extends Controller
 {
-    public function show()
+    public function show(PostedJobService $postedJobService)
     {
 
         $user = Auth::user();
 
- 
-        if (!$user || !$user->role || $user->role->name !== "Employer") {
+        $isEmployer = $user->isEmployer();
+
+        if (!$isEmployer) {
             abort(403, 'Unauthorized action.');
         }
 
-       
-        $employerId = $user->employer->id;  
+        $jobListings = $postedJobService->getPostedJob($user->employer->id);
 
-       
-
-        $jobListings = JobListing::with(['employer'])
-            ->where('employer_id', $employerId)  
-            ->latest()
-            ->paginate(6);
-
-    
         return Inertia::render('PostedJobs', [
-            'jobListings' => $jobListings,
-            'isEmployer' => true, 
+            'jobListings' => $jobListings
         ]);
     }
 }
