@@ -23,6 +23,9 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 # Enable apache modules
 RUN a2enmod rewrite
 
+# Update the DocumentRoot in the default Apache site configuration
+RUN sed -i 's!/var/www/html!/var/w ww/html/public!g' /etc/apache2/sites-available/000-default.conf
+
 # Set working directory
 WORKDIR /var/www/html
 
