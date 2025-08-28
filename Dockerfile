@@ -23,8 +23,11 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 # Enable apache modules
 RUN a2enmod rewrite
 
-# Update the DocumentRoot in the default Apache site configuration
-RUN sed -i 's!/var/www/html!/var/w ww/html/public!g' /etc/apache2/sites-available/000-default.conf
+# Update the DocumentRoot in the default Apache site configuration - FIXED THE TYPO
+RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+
+# Add proper directory permissions for Laravel
+RUN echo '<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>' >> /etc/apache2/sites-available/000-default.conf
 
 # Set working directory
 WORKDIR /var/www/html
@@ -37,7 +40,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-autoloader --no-scripts --no-dev --prefer-dist
 
 # Copy package files and install dependencies
-COPY package.json package-lock.json .
+COPY package.json package-lock.json ./
 RUN npm install
 
 # Copy application files
