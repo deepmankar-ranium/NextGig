@@ -3,9 +3,9 @@
     <div class="p-6">
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-lg font-semibold text-gray-900">{{ job.title }}</h2>
-      
+
       </div>
-      
+
       <p class="text-gray-600 text-sm mb-4">{{ truncate(job.description) }}</p>
 
       <div class="space-y-2">
@@ -48,10 +48,10 @@ import { BriefcaseIcon, MapPinIcon, CurrencyDollarIcon, BuildingOfficeIcon } fro
 
 const formatSalary = (salary) => {
   if (!salary) return 'Salary not specified';
-  return new Intl.NumberFormat('en-US', { 
-    style: 'currency', 
-    currency: 'USD', 
-    maximumFractionDigits: 0 
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
   }).format(salary);
 };
 

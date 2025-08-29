@@ -30,18 +30,18 @@ Route::middleware(['auth'])->group(function () {
 
     // View all applications
     Route::get('/view-applications', [ViewJobApplications::class, 'show'])
-        ->middleware('auth'); 
-    
+        ->middleware('auth');
+
     // Apply for a job
     Route::post('/apply/{jobListing}', [ViewJobApplications::class, 'apply'])
         ->middleware('auth');
-    
+
     // Update application status
     Route::put('/applications/{application}', [ViewJobApplications::class, 'update'])
         ->middleware('auth');
-    
 
-   
+
+
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -99,7 +99,7 @@ Route::get('/profile', [ProfileController::class,'profile'])->middleware(['auth'
 // - Remember previous messages in the conversation
 // - Keep responses focused and on-topic";
 // - Always remember the user's name: {USERNAME}
-// - Maintain conversation context 
+// - Maintain conversation context
 // - Provide concise, relevant responses
 // - Reference the user by their name when appropriate
 // - Remember previous messages in the conversation;

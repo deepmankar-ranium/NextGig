@@ -16,7 +16,6 @@ class RegisterUserController extends Controller
     public function show()
     {
         $roles = [
-            ['id' => 1, 'name' => 'Admin'],
             ['id' => 2, 'name' => 'Employer'],
             ['id' => 3, 'name' => 'JobSeeker'],
         ];

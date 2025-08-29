@@ -1,17 +1,19 @@
 <template>
   <AppLayout>
-    <div class="min-h-screen bg-gray-900 py-5">
-      <div class="max-w-3xl mx-auto h-screen flex flex-col relative bg-white" 
-           :class="{ 'blur-xs pointer-events-none': isModalOpen }">
+    <div class="bg-gray-50 py-8">
+      <div class="max-w-4xl mx-auto h-[calc(100vh-10rem)] flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200"
+           :class="{ 'blur-sm pointer-events-none': isModalOpen }">
         <!-- Header -->
-        <header class="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
+        <header class="sticky top-0 z-10 bg-white/70 backdrop-blur-lg rounded-t-2xl border-b border-gray-200">
           <div class="flex justify-between items-center px-6 py-4">
-            <div class="flex items-center gap-3">
-              <MessageCircle class="w-6 h-6 text-blue-500" />
+            <div class="flex items-center gap-4">
+              <div class="p-2 bg-indigo-100 rounded-full">
+                <MessageCircle class="w-6 h-6 text-indigo-600" />
+              </div>
               <h2 class="text-xl font-bold text-gray-800">Chat Assistant</h2>
             </div>
             <button @click="showClearChatModal"
-                    class="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg">
+                    class="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors">
               <Trash2 class="w-4 h-4" />
               <span class="hidden sm:inline">Clear Chat</span>
             </button>
@@ -19,40 +21,48 @@
         </header>
 
         <!-- Chat Messages -->
-        <div ref="chatBox" class="flex-1 overflow-y-auto px-4 py-6 pb-20 space-y-4 scroll-smooth min-h-80" >
-          <div v-for="(msg, index) in messages" 
+        <div ref="chatBox" class="flex-1 overflow-y-auto px-6 py-4 space-y-6 scroll-smooth">
+          <div v-for="(msg, index) in messages"
                :key="index"
                :class="['transition-all duration-300 ease-out animate-message']">
-            <div :class="msg.role === 'user' ? 'flex flex-col items-end' : 'flex flex-col items-start'">
-              <div :class="[
-                'max-w-[80%] p-3 rounded-2xl shadow-sm',
-                msg.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
-              ]">
-                <p class="whitespace-pre-line">{{ msg.content }}</p>
+            <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+              <div class="flex gap-3 max-w-[85%]">
+                <div v-if="msg.role === 'bot'" class="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <MessageCircle class="w-5 h-5 text-gray-500" />
+                </div>
+                <div :class="[
+                  'p-4 rounded-2xl shadow-sm',
+                  msg.role === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                ]">
+                  <p class="whitespace-pre-wrap">{{ msg.content }}</p>
+                </div>
               </div>
-              <time class="text-xs text-gray-500 mt-1 px-2">{{ msg.time }}</time>
             </div>
+             <p :class="[
+                'text-xs text-gray-400 mt-2',
+                msg.role === 'user' ? 'text-right' : 'text-left ml-11'
+              ]">{{ msg.time }}</p>
           </div>
         </div>
 
         <!-- Input Area -->
-        <footer class="sticky bottom-0 z-10 bg-white/80 backdrop-blur-md border-t border-gray-100 p-4">
-          <div class="flex items-center gap-3">
-            <input v-model="message" 
-                   @keyup.enter="sendMessage" 
+        <footer class="sticky bottom-0 z-10 bg-white/70 backdrop-blur-lg rounded-b-2xl border-t border-gray-200 p-4">
+          <div class="flex items-center gap-4">
+            <input v-model="message"
+                   @keyup.enter="sendMessage"
                    :disabled="isLoading"
                    placeholder="Type your message..."
-                   class="flex-1 p-3 bg-white border rounded-lg focus:ring-2 focus:ring-blue-500" />
-            <button @click="sendMessage" 
+                   class="flex-1 p-4 bg-gray-100 border-transparent rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            <button @click="sendMessage"
                     :disabled="isLoading || !message.trim()"
-                    class="p-3 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg">
-              <Loader2 v-if="isLoading" class="w-5 h-5 animate-spin" />
-              <Send v-else class="w-5 h-5" />
+                    class="p-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+              <Loader2 v-if="isLoading" class="w-6 h-6 animate-spin" />
+              <Send v-else class="w-6 h-6" />
             </button>
           </div>
         </footer>
       </div>
-      
+
       <ConfirmModal
        :isOpen="isModalOpen" @update:isOpen="val => isModalOpen = val"
         @confirm="handleConfirm"
@@ -80,10 +90,10 @@ const isModalOpen = ref(false);
 const createMessage = (role, content) => ({
   role,
   content,
-  time: new Date().toLocaleTimeString("en-US", { 
-    hour: "numeric", 
-    minute: "2-digit", 
-    hour12: true 
+  time: new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
   }),
   animate: true
 });
@@ -122,14 +132,14 @@ const clearChat = async () => {
 const getChat = async () => {
   try {
     const { data } = await axios.get('/chat-history');
-    
+
     messages.value = data.history.map(item => ({
         role: item.sender === 'user' ? 'user' : 'bot',
         content: item.message,
-        time: new Date(item.created_at).toLocaleTimeString("en-US", { 
-            hour: "numeric", 
-            minute: "2-digit", 
-            hour12: true 
+        time: new Date(item.created_at).toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true
         })
     }));
 
@@ -150,10 +160,10 @@ const createIntroMessage = async () => {
       messages.value.push({
         role: 'bot',
         content: data.message,
-        time: new Date().toLocaleTimeString("en-US", { 
-          hour: "numeric", 
-          minute: "2-digit", 
-          hour12: true 
+        time: new Date().toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
         })
       });
     }
@@ -170,12 +180,12 @@ const sendMessage = async () => {
 
   try {
     isLoading.value = true;
-    
+
     messages.value.push(createMessage("user", userMessage));
     await scrollToBottom();
 
     const response = await axios.post('/chat', { message: userMessage });
-    
+
     if (response.data.status === 'success') {
       messages.value.push(createMessage("bot", response.data.response));
       await scrollToBottom();
@@ -199,13 +209,13 @@ onMounted(() => {
 
 <style scoped>
 .animate-message {
-  animation: slideIn 0.3s ease-out;
+  animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -215,7 +225,7 @@ onMounted(() => {
 
 /* Custom Scrollbar */
 div::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 div::-webkit-scrollbar-track {
@@ -223,15 +233,14 @@ div::-webkit-scrollbar-track {
 }
 
 div::-webkit-scrollbar-thumb {
-  background-color: #CBD5E1;
+  background-color: #D1D5DB;
   border-radius: 20px;
 }
 
 div::-webkit-scrollbar-thumb:hover {
-  background-color: #94A3B8;
+  background-color: #9CA3AF;
 }
 
-/* Prevent overscroll behavior */
 .scroll-smooth {
   overscroll-behavior: contain;
 }
