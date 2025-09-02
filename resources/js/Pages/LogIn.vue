@@ -1,8 +1,7 @@
 <script setup>
 import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, Link } from '@inertiajs/vue3';
 import { EyeIcon, EyeOffIcon, MailIcon, LockIcon } from 'lucide-vue-next';
-import { router, Link } from '@inertiajs/vue3';
 
 const form = useForm({
   email: '',
@@ -18,25 +17,35 @@ const togglePasswordVisibility = () => {
 
 const submit = () => {
   form.post('/login', {
-    onSuccess: () => {
-      form.reset('password');
-    },
-    preserveScroll: true,
+    onFinish: () => form.reset('password'),
   });
 };
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-col items-center justify-center bg-gray-900">
-      <div class="w-full sm:max-w-md px-8 py-10 bg-white shadow-lg rounded-lg">
-        <h2 class="text-3xl font-extrabold text-center mb-8 text-gray-900">Welcome Back</h2>
-        
+  <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+      <h2 class="text-center text-3xl font-bold text-indigo-600">
+        NextGig
+      </h2>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        Sign in to your account
+      </h2>
+      <p class="mt-2 text-center text-sm text-gray-600">
+        Or
+        <Link href="/register" class="font-medium text-indigo-600 hover:text-indigo-500">
+          create a new account
+        </Link>
+      </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+      <div class="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10">
         <form @submit.prevent="submit" class="space-y-6">
-          <div class="relative">
-            <label class="block text-sm font-medium text-gray-900 dark:text-gray-700 mb-1" for="email">
-              Email
-            </label>
-            <div class="mt-1 relative rounded-md shadow-sm">
+          <!-- Email -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+            <div class="mt-1 relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MailIcon class="h-5 w-5 text-gray-400" />
               </div>
@@ -44,19 +53,20 @@ const submit = () => {
                 v-model="form.email"
                 id="email"
                 type="email"
-                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                autocomplete="email"
+                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 :class="{ 'border-red-500': form.errors.email }"
                 required
-              >
+                placeholder="you@example.com"
+              />
             </div>
             <div v-if="form.errors.email" class="mt-1 text-red-600 text-sm">{{ form.errors.email }}</div>
           </div>
 
-          <div class="relative">
-            <label class="block text-sm font-medium text-gray-900 dark:text-gray-700 mb-1" for="password">
-              Password
-            </label>
-            <div class="mt-1 relative rounded-md shadow-sm">
+          <!-- Password -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <div class="mt-1 relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <LockIcon class="h-5 w-5 text-gray-400" />
               </div>
@@ -64,14 +74,16 @@ const submit = () => {
                 v-model="form.password"
                 id="password"
                 :type="showPassword ? 'text' : 'password'"
-                class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                autocomplete="current-password"
+                class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 :class="{ 'border-red-500': form.errors.password }"
                 required
-              >
+                placeholder="••••••••"
+              />
               <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <button type="button" @click="togglePasswordVisibility" class="focus:outline-none">
-                  <EyeIcon v-if="!showPassword" class="h-5 w-5 text-gray-400" />
-                  <EyeOffIcon v-else class="h-5 w-5 text-gray-400" />
+                <button type="button" @click="togglePasswordVisibility" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                  <EyeIcon v-if="!showPassword" class="h-5 w-5" />
+                  <EyeOffIcon v-else class="h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -79,79 +91,46 @@ const submit = () => {
           </div>
 
           <div class="flex items-center justify-between">
-            <label class="flex items-center">
-              <input
-                v-model="form.remember"
-                type="checkbox"
-                class="rounded border-gray-300 text-gray-600 shadow-sm focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-700"
-              >
-              <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
-            </label>
-            <a href="/forgot-password" class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300">Forgot password?</a>
+            <div class="flex items-center">
+              <input v-model="form.remember" id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+              <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
+            </div>
+            <div class="text-sm">
+              <a href="/forgot-password" class="font-medium text-indigo-600 hover:text-indigo-500">Forgot your password?</a>
+            </div>
           </div>
-          <div class="max-w-md mx-auto space-y-6">
-            <!-- Main Login Button Section -->
-            <div class="flex justify-center">
-              <button
-                :disabled="isProcessing"
-                type="submit"
-                @click="handleLogin"
-                class="w-full relative inline-flex items-center justify-center border bg-gray-900 text-white 
-                       border-white px-6 py-3 rounded-lg shadow-md font-medium 
-                       hover:bg-white hover:text-gray-600 
-                       disabled:opacity-50 disabled:cursor-not-allowed
-                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
-                       transition-all duration-200"
-              >
-                <template v-if="!isProcessing">
-                  <span>Log in</span>
-                </template>
-                <template v-else>
-                  <svg 
-                    class="animate-spin h-5 w-5 mr-3" 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24"
-                  >
-                    <circle 
-                      class="opacity-25" 
-                      cx="12" 
-                      cy="12" 
-                      r="10" 
-                      stroke="currentColor" 
-                      stroke-width="4"
-                    />
-                    <path 
-                      class="opacity-75" 
-                      fill="currentColor" 
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  <span>Logging in...</span>
-                </template>
-              </button>
+
+          <!-- Submit Button -->
+          <div>
+            <button
+              type="submit"
+              :disabled="form.processing"
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+            >
+              Sign In
+            </button>
+          </div>
+        </form>
+
+        <!-- Divider -->
+        <div class="mt-6">
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
             </div>
-        
-            <!-- Divider -->
-            <div class="relative">
-              <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-gray-300"></div>
-              </div>
-              <div class="relative flex justify-center text-sm">
-                <span class="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-gray-500">Or continue with</span>
             </div>
-        
-            <!-- Google Login Button -->
-            <div class="flex justify-center">
-              <a
-                href="/auth/google"
-                class="w-full flex items-center justify-center px-6 py-3 border border-gray-300 
-                       rounded-lg shadow-sm bg-white text-gray-700 font-medium
-                       hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
-                       transition-all duration-200"
-              >
-                <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48">
+          </div>
+
+          <!-- Social Login -->
+          <div class="mt-6">
+            <a
+              href="/auth/google"
+              class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              <span class="sr-only">Sign in with Google</span>
+               <svg class="w-5 h-5" viewBox="0 0 48 48">
                   <path
                     fill="#4285F4"
                     d="M24 9.5c3.4 0 6.5 1.2 9 3.6l6.7-6.7C34.8 2 29.7 0 24 0 14.8 0 6.9 5.6 3 13.8l7.9 6.2C13.1 13.4 18.1 9.5 24 9.5z"
@@ -169,54 +148,27 @@ const submit = () => {
                     d="M24 48c6.5 0 12-2.2 16-5.8l-7.3-5.7c-2.2 1.5-5 2.4-8.7 2.4-5.9 0-10.9-4-12.8-9.4l-8.1 6.3C7 42.4 14.8 48 24 48z"
                   />
                 </svg>
-                <span>Continue with Google</span>
-              </a>
-            </div>
-        
-            <!-- Sign Up Link Section -->
-            <div class="text-sm text-center">
-              <span class="text-gray-600 dark:text-gray-800">
-                Don't have an account?
-              </span>
-              <a 
-                href="/register" 
-                class="ml-1 font-medium text-blue-600 hover:text-blue-500 
-                       focus:outline-none focus:underline
-                       transition duration-150 ease-in-out"
-              >
-                Sign up
-              </a>
-            </div>
+            </a>
           </div>
-
-          
-        </form>
+        </div>
       </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
 @keyframes fadeIn {
-  from { opacity: 0; transform: trangrayY(-10px); }
-  to { opacity: 1; transform: trangrayY(0); }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 form > div {
   animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
 }
 
 form > div:nth-child(1) { animation-delay: 0.1s; }
 form > div:nth-child(2) { animation-delay: 0.2s; }
 form > div:nth-child(3) { animation-delay: 0.3s; }
 form > div:nth-child(4) { animation-delay: 0.4s; }
-form > div:nth-child(5) { animation-delay: 0.5s; }
 </style>
-
-
-
-
-
-<!-- <Link href="/" class="text-white cursor-pointer">Home</Link>
-<Link href="/Jobs" class="ml-4 text-white cursor-pointer">Jobs</Link>
-<Link href="/about" class="ml-4 text-white cursor-pointer">About</Link>
-<Link href="/contact" class="ml-4 text-white cursor-pointer">Contact</Link> -->

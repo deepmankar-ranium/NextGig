@@ -1,129 +1,8 @@
-<template>
-  <AppLayout>
-    <div class="max-w-2xl mx-auto p-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-6">Add Job</h1>
-
-      <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="p-6">
-          <form @submit.prevent="submit" class="space-y-6">
-            <!-- Job Title -->
-            <div class="form-group">
-              <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
-                Job Title:
-              </label>
-              <input 
-                type="text" v-model="form.title" id="title"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" 
-              />
-              <p v-if="form.errors?.title" class="text-red-500 text-sm mt-1">{{ form.errors.title }}</p>
-            </div>
-
-            <!-- Job Description -->
-            <div class="form-group">
-              <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
-                Job Description:
-              </label>
-              <textarea 
-                v-model="form.description" id="description" rows="4"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500">
-              </textarea>
-              <p v-if="form.errors?.description" class="text-red-500 text-sm mt-1">{{ form.errors.description }}</p>
-            </div>
-
-            <!-- Employer Name (Read-Only) -->
-            <div class="form-group">
-              <label for="employer_name" class="block text-sm font-medium text-gray-700 mb-1">
-                Employer:
-              </label>
-              <input 
-                type="text" v-model="form.employer_name" id="employer_name"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" 
-                readonly 
-              />
-              <p v-if="form.errors?.employer_name" class="text-red-500 text-sm mt-1">{{ form.errors.employer_name }}</p>
-            </div>
-
-            <!-- Salary -->
-            <div class="form-group">
-              <label for="salary" class="block text-sm font-medium text-gray-700 mb-1">
-                Salary:
-              </label>
-              <input 
-                type="number" v-model="form.salary" id="salary"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" 
-              />
-              <p v-if="form.errors?.salary" class="text-red-500 text-sm mt-1">{{ form.errors.salary }}</p>
-            </div>
-
-            <!-- Tags Selection -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Select Tags:</label>
-
-              <div class="flex flex-wrap gap-4 mt-4">
-                <div class="flex flex-wrap gap-3">
-                  <div v-for="tag in tagsList" :key="tag.id" 
-                    class="flex items-center px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm hover:border-blue-400 transition-colors">
-                    <input 
-                      type="checkbox"
-                      :id="'tag-' + tag.id"
-                      :value="tag.id"
-                      v-model="form.tags"
-                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      @change="saveFormToStorage"
-                    />
-                    <label :for="'tag-' + tag.id" class="ml-2 text-gray-700 cursor-pointer select-none">
-                      {{ tag.name }}
-                    </label>
-                  </div>
-                </div>
-
-                <!-- No Tags Available -->
-                <div v-if="tagsList.length === 0" 
-                  class="w-full text-center py-4 text-gray-500 bg-white rounded-lg border border-gray-200">
-                  <span class="block mb-1">No tags available</span>
-                  <span class="text-sm">Create some tags in the Tag Manager</span>
-                </div>
-
-                <!-- Link to Tag Manager -->
-                <div class="w-full">
-                  <p class="text-gray-600 mb-4">
-                    Want to add custom tags? Visit the 
-                    <Link href="/tags" class="text-blue-600 hover:text-blue-800 underline">
-                      Tag Manager
-                    </Link>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="flex space-x-4">
-              <button 
-                type="submit" 
-                class="border bg-gray-900 text-white border-white px-6 py-3 rounded-lg shadow-md font-medium hover:bg-white hover:text-gray-600 transition"
-                :disabled="form.processing">
-                {{ form.processing ? 'Creating...' : 'Create Job Listing' }}
-              </button>
-              
-              <button 
-                type="button" 
-                @click="clearForm"
-                class="border border-gray-300 bg-white text-gray-700 px-6 py-3 rounded-lg shadow-md font-medium hover:bg-gray-50 transition">
-                Clear Form
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </AppLayout>
-</template>
-
 <script setup>
-import { computed, watch, onMounted, ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { computed, watch, onMounted } from 'vue';
+import { useForm, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layout/AppLayout.vue';
-import { Link } from '@inertiajs/vue3';
+import { ChevronLeftIcon } from 'lucide-vue-next';
 
 // Define Props
 const props = defineProps({
@@ -136,6 +15,10 @@ const props = defineProps({
     required: true
   }
 });
+
+const handleBack = () => {
+  window.history.back();
+};
 
 // Compute Employer Name Safely
 const employerName = computed(() => props.employer?.name || '');
@@ -229,3 +112,125 @@ onMounted(() => {
   }
 });
 </script>
+
+<template>
+  <AppLayout>
+    <div class="bg-gray-50 min-h-screen">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- Page Header -->
+        <div class="pb-8 border-b border-gray-200">
+          <button @click="handleBack" class="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
+            <ChevronLeftIcon class="h-5 w-5 mr-1" />
+            Back
+          </button>
+          <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+            Create a New Job Posting
+          </h1>
+          <p class="mt-2 text-lg text-gray-600">
+            Fill out the details below to find your next great hire.
+          </p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="mt-8">
+          <form @submit.prevent="submit" class="space-y-8">
+            <div class="bg-white p-8 rounded-xl shadow-md">
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-6">
+                        <label for="title" class="block text-sm font-medium text-gray-700">Job Title</label>
+                        <input 
+                            type="text" v-model="form.title" id="title"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                        <p v-if="form.errors?.title" class="text-red-500 text-sm mt-1">{{ form.errors.title }}</p>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="employer_name" class="block text-sm font-medium text-gray-700">Employer</label>
+                        <input 
+                            type="text" v-model="form.employer_name" id="employer_name"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm bg-gray-100 cursor-not-allowed"
+                            readonly 
+                        />
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="salary" class="block text-sm font-medium text-gray-700">Salary (per year)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input 
+                                type="number" v-model="form.salary" id="salary"
+                                class="block w-full pl-7 pr-12 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="0.00"
+                            />
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">USD</span>
+                            </div>
+                        </div>
+                        <p v-if="form.errors?.salary" class="text-red-500 text-sm mt-1">{{ form.errors.salary }}</p>
+                    </div>
+
+                    <div class="sm:col-span-6">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Job Description</label>
+                        <textarea 
+                            v-model="form.description" id="description" rows="6"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </textarea>
+                        <p v-if="form.errors?.description" class="text-red-500 text-sm mt-1">{{ form.errors.description }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-md">
+                <h3 class="text-lg font-medium text-gray-900">Job Tags</h3>
+                <p class="mt-1 text-sm text-gray-500">Select tags that best describe this role. You can manage your tags in the <Link href="/tags" class="text-indigo-600 hover:text-indigo-500 underline">Tag Manager</Link>.</p>
+                
+                <div v-if="tagsList.length > 0" class="mt-4 flex flex-wrap gap-3">
+                    <div v-for="tag in tagsList" :key="tag.id">
+                        <input 
+                          type="checkbox"
+                          :id="'tag-' + tag.id"
+                          :value="tag.id"
+                          v-model="form.tags"
+                          class="hidden"
+                          @change="saveFormToStorage"
+                        />
+                        <label 
+                          :for="'tag-' + tag.id" 
+                          class="cursor-pointer px-3 py-1.5 text-sm rounded-full border transition-colors"
+                          :class="form.tags.includes(tag.id) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
+                        >
+                          {{ tag.name }}
+                        </label>
+                    </div>
+                </div>
+                <div v-else class="mt-4 text-center py-6 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
+                  <p>No tags available.</p>
+                  <p class="text-sm">Visit the <Link href="/tags" class="text-indigo-600 hover:text-indigo-500 font-medium">Tag Manager</Link> to create some.</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-4">
+              <button 
+                type="button" 
+                @click="clearForm"
+                class="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 text-sm font-medium">
+                Clear Form
+              </button>
+              <button 
+                type="submit" 
+                class="inline-flex justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                :disabled="form.processing">
+                {{ form.processing ? 'Creating...' : 'Create Job Listing' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </AppLayout>
+</template>
