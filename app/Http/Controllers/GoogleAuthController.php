@@ -19,12 +19,11 @@ class GoogleAuthController extends Controller
 
     // Step 2: Handle Google OAuth Callback
     public function handleGoogleCallback()
-    { 
+    {
         try {
             $googleUser = Socialite::driver('google')->user();
 
             $role_id = session('user_role'); // Retrieve role_id from session
-    
             // Check if user already exists in our database
             $user = User::where('email', $googleUser->getEmail())->first();
 
@@ -63,7 +62,7 @@ class GoogleAuthController extends Controller
             // Log in the user
             Auth::login($user);
 
-            return redirect('/Home'); 
+            return redirect('/Home');
         } catch (\Exception $e) {
             return redirect('/register')->with('error', 'Something went wrong. Please try again.');
         }

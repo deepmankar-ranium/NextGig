@@ -1,7 +1,12 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useForm, Link } from '@inertiajs/vue3';
 import { EyeIcon, EyeOffIcon, MailIcon, LockIcon } from 'lucide-vue-next';
+import { useToast } from 'vue-toastification';
+
+const props = defineProps({
+  status: String,
+});
 
 const form = useForm({
   email: '',
@@ -10,6 +15,7 @@ const form = useForm({
 });
 
 const showPassword = ref(false);
+const toast = useToast();
 
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value;
@@ -20,6 +26,18 @@ const submit = () => {
     onFinish: () => form.reset('password'),
   });
 };
+
+onMounted(() => {
+  if (props.status) {
+    toast.success(props.status);
+  }
+});
+
+watch(() => props.status, (newStatus) => {
+  if (newStatus) {
+    toast.success(newStatus);
+  }
+});
 </script>
 
 <template>
