@@ -13,25 +13,21 @@ class EmployerJobListingController extends Controller
 
         $user = Auth::user();
 
- 
+
         if (!$user || !$user->role || $user->role->name !== "Employer") {
             abort(403, 'Unauthorized action.');
         }
 
-       
-        $employerId = $user->employer->id;  
-
-       
+        $employerId = $user->employer->id;
 
         $jobListings = JobListing::with(['employer'])
-            ->where('employer_id', $employerId)  
+            ->where('employer_id', $employerId)
             ->latest()
             ->paginate(6);
 
-    
         return Inertia::render('PostedJobs', [
             'jobListings' => $jobListings,
-            'isEmployer' => true, 
+            'isEmployer' => true,
         ]);
     }
 }

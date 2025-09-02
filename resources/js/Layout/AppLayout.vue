@@ -34,12 +34,12 @@ const currentYear = new Date().getFullYear();
           </div>
 
           <!-- Desktop Navigation -->
-          <nav class="hidden md:flex items-center space-x-1">
+          <nav class="hidden md:flex items-center space-x-0.5 xl:space-x-1 2xl:space-x-1.5">
             <Link
               v-for="item in navItems"
               :key="item.name"
               :href="item.href"
-              class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors flex items-center"
               :class="{ 'bg-gray-100 text-indigo-600': $page.url.startsWith(item.href) }"
             >
               <component :is="item.icon" class="h-5 w-5 inline-block mr-1" />

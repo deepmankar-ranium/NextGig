@@ -14,7 +14,7 @@ class AppliedJobsController extends Controller
         $jobSeekerId = $user->jobseeker->id;
 
         $appliedJobs = Application::where('jobseeker_id', $jobSeekerId)
-            ->with('jobListing') 
+            ->with('jobListing')
             ->get();
 
             return Inertia::render('AppliedJobs', [

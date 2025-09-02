@@ -8,9 +8,11 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ViewJobApplications;
 use App\Http\Controllers\EmployerJobListingController;
 use App\Http\Controllers\AppliedJobsController;
+use App\Http\Controllers\ForgetPassword;
 use App\Http\Controllers\GoogleAuthController;
 use Inertia\Inertia;
 use App\Http\Controllers\GPTController;
+use App\Http\Controllers\sendResetPasswordLink;
 use App\Http\Controllers\TagController;
 
 
@@ -39,8 +41,6 @@ Route::middleware(['auth'])->group(function () {
     // Update application status
     Route::put('/applications/{application}', [ViewJobApplications::class, 'update'])
         ->middleware('auth');
-
-
 
 });
 
@@ -72,6 +72,11 @@ Route::post('/login', [RegisterUserController::class, 'authenticate'])->name('lo
 Route::post('/logout', [RegisterUserController::class, 'logout'])->name('logout');
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+Route::get('/forgot-password',[ForgetPassword::class,'show']);
+Route::post('/send-reset-link',[ForgetPassword::class,'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [ForgetPassword::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [ForgetPassword::class, 'reset'])->name('password.update');
+
 
 // Static Pages
 Route::get('/about', function () {
