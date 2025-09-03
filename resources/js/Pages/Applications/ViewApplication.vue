@@ -227,7 +227,7 @@ import { router } from '@inertiajs/vue3'
 import VueMultiselect from 'vue-multiselect'
 import AppLayout from '@/Layout/AppLayout.vue'
 import 'vue-multiselect/dist/vue-multiselect.css'
-import { Check, X, FileText, Search } from 'lucide-vue-next'
+import { Check, X, FileText, Search, ChevronLeftIcon } from 'lucide-vue-next'
 import { onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
@@ -317,6 +317,10 @@ const handleEscKey = (event) => {
     if (isPopupVisible.value) closePopup()
     if (isConfirmPopupVisible.value) closeConfirmPopup()
   }
+}
+
+const handleBack = () => {
+  router.back()
 }
 
 onMounted(() => {

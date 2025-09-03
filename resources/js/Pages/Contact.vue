@@ -1,10 +1,10 @@
 <script setup>
-import AppLayout from '../Layout/AppLayout.vue';
 import PageContainer from '@/Components/PageContainer.vue';
+import Navbar from '@/Layout/Navbar.vue';
 </script>
 
 <template>
-  <AppLayout>
+    <navbar />
     <div class="bg-gray-50">
       <PageContainer>
         <!-- Header -->
@@ -20,14 +20,14 @@ import PageContainer from '@/Components/PageContainer.vue';
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto pb-24 px-4 sm:px-6 lg:px-8">
           <div class="grid md:grid-cols-2 gap-16 items-start">
-            
+
             <!-- Contact Information -->
             <div class="bg-white p-8 rounded-xl shadow-md">
               <h3 class="text-2xl font-bold text-gray-900 mb-6">Contact Information</h3>
               <p class="text-gray-600 mb-8">
                 Fill up the form and our team will get back to you within 24 hours. Or, reach out to us directly through one of the channels below.
               </p>
-              
+
               <div class="space-y-6">
                 <div class="flex items-start space-x-4">
                   <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 text-indigo-600">
@@ -108,5 +108,5 @@ import PageContainer from '@/Components/PageContainer.vue';
         </div>
       </PageContainer>
     </div>
-  </AppLayout>
+
 </template>
