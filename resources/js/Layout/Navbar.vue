@@ -11,7 +11,7 @@ import { Link } from '@inertiajs/vue3';
           </div>
           <div class="hidden md:flex items-center space-x-8">
             <Link href="/Jobs" class="text-gray-600 hover:text-indigo-600 transition-colors duration-300">Browse Jobs</Link>
-            <Link href="#features" class="text-gray-600 hover:text-indigo-600 transition-colors duration-300">Features</Link>
+            <Link href="/#features" class="text-gray-600 hover:text-indigo-600 transition-colors duration-300">Features</Link>
             <Link href="/contact" class="text-gray-600 hover:text-indigo-600 transition-colors duration-300">Contact</Link>
           </div>
           <div class="flex items-center space-x-4">
