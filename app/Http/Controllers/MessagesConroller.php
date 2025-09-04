@@ -2,72 +2,81 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Actions\Messages\SendMessageAction;
+use App\Http\Requests\Messages\StoreMessageRequest;
 use App\Models\User;
-use App\Models\DirectMessage;
-use App\Events\ChatMessageSent;
-use Illuminate\Support\Facades\Log;
+use App\Services\DirectMessageService;
+use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class MessagesConroller extends Controller
 {
-    public function show(User $user = null){
-        return Inertia::render('Messages/Inbox', [
-            'users' => $this->getUsers(),
-            'selectedUser' => $user,
-            'messages' => $user ? $this->getMessages($user) : [],
-        ]);
-    }
+    /**
+     * The service instance for handling direct message logic.
+     *
+     * @var DirectMessageService
+     */
+    protected $directMessageService;
 
-    public function getUsers(){
-        // Eager load the role relationship to avoid N+1 query problem
-        // Select specific columns to reduce memory usage if not all columns are needed
-        $users = User::with('role')->select('id', 'full_name', 'email', 'role_id')->get();
-        return $users->map(fn($user) => ['id' => $user->id, 'name' => $user->full_name, 'email' => $user->email, 'role' => $user->role->name ?? 'N/A']);
-    }
+    /**
+     * The action instance for sending a message.
+     *
+     * @var SendMessageAction
+     */
+    protected $sendMessageAction;
 
-    private function getMessages(User $user){
-        $authUserId = auth()->id();
-
-        // Fetch messages between the authenticated user and the selected user
-        $messages = DirectMessage::where(function ($query) use ($authUserId, $user) {
-            $query->where('sender_id', $authUserId)
-                  ->where('receiver_id', $user->id);
-        })->orWhere(function ($query) use ($authUserId, $user) {
-            $query->where('sender_id', $user->id)
-                  ->where('receiver_id', $authUserId);
-        })->orderBy('created_at', 'asc')->get();
-
-        return $messages;
-    }
-
-    public function fetchInboxData(User $user){
-        return Inertia::render('Messages/Inbox', [
-            'users' => $this->getUsers(),
-            'selectedUser' => $user,
-            'messages' => $this->getMessages($user),
-        ]);
-    }
-
-    public function store(Request $request)
+    /**
+     * Create a new controller instance.
+     *
+     * @param  DirectMessageService  $directMessageService The service for handling message-related business logic.
+     * @param  SendMessageAction  $sendMessageAction The action for sending a message.
+     */
+    public function __construct(DirectMessageService $directMessageService, SendMessageAction $sendMessageAction)
     {
-        $request->validate([
-            'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string',
-        ]);
+        // Inject the service for querying data and the action for executing commands.
+        $this->directMessageService = $directMessageService;
+        $this->sendMessageAction = $sendMessageAction;
+    }
 
-        $message = DirectMessage::create([
-            'sender_id' => auth()->id(),
-            'receiver_id' => $request->receiver_id,
-            'message' => $request->message,
-        ]);
-
-        ChatMessageSent::dispatch($message, auth()->user());
-
+    /**
+     * Display the messages inbox page.
+     *
+     * This method renders the main chat interface. It fetches all users for the sidebar
+     * and the conversation messages for the currently selected user.
+     *
+     * @param  User|null  $user The user currently selected in the chat interface (optional).
+     * @return Response The Inertia response for the messages inbox view.
+     */
+    public function show(User $user = null): Response
+    {
+        // Render the Inertia view with necessary data from the service.
         return Inertia::render('Messages/Inbox', [
-            'users' => $this->getUsers(),
-            'selectedUser' => User::find($request->receiver_id),
-            'messages' => $this->getMessages(User::find($request->receiver_id)),
+            'users' => $this->directMessageService->getUsersForInbox(),
+            'selectedUser' => $user,
+            'messages' => $user ? $this->directMessageService->getMessagesBetween(auth()->user(), $user) : [],
         ]);
+    }
+
+    /**
+     * Store a new message in the database.
+     *
+     * This method validates the incoming request, uses the action to send the message,
+     * and then redirects back to the chat interface with the recipient selected.
+     *
+     * @param  StoreMessageRequest  $request The validated request containing message data.
+     * @return RedirectResponse A redirect to the chat interface.
+     */
+    public function store(StoreMessageRequest $request): RedirectResponse
+    {
+        // Use the action to send the message with validated data.
+        $this->sendMessageAction->execute(
+            $request->user(),
+            $request->validated('receiver_id'),
+            $request->validated('message')
+        );
+
+        // Redirect to the chat view with the recipient selected.
+        return redirect()->route('messages.show', ['user' => $request->validated('receiver_id')]);
     }
 }

@@ -52,14 +52,16 @@ Route::middleware(['auth'])->group(function () {
 
 
     // Inbox chat routes
-    Route::get('/messages', [MessagesConroller::class, 'show'])->name('messages');
-    Route::get('/messages/{user}', [MessagesConroller::class, 'fetchInboxData'])->name('messages.fetch');
+    Route::get('/messages/{user?}', [MessagesConroller::class, 'show'])->name('messages.show');
     Route::post('/messages', [MessagesConroller::class, 'store'])->name('messages.store');
 
     // Tag routes
     Route::get('/tags', [TagController::class, 'index']);
     Route::post('/create-tags', [TagController::class, 'store']);
     Route::post('/delete-tags', [TagController::class, 'destroy']);
+
+    // Profile routes
+    Route::get('/profile', [ProfileController::class,'profile']);
 });
 
 // Authentication routes (no middleware)]
@@ -86,6 +88,4 @@ Route::get('/about', function () {
 Route::get('/contact', function () {
     return Inertia::render('Contact');
 });
-
-Route::get('/profile', [ProfileController::class,'profile'])->middleware(['auth']);
 

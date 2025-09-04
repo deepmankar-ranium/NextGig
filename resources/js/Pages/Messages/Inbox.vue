@@ -119,7 +119,7 @@
       <div class="p-5 bg-white border-t border-slate-200">
         <div class="flex items-end gap-3">
           <div
-            class="fleam able to build chat feature in this project *:x flex-1 items-center gap-3 bg-slate-100 rounded-full px-5 py-3 border-2 border-transparent transition focus-within:border-violet-500"
+            class="flex items-center gap-3 bg-slate-100 rounded-full px-5 py-3 border-2 border-transparent transition focus-within:border-violet-500 w-full"
           >
             <button
               class="w-6 h-6 text-slate-500 flex items-center justify-center hover:text-slate-700"
@@ -505,7 +505,7 @@ const handleUserSelected = (user) => {
     }
 
     try {
-        router.get(route('messages.fetch', { user: user.id }), {}, {
+        router.get(route('messages.show', { user: user.id }), {}, {
             preserveState: true,
             preserveScroll: true,
         });
