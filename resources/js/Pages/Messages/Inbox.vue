@@ -1,172 +1,336 @@
 <template>
-    <AppLayout>
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 flex flex-row w-full max-w-7xl h-[95vh] overflow-hidden">
-                <!-- Chat Sidebar -->
-                <ChatSidebar
-                    :users="users"
-                    @user-selected="handleUserSelected"
-                    class="w-80 border-r border-slate-200/50 flex flex-col bg-white/50 backdrop-blur-sm"
-                />
 
-                <!-- Main Chat Area -->
-                <div class="flex flex-col flex-1 relative">
-                    <div v-if="selectedUser" class="flex flex-col flex-1 h-full">
-                        <!-- Chat Header with enhanced design -->
-                        <div class="bg-white/70 backdrop-blur-md p-6 border-b border-slate-200/50 flex items-center justify-between sticky top-0 z-10">
-                            <div class="flex items-center space-x-4">
-                                <div class="relative">
-                                    <div class="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-bold shadow-lg ring-4 ring-white/20">
-                                        {{ getUserInitials(selectedUser) }}
-                                    </div>
-                                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
-                                </div>
-                                <div>
-                                    <h1 class="text-xl font-bold text-slate-800">{{ getUserDisplayName(selectedUser) }}</h1>
-                                    <p class="text-sm text-slate-500">Active now</p>
-                                </div>
-                            </div>
+  <div class="flex h-screen bg-slate-50">
+    <!-- Sidebar -->
+    <ChatSidebar :users="users" @user-selected="handleUserSelected" />
 
-                            <!-- Action buttons -->
-                            <div class="flex items-center space-x-2">
-                                <button class="p-2 rounded-full hover:bg-slate-100 transition-colors duration-200">
-                                    <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                    </svg>
-                                </button>
-                                <button class="p-2 rounded-full hover:bg-slate-100 transition-colors duration-200">
-                                    <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                    </svg>
-                                </button>
-                                <button class="p-2 rounded-full hover:bg-slate-100 transition-colors duration-200">
-                                    <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Message Display Area with enhanced styling -->
-                        <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-slate-50/30 to-white/30" ref="messagesContainer" style="scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;">
-                            <template v-if="messages && messages.length > 0">
-                                <div v-for="message in messages" :key="message.id || Math.random()"
-                                     :class="{'flex justify-end': isMyMessage(message), 'flex justify-start': !isMyMessage(message)}"
-                                     class="animate-fade-in">
-
-                                    <!-- Received messages -->
-                                    <div v-if="!isMyMessage(message)" class="flex items-end space-x-3 max-w-md">
-                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-slate-400 to-slate-500 flex items-center justify-center text-white text-sm font-medium">
-                                            {{ getUserInitials(selectedUser) }}
-                                        </div>
-                                        <div class="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                                            <p class="text-slate-800 leading-relaxed">{{ getMessageText(message) }}</p>
-                                            <p class="text-xs text-slate-500 mt-1">{{ formatTime(message.created_at) }}</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sent messages -->
-                                    <div v-else class="flex items-end space-x-3 max-w-md">
-                                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl rounded-br-md px-4 py-3 shadow-lg">
-                                            <p class="text-white leading-relaxed">{{ getMessageText(message) }}</p>
-                                            <div class="flex items-center justify-end space-x-1 mt-1">
-                                                <p class="text-xs text-indigo-100">{{ formatTime(message.created_at) }}</p>
-                                                <svg class="w-4 h-4 text-indigo-200" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-                                            {{ getUserInitials(currentUser) }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
-                            <div v-else class="flex items-center justify-center h-32 text-slate-500">
-                                <p>No messages yet. Start the conversation!</p>
-                            </div>
-                        </div>
-
-                        <!-- Enhanced Message Input -->
-                        <div class="bg-white/80 backdrop-blur-md p-6 border-t border-slate-200/50">
-                            <div class="flex items-end space-x-4">
-                                <!-- Attachment button -->
-                                <button class="flex-shrink-0 p-3 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all duration-200">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                                    </svg>
-                                </button>
-
-                                <!-- Message input container -->
-                                <div class="flex-1 relative">
-                                    <input
-                                        type="text"
-                                        v-model="newMessage"
-                                        @keyup.enter="sendMessage"
-                                        @input="handleTyping"
-                                        placeholder="Type your message..."
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 resize-none"
-                                        :disabled="isLoading"
-                                    />
-
-                                    <!-- Emoji button -->
-                                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors duration-200">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                <!-- Send button with enhanced styling -->
-                                <button
-                                    @click="sendMessage"
-                                    :disabled="!canSendMessage"
-                                    class="flex-shrink-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed text-white rounded-2xl p-4 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-                                >
-                                    <svg v-if="!isLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                    </svg>
-                                    <svg v-else class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <!-- Typing indicator -->
-                            <div v-if="isTyping" class="flex items-center space-x-2 mt-3 text-sm text-slate-500">
-                                <div class="flex space-x-1">
-                                    <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                                    <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                                    <div class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                                </div>
-                                <span>{{ getUserDisplayName(selectedUser) }} is typing...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Enhanced empty state -->
-                    <div v-else class="flex items-center justify-center h-full">
-                        <div class="text-center text-slate-500 max-w-md mx-auto p-8">
-                            <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-3xl flex items-center justify-center">
-                                <svg class="w-12 h-12 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-2xl font-bold text-slate-700 mb-3">Start a conversation</h3>
-                            <p class="text-slate-500 leading-relaxed">Select someone from the sidebar to begin chatting. Your messages are private and secure.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Main Chat Area -->
+    <div class="flex flex-1 flex-col">
+      <!-- Chat Header -->
+      <div class="h-[60px] bg-white border-b border-slate-200 px-6 flex items-center justify-between shadow-sm">
+        <div v-if="selectedUser" class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-base bg-gradient-to-br from-violet-600 to-violet-500"
+          >
+            {{ getUserInitials(selectedUser) }}
+          </div>
+          <div>
+            <h1 class="text-base font-semibold text-slate-800 m-0">
+              {{ getUserDisplayName(selectedUser) }}
+            </h1>
+            <p class="text-xs text-emerald-500 flex items-center gap-1 m-0">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Online
+            </p>
+          </div>
         </div>
-    </AppLayout>
+
+        <!-- Action buttons -->
+        <div class="flex items-center gap-2">
+          <button
+            class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center transition hover:bg-slate-200"
+          >
+            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+              />
+            </svg>
+          </button>
+          <button
+            class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center transition hover:bg-slate-200"
+          >
+            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+          </button>
+          <button
+            class="w-9 h-9 rounded-full bg-violet-600 text-white flex items-center justify-center transition hover:bg-violet-700"
+          >
+            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div ref="messagesContainer" class="flex-1 overflow-y-auto p-5 bg-slate-50">
+        <template v-if="selectedUser && messages && messages.length > 0">
+          <div
+            v-for="message in messages"
+            :key="message.id || Math.random()"
+            class="flex gap-3 mb-5"
+            :class="isMyMessage(message) ? 'flex-row-reverse' : ''"
+          >
+            <!-- Received messages -->
+            <div v-if="!isMyMessage(message)" class="flex gap-3 max-w-[70%]">
+              <div
+                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 bg-gradient-to-br from-violet-600 to-violet-500"
+              >
+                {{ getUserInitials(selectedUser) }}
+              </div>
+              <div
+                class="bg-white rounded-2xl rounded-tl-md p-3.5 shadow-sm border border-slate-200"
+              >
+                <p class="text-slate-800 text-sm leading-relaxed m-0">{{ getMessageText(message) }}</p>
+                <p class="text-[11px] text-slate-500 mt-1">{{ formatTime(message.created_at) }}</p>
+              </div>
+            </div>
+
+            <!-- Sent messages -->
+            <div v-else class="flex gap-3 max-w-[70%]">
+              <div class="bg-violet-600 rounded-2xl rounded-tr-md p-3.5 shadow-sm">
+                <p class="text-white text-sm leading-relaxed m-0">{{ getMessageText(message) }}</p>
+                <div class="flex items-center justify-end gap-1 mt-1">
+                  <p class="text-[11px] text-white/80 m-0">{{ formatTime(message.created_at) }}</p>
+                  <svg class="w-[14px] h-[14px] text-white/80" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 bg-gradient-to-br from-emerald-500 to-emerald-600"
+              >
+                {{ getUserInitials(currentUser) }}
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Input -->
+      <div class="p-5 bg-white border-t border-slate-200">
+        <div class="flex items-end gap-3">
+          <div
+            class="fleam able to build chat feature in this project *:x flex-1 items-center gap-3 bg-slate-100 rounded-full px-5 py-3 border-2 border-transparent transition focus-within:border-violet-500"
+          >
+            <button
+              class="w-6 h-6 text-slate-500 flex items-center justify-center hover:text-slate-700"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                />
+              </svg>
+            </button>
+
+            <input
+              type="text"
+              v-model="newMessage"
+              @keyup.enter="sendMessage"
+              placeholder="Type your message here..."
+              :disabled="isLoading || !selectedUser"
+              class="flex-1 bg-transparent border-none outline-none text-slate-800 text-sm placeholder-slate-400 focus:ring-0"
+            />
+
+            <button
+              class="w-6 h-6 text-slate-500 flex items-center justify-center hover:text-slate-700"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <button
+            @click="sendMessage"
+            :disabled="!canSendMessage"
+            class="w-11 h-11 bg-violet-600 rounded-full text-white flex items-center justify-center transition shadow-lg hover:bg-violet-700 disabled:opacity-50"
+          >
+            <svg
+              v-if="!isLoading"
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div v-if="selectedUser" class="w-[300px] bg-white border-l border-slate-200 p-6 overflow-y-auto">
+      <!-- Profile Header -->
+      <div class="text-center mb-6">
+        <div
+          class="w-20 h-20 rounded-full flex items-center justify-center text-white font-semibold text-3xl mx-auto mb-3 shadow-lg bg-gradient-to-br from-violet-600 to-violet-500"
+        >
+          {{ getUserInitials(selectedUser) }}
+        </div>
+        <h2 class="text-lg font-semibold text-slate-800 mb-1">
+          {{ getUserDisplayName(selectedUser) }}
+        </h2>
+        <p class="text-sm text-emerald-500 flex items-center justify-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          UX Designer
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-2 mb-6">
+        <button
+          class="flex-1 p-2 border border-slate-200 rounded-lg bg-white text-slate-500 text-xs flex items-center justify-center gap-1"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+        </button>
+        <!-- <button
+          class="flex-1 p-2 border border-slate-200 rounded-lg bg-white text-slate-500 text-xs flex items-center justify-center gap-1"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
+        </button>
+        <button
+          class="flex-1 p-2 border border-slate-200 rounded-lg bg-white text-slate-500 text-xs flex items-center justify-center gap-1"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+            />
+          </svg>
+        </button> -->
+      </div>
+
+      <!-- Contact Info -->
+      <!-- <div class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-semibold text-slate-800">EDIT PROFILE</h3>
+          <button class="text-xs text-slate-500">See all</button>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-medium text-slate-500 block mb-1">Mobile</label>
+          <p class="text-sm text-slate-800">+1(0) 332 4567</p>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-medium text-slate-500 block mb-1">Email</label>
+          <p class="text-sm text-slate-800">michael@gmail.com</p>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-medium text-slate-500 block mb-1">Date of Birth</label>
+          <p class="text-sm text-slate-800">02/12/1990</p>
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-medium text-slate-500 block mb-1">Gender</label>
+          <p class="text-sm text-slate-800">Male</p>
+        </div>
+      </div> -->
+
+      <!-- Shared Media -->
+      <!-- <div>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-semibold text-slate-800">Shared Media</h3>
+          <button class="text-xs text-slate-500">See all</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div
+            class="aspect-square bg-slate-100 rounded-lg flex items-center justify-center"
+          >
+            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <div
+            class="aspect-square bg-slate-100 rounded-lg flex items-center justify-center"
+          >
+            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <div
+            class="aspect-square bg-slate-100 rounded-lg flex items-center justify-center"
+          >
+            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <div
+            class="aspect-square bg-slate-100 rounded-lg flex items-center justify-center"
+          >
+            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+        </div>
+      </div> -->
+    </div>
+  </div>
 </template>
 
+
 <script setup>
+// Replace your current script setup with this improved version
+
 import AppLayout from '@/Layout/AppLayout.vue';
 import ChatSidebar from '@/Layout/ChatSidebar.vue';
-import { ref, watch, nextTick, computed } from 'vue';
+import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -191,17 +355,26 @@ const props = defineProps({
 const newMessage = ref('');
 const messagesContainer = ref(null);
 const isLoading = ref(false);
-const isTyping = ref(false);
-const typingTimeout = ref(null);
+
+// ✅ Create reactive local messages array
+const localMessages = ref([...props.messages]);
+
+// ✅ Watch for prop changes and update local messages
+watch(() => props.messages, (newMessages) => {
+    localMessages.value = [...newMessages];
+}, { immediate: true });
 
 // Computed properties for safe access
 const selectedUser = computed(() => props.selectedUser || null);
 const currentUser = computed(() => props.auth?.user || null);
-const messages = computed(() => props.messages || []);
+const messages = computed(() => localMessages.value || []);
 
 const canSendMessage = computed(() => {
     return !isLoading.value && newMessage.value?.trim() && selectedUser.value;
 });
+
+// ✅ Store current Echo channel reference
+let currentChannel = null;
 
 // Auto-scroll to bottom when new messages arrive
 watch(() => messages.value, () => {
@@ -215,17 +388,75 @@ watch(() => messages.value, () => {
     });
 }, { deep: true });
 
+// ✅ Improved Echo setup
+const setupEchoChannel = (user) => {
+    if (!user || !currentUser.value || !window.Echo) return;
+
+    const participants = [currentUser.value.id, user.id].sort();
+    const channelName = `chat.${participants[0]}.${participants[1]}`;
+
+    try {
+        currentChannel = window.Echo.private(channelName)
+            .listen('ChatMessageSent', (e) => {
+                console.log('New message received:', e.message);
+                // ✅ Add to local messages array
+                // Only add if the message is not from the current user (to prevent duplication from optimistic updates)
+                if (e.message.sender_id !== currentUser.value.id) {
+                    localMessages.value.push(e.message);
+                }
+            })
+            .error((error) => {
+                console.error('Echo channel error:', error);
+            });
+
+        console.log('Echo channel setup:', channelName);
+    } catch (error) {
+        console.error('Failed to setup Echo channel:', error);
+    }
+};
+
+// ✅ Cleanup Echo channel
+const cleanupEchoChannel = () => {
+    if (currentChannel) {
+        try {
+            currentChannel.stopListening('ChatMessageSent');
+            currentChannel = null;
+        } catch (error) {
+            console.error('Error cleaning up Echo channel:', error);
+        }
+    }
+};
+
+onMounted(() => {
+    if (selectedUser.value) {
+        setupEchoChannel(selectedUser.value);
+    }
+});
+
+onUnmounted(() => {
+    cleanupEchoChannel();
+});
+
+// ✅ Better user selection handling
+watch(selectedUser, (newUser, oldUser) => {
+    // Cleanup old channel
+    cleanupEchoChannel();
+
+    // Setup new channel
+    if (newUser) {
+        setupEchoChannel(newUser);
+    }
+});
+
 // Utility functions with comprehensive error handling
 const getUserDisplayName = (user) => {
     if (!user || typeof user !== 'object') return 'Unknown User';
-
     const name = user.full_name || user.name || user.first_name || user.username || '';
     return name.trim() || 'Unknown User';
 };
 
 const getUserInitials = (user) => {
     if (!user || typeof user !== 'object') return '?';
-
     const name = getUserDisplayName(user);
     if (name === 'Unknown User') return '?';
 
@@ -255,7 +486,6 @@ const formatTime = (timestamp) => {
     try {
         const date = new Date(timestamp);
         if (isNaN(date.getTime())) return '';
-
         return date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
@@ -284,16 +514,7 @@ const handleUserSelected = (user) => {
     }
 };
 
-// Handle typing indicator
-const handleTyping = () => {
-    isTyping.value = true;
-    clearTimeout(typingTimeout.value);
-    typingTimeout.value = setTimeout(() => {
-        isTyping.value = false;
-    }, 1000);
-};
-
-// Send message with comprehensive error handling
+// ✅ Improved send message with optimistic updates
 const sendMessage = () => {
     if (!canSendMessage.value) return;
 
@@ -307,6 +528,20 @@ const sendMessage = () => {
 
     isLoading.value = true;
 
+    // ✅ Optimistic update - add message immediately
+    const tempMessage = {
+        id: 'temp_' + Date.now(),
+        message: messageText,
+        sender_id: currentUser.value.id,
+        receiver_id: receiverId,
+        created_at: new Date().toISOString(),
+        temp: true // Mark as temporary
+    };
+
+    localMessages.value.push(tempMessage);
+    const originalMessageText = newMessage.value;
+    newMessage.value = '';
+
     try {
         router.post(route('messages.store'), {
             receiver_id: receiverId,
@@ -314,11 +549,22 @@ const sendMessage = () => {
         }, {
             preserveState: true,
             preserveScroll: true,
-            onSuccess: () => {
-                newMessage.value = '';
+            onSuccess: (response) => {
+                // ✅ Remove temp message and replace with real one if needed
+                const tempIndex = localMessages.value.findIndex(msg => msg.id === tempMessage.id);
+                if (tempIndex !== -1) {
+                    localMessages.value.splice(tempIndex, 1);
+                }
             },
             onError: (errors) => {
                 console.error('Message send error:', errors);
+                // ✅ Remove temp message on error
+                const tempIndex = localMessages.value.findIndex(msg => msg.id === tempMessage.id);
+                if (tempIndex !== -1) {
+                    localMessages.value.splice(tempIndex, 1);
+                }
+                // ✅ Restore message text
+                newMessage.value = originalMessageText;
             },
             onFinish: () => {
                 isLoading.value = false;
@@ -326,42 +572,17 @@ const sendMessage = () => {
         });
     } catch (error) {
         console.error('Error sending message:', error);
+        // ✅ Remove temp message and restore text on error
+        const tempIndex = localMessages.value.findIndex(msg => msg.id === tempMessage.id);
+        if (tempIndex !== -1) {
+            localMessages.value.splice(tempIndex, 1);
+        }
+        newMessage.value = originalMessageText;
         isLoading.value = false;
     }
 };
+
+const handleTyping = () => {
+    // Add typing indicator logic here if needed
+};
 </script>
-
-<style scoped>
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fade-in 0.3s ease-out;
-}
-
-/* Custom scrollbar styling */
-.overflow-y-auto::-webkit-scrollbar {
-    width: 6px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-</style>

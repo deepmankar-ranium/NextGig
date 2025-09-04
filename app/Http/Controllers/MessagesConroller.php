@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Models\DirectMessage;
+use App\Events\ChatMessageSent;
+use Illuminate\Support\Facades\Log;
 
 class MessagesConroller extends Controller
 {
@@ -59,6 +61,8 @@ class MessagesConroller extends Controller
             'receiver_id' => $request->receiver_id,
             'message' => $request->message,
         ]);
+
+        ChatMessageSent::dispatch($message, auth()->user());
 
         return Inertia::render('Messages/Inbox', [
             'users' => $this->getUsers(),
