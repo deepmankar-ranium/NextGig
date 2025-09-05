@@ -39,6 +39,7 @@ class ChatMessageSent implements ShouldBroadcast
 
         return [
             new PrivateChannel('chat.' . implode('.', $participants)),
+            new PrivateChannel('user.' . $this->message->receiver_id),
         ];
     }
 
