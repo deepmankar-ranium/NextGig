@@ -2,22 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
+use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\SendPasswordResetLinkRequest;
+use App\Services\PasswordResetService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class ForgetPassword extends Controller
 {
-    public function show(){
+    public function __construct(private PasswordResetService $passwordResetService)
+    {
+    }
+
+    public function show()
+    {
         return Inertia::render('Auth/ForgotPassword');
     }
-    public function sendResetLinkEmail(Request $request)
-    {
-        $request->validate(['email' => 'required|email']);
 
-        $status = Password::sendResetLink($request->only('email'));
+    public function sendResetLinkEmail(SendPasswordResetLinkRequest $request)
+    {
+        $status = $this->passwordResetService->sendResetLink($request->validated());
 
         if ($status == Password::RESET_LINK_SENT) {
             return redirect('/forgot-password')->with('status', __($status));
@@ -36,24 +41,9 @@ class ForgetPassword extends Controller
         ]);
     }
 
-    public function reset(Request $request)
+    public function reset(ResetPasswordRequest $request)
     {
-        $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|confirmed|min:8',
-        ]);
-
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password)
-                ])->setRememberToken(Str::random(60));
-
-                $user->save();
-            }
-        );
+        $status = $this->passwordResetService->resetPassword($request->validated());
 
         if ($status == Password::PASSWORD_RESET) {
             return Inertia::render('Auth/ResetPassword', [

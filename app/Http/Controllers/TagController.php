@@ -1,39 +1,39 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers;
-use App\Models\Tag;
+
+use App\Http\Requests\DestroyTagRequest;
+use App\Http\Requests\StoreTagRequest;
+use App\Services\TagService;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\UnauthorizedException;
 
 class TagController extends Controller
 {
+    public function __construct(private TagService $tagService)
+    {
+    }
+
     public function index()
     {
-       $isEmployer = Auth::user() && Auth::user()->role && Auth::user()->role->name === "Employer";
-       if($isEmployer){
-        $tags =Tag::all();
-        return Inertia::render('Tags',[
-            'tags' => $tags
-        ]);
-       } else {
-           throw new UnauthorizedException('Only employers can access tags');
-       }
+        if (auth()->user()?->role->name !== 'Employer') {
+            throw new UnauthorizedException('Only employers can access tags');
+        }
 
-       
-    }
-    public function store(){
-        $data = request()->validate([
-            'name' => 'required'
+        return Inertia::render('Tags', [
+            'tags' => $this->tagService->getAllTags(),
         ]);
-        Tag::create($data);
+    }
+
+    public function store(StoreTagRequest $request)
+    {
+        $this->tagService->createTag($request->validated());
         return redirect('/tags');
     }
-    public function destroy(){
-        $data = request()->validate([
-            'tags' => 'required|array'
-        ]);
-        Tag::destroy($data['tags']);
+
+    public function destroy(DestroyTagRequest $request)
+    {
+        $this->tagService->deleteTags($request->validated('tags'));
         return redirect('/tags');
     }
-} 
+}
