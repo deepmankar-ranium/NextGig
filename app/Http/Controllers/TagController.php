@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Tag\CreateTagAction;
+use App\Actions\Tag\DeleteTagsAction;
 use App\Http\Requests\DestroyTagRequest;
 use App\Http\Requests\StoreTagRequest;
 use App\Services\TagService;
@@ -25,15 +27,15 @@ class TagController extends Controller
         ]);
     }
 
-    public function store(StoreTagRequest $request)
+    public function store(StoreTagRequest $request, CreateTagAction $action)
     {
-        $this->tagService->createTag($request->validated());
+        $action->execute($request->validated());
         return redirect('/tags');
     }
 
-    public function destroy(DestroyTagRequest $request)
+    public function destroy(DestroyTagRequest $request, DeleteTagsAction $action)
     {
-        $this->tagService->deleteTags($request->validated('tags'));
+        $action->execute($request->validated('tags'));
         return redirect('/tags');
     }
 }

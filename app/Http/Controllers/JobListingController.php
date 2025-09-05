@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\JobListing\CreateJobListingAction;
+use App\Actions\JobListing\DeleteJobListingAction;
+use App\Actions\JobListing\UpdateJobListingAction;
 use App\Http\Requests\StoreJobListingRequest;
 use App\Http\Requests\UpdateJobListingRequest;
 use App\Models\JobListing;
@@ -59,9 +62,9 @@ class JobListingController extends Controller
         ]);
     }
 
-    public function store(StoreJobListingRequest $request)
+    public function store(StoreJobListingRequest $request, CreateJobListingAction $action)
     {
-        $this->jobListingService->createJobListing($request->validated());
+        $action->execute($request->validated());
         return redirect('/Jobs')->with('success', 'Job listing created successfully!');
     }
 
@@ -74,15 +77,15 @@ class JobListingController extends Controller
         ]);
     }
 
-    public function update(UpdateJobListingRequest $request, JobListing $jobListing)
+    public function update(UpdateJobListingRequest $request, JobListing $jobListing, UpdateJobListingAction $action)
     {
-        $this->jobListingService->updateJobListing($jobListing, $request->validated());
+        $action->execute($jobListing, $request->validated());
         return redirect("/Jobs/job/{$jobListing->id}")->with('success', 'Job listing updated successfully!');
     }
 
-    public function destroy(JobListing $jobListing)
+    public function destroy(JobListing $jobListing, DeleteJobListingAction $action)
     {
-        $this->jobListingService->deleteJobListing($jobListing);
+        $action->execute($jobListing);
         return redirect("/Jobs")->with('success', 'Job deleted successfully!');
     }
 

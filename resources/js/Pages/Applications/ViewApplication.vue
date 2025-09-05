@@ -227,7 +227,7 @@ import { router } from '@inertiajs/vue3'
 import VueMultiselect from 'vue-multiselect'
 import AppLayout from '@/Layout/AppLayout.vue'
 import 'vue-multiselect/dist/vue-multiselect.css'
-import { Check, X, FileText, Search } from 'lucide-vue-next'
+import { Check, X, FileText, Search, ChevronLeftIcon } from 'lucide-vue-next'
 import { onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
@@ -236,6 +236,10 @@ const props = defineProps({
     required: true
   }
 })
+
+const handleBack = () => {
+  window.history.back();
+};
 
 const tableHeaders = ['ID', 'Job Listing', 'Applicant', 'Resume', 'Cover Letter', 'Status', 'Actions']
 const statusOptions = ref([

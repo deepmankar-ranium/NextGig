@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Application;
 use App\Models\JobListing;
 use App\Models\Tag;
 use Illuminate\Support\Facades\Auth;
@@ -32,34 +33,6 @@ class JobListingService
     public function getJobListing(JobListing $jobListing)
     {
         return $jobListing->load(['employer.user', 'tags']);
-    }
-
-    public function createJobListing(array $data)
-    {
-        $jobListing = JobListing::create($data);
-
-        if (isset($data['tags'])) {
-            $jobListing->tags()->sync($data['tags']);
-        }
-
-        return $jobListing;
-    }
-
-    public function updateJobListing(JobListing $jobListing, array $data)
-    {
-        $jobListing->update($data);
-
-        if (isset($data['tags'])) {
-            $jobListing->tags()->sync($data['tags']);
-        }
-
-        return $jobListing;
-    }
-
-    public function deleteJobListing(JobListing $jobListing)
-    {
-        Gate::authorize('delete', $jobListing);
-        $jobListing->delete();
     }
 
     public function getJobDetails(JobListing $jobListing)

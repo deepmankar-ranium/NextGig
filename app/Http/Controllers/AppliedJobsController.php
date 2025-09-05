@@ -1,24 +1,22 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Application;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+
+use App\Services\JobSeekerService;
 use Inertia\Inertia;
 
 class AppliedJobsController extends Controller
 {
+    public function __construct(private JobSeekerService $jobSeekerService)
+    {
+    }
+
     public function show()
     {
-        $user = Auth::user();
-        $jobSeekerId = $user->jobseeker->id;
+        $appliedJobs = $this->jobSeekerService->getAppliedJobs();
 
-        $appliedJobs = Application::where('jobseeker_id', $jobSeekerId)
-            ->with('jobListing')
-            ->get();
-
-            return Inertia::render('AppliedJobs', [
-                'appliedJobs' => $appliedJobs,
-            ]);
+        return Inertia::render('AppliedJobs', [
+            'appliedJobs' => $appliedJobs,
+        ]);
     }
 }

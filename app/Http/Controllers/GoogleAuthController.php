@@ -2,24 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\GoogleAuthService;
+use App\Actions\Auth\HandleGoogleCallbackAction;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
-    public function __construct(private GoogleAuthService $googleAuthService)
-    {
-    }
-
     public function redirectToGoogle()
     {
         return Socialite::driver('google')->redirect();
     }
 
-    public function handleGoogleCallback()
+    public function handleGoogleCallback(HandleGoogleCallbackAction $action)
     {
-        $user = $this->googleAuthService->handleCallback();
+        $user = $action->execute();
 
         if ($user) {
             return redirect('/Home');

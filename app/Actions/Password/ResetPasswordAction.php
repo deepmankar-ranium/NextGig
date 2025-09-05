@@ -1,19 +1,14 @@
 <?php
 
-namespace App\Services;
+namespace App\Actions\Password;
 
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class PasswordResetService
+class ResetPasswordAction
 {
-    public function sendResetLink(array $data)
-    {
-        return Password::sendResetLink($data);
-    }
-
-    public function resetPassword(array $data)
+    public function execute(array $data): string
     {
         return Password::reset($data, function ($user, $password) {
             $user->forceFill([

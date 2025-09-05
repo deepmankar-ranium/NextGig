@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Actions\Auth;
 
 use App\Models\User;
 use App\Models\Employer;
@@ -8,9 +8,9 @@ use App\Models\JobSeeker;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
-class GoogleAuthService
+class HandleGoogleCallbackAction
 {
-    public function handleCallback()
+    public function execute(): ?User
     {
         try {
             $googleUser = Socialite::driver('google')->user();
