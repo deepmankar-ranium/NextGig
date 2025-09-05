@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
+use App\Services\ProfileService;
 use Inertia\Inertia;
-use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
+    public function __construct(private ProfileService $profileService)
+    {
+    }
+
     public function profile()
     {
-        $user = Auth::user();
-        if ($user) {
-            $user->role;
-        } else {
+        $user = $this->profileService->getProfileData();
+
+        if (!$user) {
             return redirect()->route('login');
         }
+
         return Inertia::render('Profile', [
             'user' => $user,
         ]);

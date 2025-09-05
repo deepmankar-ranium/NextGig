@@ -5,7 +5,7 @@ use App\Http\Controllers\JobListingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegisterUserController;
 use App\Http\Controllers\ApplicationController;
-use App\Http\Controllers\ViewJobApplications;
+use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\EmployerJobListingController;
 use App\Http\Controllers\AppliedJobsController;
 use App\Http\Controllers\ForgetPassword;
@@ -14,7 +14,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\GPTController;
 use App\Http\Controllers\sendResetPasswordLink;
 use App\Http\Controllers\TagController;
-use App\Http\Controllers\MessagesConroller;
+use App\Http\Controllers\MessagesController;
 
 
 Route::get('/', function () {
@@ -35,9 +35,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/filter', [JobListingController::class, 'filterJobs']);
 
     // Application routes
-    Route::get('/view-applications', [ViewJobApplications::class, 'show']);
-    Route::post('/apply/{jobListing}', [ViewJobApplications::class, 'apply']);
-    Route::put('/applications/{application}', [ViewJobApplications::class, 'update']);
+    Route::get('/view-applications', [JobApplicationController::class, 'show']);
+    Route::post('/apply/{jobListing}', [JobApplicationController::class, 'apply']);
+    Route::put('/applications/{application}', [JobApplicationController::class, 'update']);
 
     // User-specific job routes
     Route::get('/posted-jobs', [EmployerJobListingController::class, 'show']);
@@ -52,8 +52,8 @@ Route::middleware(['auth'])->group(function () {
 
 
     // Inbox chat routes
-    Route::get('/messages/{user?}', [MessagesConroller::class, 'show'])->name('messages.show');
-    Route::post('/messages', [MessagesConroller::class, 'store'])->name('messages.store');
+    Route::get('/messages/{user?}', [MessagesController::class, 'show'])->name('messages.show');
+    Route::post('/messages', [MessagesController::class, 'store'])->name('messages.store');
 
     // Tag routes
     Route::get('/tags', [TagController::class, 'index']);

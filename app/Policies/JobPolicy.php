@@ -17,6 +17,14 @@ class JobPolicy
     }
 
     /**
+     * Determine if the user can view their own job listings.
+     */
+    public function viewEmployerJobs(User $user): bool
+    {
+        return $user->role->name === 'Employer';
+    }
+
+    /**
      * Determine if the user can create models.
      */
     public function create(User $user): bool

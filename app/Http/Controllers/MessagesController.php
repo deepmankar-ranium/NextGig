@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class MessagesConroller extends Controller
+class MessagesController extends Controller
 {
     /**
      * The service instance for handling direct message logic.
