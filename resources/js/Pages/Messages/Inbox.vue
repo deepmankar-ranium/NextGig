@@ -1,5 +1,4 @@
 <template>
-
   <div class="flex h-screen bg-slate-50">
     <!-- Sidebar -->
     <ChatSidebar :users="users" @user-selected="handleUserSelected" />
@@ -26,7 +25,10 @@
         </div>
 
         <!-- Action buttons -->
-        <div class="flex items-center gap-2">
+        <div v-if="selectedUser" class="flex items-center gap-2">
+            <button v-if="localMessages.length > 0" @click="confirmDeleteMessages" class="p-2 rounded-full text-slate-500 hover:bg-red-100 hover:text-red-600 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
           <button
             class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center transition hover:bg-slate-200"
           >
@@ -213,113 +215,39 @@
             />
           </svg>
         </button>
-        <!-- <button
-          class="flex-1 p-2 border border-slate-200 rounded-lg bg-white text-slate-500 text-xs flex items-center justify-center gap-1"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-        </button>
-        <button
-          class="flex-1 p-2 border border-slate-200 rounded-lg bg-white text-slate-500 text-xs flex items-center justify-center gap-1"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-            />
-          </svg>
-        </button> -->
       </div>
+    </div>
+  </div>
 
-      <!-- Contact Info -->
-      <!-- <div class="mb-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-semibold text-slate-800">EDIT PROFILE</h3>
-          <button class="text-xs text-slate-500">See all</button>
+  <!-- Confirmation Modal -->
+  <div v-if="isConfirmDeleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm" @click.self="handleDeleteCancel">
+    <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl transform transition-all"
+         :class="isConfirmDeleteModalOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'">
+      <div class="flex items-start">
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+          <svg class="h-6 w-6 text-red-600" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
         </div>
-        <div class="mb-4">
-          <label class="text-xs font-medium text-slate-500 block mb-1">Mobile</label>
-          <p class="text-sm text-slate-800">+1(0) 332 4567</p>
-        </div>
-        <div class="mb-4">
-          <label class="text-xs font-medium text-slate-500 block mb-1">Email</label>
-          <p class="text-sm text-slate-800">michael@gmail.com</p>
-        </div>
-        <div class="mb-4">
-          <label class="text-xs font-medium text-slate-500 block mb-1">Date of Birth</label>
-          <p class="text-sm text-slate-800">02/12/1990</p>
-        </div>
-        <div class="mb-4">
-          <label class="text-xs font-medium text-slate-500 block mb-1">Gender</label>
-          <p class="text-sm text-slate-800">Male</p>
-        </div>
-      </div> -->
-
-      <!-- Shared Media -->
-      <!-- <div>
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-semibold text-slate-800">Shared Media</h3>
-          <button class="text-xs text-slate-500">See all</button>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div
-            class="aspect-square bg-slate-100 rounded-lg flex items-center justify-center"
-          >
-            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <div
-            class="aspect-square bg-slate-100 rounded-lg flex items-center justify-center"
-          >
-            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <div
-            class="aspect-square bg-slate-100 rounded-lg flex items-center justify-center"
-          >
-            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <div
-            class="aspect-square bg-slate-100 rounded-lg flex items-center justify-center"
-          >
-            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
+        <div class="ml-4 text-left">
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Delete Conversation
+          </h3>
+          <div class="mt-2">
+            <p class="text-sm text-gray-500">
+              Are you sure you want to delete this entire conversation? All messages will be permanently removed. This action cannot be undone.
+            </p>
           </div>
         </div>
-      </div> -->
+      </div>
+      <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+        <button @click="handleDeleteConfirm" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+          Delete
+        </button>
+        <button @click="handleDeleteCancel" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -582,7 +510,45 @@ const sendMessage = () => {
     }
 };
 
-const handleTyping = () => {
-    // Add typing indicator logic here if needed
+const isConfirmDeleteModalOpen = ref(false);
+
+const confirmDeleteMessages = () => {
+    // Ensure a user is selected before opening the modal
+    if (selectedUser.value) {
+        isConfirmDeleteModalOpen.value = true;
+    }
+};
+
+const deleteMessages = () => {
+    if (!selectedUser.value || !currentUser.value) {
+        console.error('Cannot delete messages: missing user information.');
+        return;
+    }
+
+    try {
+        router.post(route('messages.delete', { sender_id: currentUser.value.id, receiver_id: selectedUser.value.id }), {
+            onSuccess: () => {
+                // On successful deletion, clear the messages from the local state
+                localMessages.value = [];
+            },
+            preserveState: true,
+            preserveScroll: true,
+            onError: (errors) => {
+                console.error('Error deleting messages:', errors);
+                // Optionally, you could show an error notification to the user here
+            }
+        });
+    } catch (error) {
+        console.error('Exception during message deletion:', error);
+    }
+};
+
+const handleDeleteConfirm = () => {
+    deleteMessages();
+    isConfirmDeleteModalOpen.value = false;
+};
+
+const handleDeleteCancel = () => {
+    isConfirmDeleteModalOpen.value = false;
 };
 </script>

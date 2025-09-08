@@ -1,8 +1,9 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Actions\Messages\DeleteDirectMessagesAction;
 use App\Actions\Messages\SendMessageAction;
+use App\Http\Requests\DeleteDirectMessageRequest;
 use App\Http\Requests\Messages\StoreMessageRequest;
 use App\Models\User;
 use App\Services\DirectMessageService;
@@ -27,16 +28,27 @@ class MessagesController extends Controller
     protected $sendMessageAction;
 
     /**
+     * The action instance for deleting direct messages.
+     *
+     * @var DeleteDirectMessagesAction
+     */
+    protected $DeleteDirectMessagesAction;
+
+    /**
      * Create a new controller instance.
      *
      * @param  DirectMessageService  $directMessageService The service for handling message-related business logic.
      * @param  SendMessageAction  $sendMessageAction The action for sending a message.
+     * @param  DeleteDirectMessagesAction  $DeleteDirectMessagesAction The action for deleting messages.
      */
-    public function __construct(DirectMessageService $directMessageService, SendMessageAction $sendMessageAction)
-    {
-        // Inject the service for querying data and the action for executing commands.
-        $this->directMessageService = $directMessageService;
-        $this->sendMessageAction = $sendMessageAction;
+    public function __construct(
+        DirectMessageService $directMessageService,
+        SendMessageAction $sendMessageAction,
+        DeleteDirectMessagesAction $DeleteDirectMessagesAction
+    ) {
+        $this->directMessageService       = $directMessageService;
+        $this->sendMessageAction          = $sendMessageAction;
+        $this->DeleteDirectMessagesAction = $DeleteDirectMessagesAction;
     }
 
     /**
@@ -52,9 +64,9 @@ class MessagesController extends Controller
     {
         // Render the Inertia view with necessary data from the service.
         return Inertia::render('Messages/Inbox', [
-            'users' => $this->directMessageService->getUsersForInbox(),
+            'users'        => $this->directMessageService->getUsersForInbox(),
             'selectedUser' => $user,
-            'messages' => $user ? $this->directMessageService->getMessagesBetween(auth()->user(), $user) : [],
+            'messages'     => $user ? $this->directMessageService->getMessagesBetween(auth()->user(), $user) : [],
         ]);
     }
 
@@ -78,5 +90,13 @@ class MessagesController extends Controller
 
         // Redirect to the chat view with the recipient selected.
         return redirect()->route('messages.show', ['user' => $request->validated('receiver_id')]);
+    }
+
+    public function deleteMessages(DeleteDirectMessageRequest $request, $sender_id, $receiver_id): RedirectResponse
+    {
+        $request->authorize();
+        $this->DeleteDirectMessagesAction->deleteMessages($sender_id, $receiver_id);
+
+        return redirect()->route('messages.show', ['user' => $receiver_id]);
     }
 }
