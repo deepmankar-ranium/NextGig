@@ -8,7 +8,7 @@ class UpdateJobListingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('job_listing'));
+        return $this->user()->can('update', $this->route('jobListing'));
     }
 
     public function rules(): array

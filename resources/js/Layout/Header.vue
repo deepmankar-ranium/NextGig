@@ -2,9 +2,11 @@
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { Home, Briefcase, User, Info, LogOut, Menu, X, MessageSquare } from 'lucide-vue-next';
+import { useNotificationStore } from '../store/notifications';
 
 const isMenuOpen = ref(false);
 const page = usePage();
+const notificationStore = useNotificationStore();
 
 const isEmployer = computed(() => page.props.auth.user?.role_id === 2);
 const isJobSeeker = computed(() => page.props.auth.user?.role_id === 3);
@@ -15,7 +17,7 @@ const navItems = computed(() => [
   { name: 'Profile', href: '/profile', icon: User },
   ...(isEmployer.value ? [{ name: 'Posted Jobs', href: '/posted-jobs', icon: Briefcase }] : []),
   ...(isJobSeeker.value ? [{ name: 'Applied Jobs', href: '/applied-jobs', icon: Briefcase }] : []),
-  { name: 'Inbox', href: '/messages', icon: MessageSquare },
+  { name: 'Inbox', href: '/messages', icon: MessageSquare , badge: notificationStore.unreadCount > 0 ? notificationStore.unreadCount : null},
   { name: 'About', href: '/about', icon: Info },
   { name: 'Chat With AI', href: '/chat', icon: Info },
 ]);
@@ -39,8 +41,9 @@ const navItems = computed(() => [
             class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors flex items-center"
             :class="{ 'bg-gray-100 text-indigo-600': $page.url.startsWith(item.href) }"
           >
-            <component :is="item.icon" class="h-5 w-5 inline-block mr-1" />
+            <component :is="item.icon" class="h-5 w-5 inline-block mr-1"  />
             <span>{{ item.name }}</span>
+            <span v-if="item.badge" class="ml-2 bg-indigo-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{{ item.badge }}</span>
           </Link>
         </nav>
 
@@ -79,7 +82,8 @@ const navItems = computed(() => [
           :class="{ 'bg-indigo-50 text-indigo-700': $page.url.startsWith(item.href) }"
         >
           <component :is="item.icon" class="mr-3 h-6 w-6 text-gray-500" :class="{'text-indigo-600': $page.url.startsWith(item.href)}" />
-          {{ item.name }}
+          <span>{{ item.name }}</span>
+          <span v-if="item.badge" class="ml-auto bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded-full">{{ item.badge }}</span>
         </Link>
       </div>
       <div class="pt-4 pb-3 border-t border-gray-200">

@@ -237,6 +237,10 @@ const props = defineProps({
   }
 })
 
+const handleBack = () => {
+  window.history.back();
+};
+
 const tableHeaders = ['ID', 'Job Listing', 'Applicant', 'Resume', 'Cover Letter', 'Status', 'Actions']
 const statusOptions = ref([
   { text: "All", value: "" },

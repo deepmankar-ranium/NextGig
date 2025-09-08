@@ -2,27 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Password\ResetPasswordAction;
+use App\Actions\Password\SendPasswordResetLinkAction;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\SendPasswordResetLinkRequest;
-use App\Services\PasswordResetService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 
 class ForgetPassword extends Controller
 {
-    public function __construct(private PasswordResetService $passwordResetService)
+    public function sendResetLinkEmail(SendPasswordResetLinkRequest $request, SendPasswordResetLinkAction $action)
     {
-    }
-
-    public function show()
-    {
-        return Inertia::render('Auth/ForgotPassword');
-    }
-
-    public function sendResetLinkEmail(SendPasswordResetLinkRequest $request)
-    {
-        $status = $this->passwordResetService->sendResetLink($request->validated());
+        $status = $action->execute($request->validated());
 
         if ($status == Password::RESET_LINK_SENT) {
             return redirect('/forgot-password')->with('status', __($status));
@@ -41,9 +33,9 @@ class ForgetPassword extends Controller
         ]);
     }
 
-    public function reset(ResetPasswordRequest $request)
+    public function reset(ResetPasswordRequest $request, ResetPasswordAction $action)
     {
-        $status = $this->passwordResetService->resetPassword($request->validated());
+        $status = $action->execute($request->validated());
 
         if ($status == Password::PASSWORD_RESET) {
             return Inertia::render('Auth/ResetPassword', [
@@ -58,5 +50,10 @@ class ForgetPassword extends Controller
         throw \Illuminate\Validation\ValidationException::withMessages([
             $errorField => [__($status)],
         ]);
+    }
+
+    public function show()
+    {
+        return Inertia::render('Auth/ForgotPassword');
     }
 }

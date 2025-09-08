@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Chat\ClearChatAction;
+use App\Actions\Chat\CreateIntroMessageAction;
+use App\Actions\Chat\SendMessageAction;
 use App\Http\Requests\ChatRequest;
 use App\Services\ChatService;
 use Inertia\Inertia;
@@ -12,9 +15,9 @@ class GPTController extends Controller
     {
     }
 
-    public function chat(ChatRequest $request)
+    public function chat(ChatRequest $request, SendMessageAction $action)
     {
-        $response = $this->chatService->sendMessage($request->validated('message'));
+        $response = $action->execute($request->validated('message'));
 
         if ($response) {
             return response()->json([
@@ -39,9 +42,10 @@ class GPTController extends Controller
         ]);
     }
 
-    public function clearChat()
+    public function clearChat(ClearChatAction $action, CreateIntroMessageAction $createIntroMessageAction)
     {
-        $this->chatService->clearHistory();
+        $action->execute();
+        $createIntroMessageAction->execute(); // Re-create intro message after clearing
 
         return response()->json([
             'status' => 'success'
@@ -53,9 +57,9 @@ class GPTController extends Controller
         return Inertia::render('Chat');
     }
 
-    public function createIntroMessage()
+    public function createIntroMessage(CreateIntroMessageAction $action)
     {
-        $introMessage = $this->chatService->createIntroMessage();
+        $introMessage = $action->execute();
 
         if ($introMessage) {
             return response()->json([

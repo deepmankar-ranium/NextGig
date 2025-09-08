@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\JobApplication\ApplyForJobAction;
+use App\Actions\JobApplication\UpdateApplicationStatusAction;
 use App\Http\Requests\ApplyForJobRequest;
 use App\Http\Requests\UpdateApplicationStatusRequest;
 use App\Models\Application;
@@ -26,9 +28,9 @@ class JobApplicationController extends Controller
         ]);
     }
 
-    public function apply(ApplyForJobRequest $request, JobListing $jobListing)
+    public function apply(ApplyForJobRequest $request, JobListing $jobListing, ApplyForJobAction $action)
     {
-        $result = $this->jobApplicationService->applyForJob($jobListing, $request->validated());
+        $result = $action->execute($jobListing, $request->validated());
 
         if (isset($result['error'])) {
             return redirect()->back()->withErrors($result);
@@ -37,9 +39,9 @@ class JobApplicationController extends Controller
         return redirect()->route('Jobs')->with($result);
     }
 
-    public function update(UpdateApplicationStatusRequest $request, Application $application)
+    public function update(UpdateApplicationStatusRequest $request, Application $application, UpdateApplicationStatusAction $action)
     {
-        $this->jobApplicationService->updateApplicationStatus($application, $request->validated('application_status'));
+        $action->execute($application, $request->validated('application_status'));
 
         return redirect()->back()->with('success', 'Application status updated successfully.');
     }

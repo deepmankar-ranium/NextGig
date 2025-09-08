@@ -10,14 +10,4 @@ class TagService
     {
         return Tag::all();
     }
-
-    public function createTag(array $data): Tag
-    {
-        return Tag::create($data);
-    }
-
-    public function deleteTags(array $tagIds): void
-    {
-        Tag::destroy($tagIds);
-    }
 }
