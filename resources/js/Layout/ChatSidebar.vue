@@ -27,7 +27,7 @@
       <button
         v-for="user in users"
         :key="user.id"
-        @click="$emit('user-selected', user)"
+        @click="handleUserClick(user)"
         :class="{
           'bg-indigo-700': user.id === selectedUser?.id,
           'hover:bg-gray-700': user.id !== selectedUser?.id,
@@ -48,6 +48,9 @@
           <div class="font-medium text-lg mb-1 truncate text-gray-100">
             {{ user.name }}
           </div>
+          <span v-if="unreadMessages[user.id] && unreadMessages[user.id].length > 0" class="text-sm text-gray-400">
+            {{ unreadMessages[user.id].length }} unread message<span v-if="unreadMessages[user.id].length > 1">s</span>
+          </span>
         </div>
       </button>
     </div>
@@ -63,6 +66,9 @@
 </template>
 
 <script setup>
+import { useNotificationStore } from '../store/notifications';
+import { storeToRefs } from 'pinia';
+
 const props = defineProps({
   users: {
     type: Array,
@@ -74,5 +80,15 @@ const props = defineProps({
   },
 });
 
-defineEmits(['user-selected']);
+const emit = defineEmits(['user-selected']);
+
+const notificationStore = useNotificationStore();
+const { unreadMessages } = storeToRefs(notificationStore);
+
+const handleUserClick = (user) => {
+  emit('user-selected', user);
+  if (unreadMessages.value[user.id]) {
+    notificationStore.markUserMessagesAsRead(user.id);
+  }
+};
 </script>
