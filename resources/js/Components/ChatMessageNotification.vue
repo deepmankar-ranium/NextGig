@@ -17,3 +17,12 @@ defineProps({
   message: String,
 });
 </script>
+
+<style>
+.Vue-Toastification__toast--default {
+    background-color: transparent !important;
+}
+.Vue-Toastification__toast {
+    padding: 0 !important;
+}
+</style>
