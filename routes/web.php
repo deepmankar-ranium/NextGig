@@ -54,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
     // Inbox chat routes
     Route::get('/messages/{user?}', [MessagesController::class, 'show'])->name('messages.show');
     Route::post('/messages', [MessagesController::class, 'store'])->name('messages.store');
+    Route::post('/messages/delete/{sender_id}/{receiver_id}', [MessagesController::class, 'deleteMessages'])->name('messages.delete');
 
     // Tag routes
     Route::get('/tags', [TagController::class, 'index']);
