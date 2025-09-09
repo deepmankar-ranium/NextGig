@@ -18,7 +18,7 @@ defineProps({
 });
 </script>
 
-<style>
+<style scoped>
 .Vue-Toastification__toast--default {
     background-color: transparent !important;
 }
