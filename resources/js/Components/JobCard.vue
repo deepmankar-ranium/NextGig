@@ -14,7 +14,7 @@
           {{ job.location }}
         </div>
         <div class="flex items-center text-sm text-gray-600">
-          <CurrencyDollarIcon class="h-5 w-5 mr-2 text-gray-400" />
+          <IndianRupeeIcon class="h-5 w-5 mr-2 text-gray-400" />
           {{ formatSalary(job.salary) }}
         </div>
         <div v-if="job.employer?.name" class="flex items-center text-sm text-gray-600">
@@ -44,13 +44,14 @@
 const props=defineProps({
   job:Object
 })
-import { BriefcaseIcon, MapPinIcon, CurrencyDollarIcon, BuildingOfficeIcon } from '@heroicons/vue/24/outline';
+import { BriefcaseIcon, MapPinIcon, BuildingOfficeIcon } from '@heroicons/vue/24/outline';
+import { IndianRupeeIcon } from 'lucide-vue-next';
 
 const formatSalary = (salary) => {
   if (!salary) return 'Salary not specified';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
     maximumFractionDigits: 0
   }).format(salary);
 };

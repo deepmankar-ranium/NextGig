@@ -296,9 +296,11 @@ const closePopup = () => {
   isPopupVisible.value = false
   popupContent.value = ''
 }
+
 const isConfirmPopupVisible = ref(false);
 const confirmApplicationId = ref(null);
 const confirmStatus = ref('');
+const isProcessing = ref(false);
 
 const showConfirmPopup = (applicationId, status) => {
   confirmApplicationId.value = applicationId;
@@ -306,9 +308,15 @@ const showConfirmPopup = (applicationId, status) => {
   isConfirmPopupVisible.value = true;
 };
 
+const closeConfirmPopup = () => {
+  isConfirmPopupVisible.value = false;
+};
+
 const updateStatus = (applicationId, status) => {
   router.put(`/applications/${applicationId}`, { application_status: status }, {
     preserveScroll: true,
+    onStart: () => isProcessing.value = true,
+    onFinish: () => isProcessing.value = false,
     onSuccess: () => {
       isConfirmPopupVisible.value = false;
     }

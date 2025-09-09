@@ -11,7 +11,7 @@ import {
   PlusIcon,
   Trash2,
   Building2,       // instead of <Building>
-  DollarSignIcon,  // instead of <CurrencyDollarIcon>
+  IndianRupeeIcon,  // instead of <CurrencyDollarIcon>
   X                // close button
 } from 'lucide-vue-next';
 
@@ -59,7 +59,7 @@ const handleBack = () => {
 };
 
 const formattedSalary = computed(() => {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(props.job.salary);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(props.job.salary);
 });
 </script>
 
@@ -132,7 +132,7 @@ const formattedSalary = computed(() => {
                     <h3 class="text-lg font-bold text-gray-900">Job Overview</h3>
                     <div class="flex items-center">
                         <!-- FIXED Dollar icon -->
-                        <DollarSignIcon class="h-5 w-5 text-gray-400 mr-3" />
+                        <IndianRupeeIcon class="h-5 w-5 text-gray-400 mr-3" />
                         <div>
                             <p class="text-sm text-gray-500">Salary</p>
                             <p class="font-semibold text-gray-800">{{ formattedSalary }}</p>
