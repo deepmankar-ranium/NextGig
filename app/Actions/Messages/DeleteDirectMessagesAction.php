@@ -2,18 +2,17 @@
 
 namespace App\Actions\Messages;
 
+use App\Events\MessagesDeleted;
 use App\Models\DirectMessage;
-use Illuminate\Support\Facades\DB;
 
 class DeleteDirectMessagesAction
 {
     /**
-     * Delete direct messages between two users.
-     * Delete message from both users
+     * Delete direct messages between two users and broadcast an event.
      *
-     * @param int $user1Id
-     * @param int $user2Id
-     * @return bool
+     * @param int $sender_id
+     * @param int $receiver_id
+     * @return void
      */
     public function deleteMessages(int $sender_id, int $receiver_id): void
     {
@@ -24,6 +23,8 @@ class DeleteDirectMessagesAction
             $query->where('sender_id', $receiver_id)
                 ->where('receiver_id', $sender_id);
         })->delete();
+
+        broadcast(new MessagesDeleted($sender_id, $receiver_id))->toOthers();
     }
 }
 
