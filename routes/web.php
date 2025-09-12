@@ -55,6 +55,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/messages/{user?}', [MessagesController::class, 'show'])->name('messages.show');
     Route::post('/messages', [MessagesController::class, 'store'])->name('messages.store');
     Route::post('/messages/delete/{sender_id}/{receiver_id}', [MessagesController::class, 'deleteMessages'])->name('messages.delete');
+    Route::delete('/messages/{message_id}', [MessagesController::class, 'destroy'])->name('message.destroy');
 
     // Tag routes
     Route::get('/tags', [TagController::class, 'index']);
