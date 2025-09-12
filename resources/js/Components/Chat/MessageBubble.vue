@@ -9,7 +9,6 @@
                  @mouseleave="$emit('mouseleave')">
                 <p class="text-slate-800 text-sm leading-relaxed m-0">{{ getMessageText(message) }}</p>
                 <p class="text-[11px] text-slate-500 mt-1">{{ formatTime(message.created_at) }}</p>
-                <p> {{ message.id }}</p>
             </div>
         </div>
 

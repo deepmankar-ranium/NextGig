@@ -47,6 +47,12 @@
     @copy="copyMessage"
     @delete="deleteMessage"
   />
+
+  <ConfirmDeleteMessage
+    v-if="deleteConfirmModal"
+    @confirm="handleDeleteConfirmMessage"
+    @cancel="deleteConfirmModal = false"
+  />
 </template>
 
 
@@ -59,6 +65,7 @@ import ChatHeader from '@/Components/Chat/ChatHeader.vue';
 import MessageInput from '@/Components/Chat/MessageInput.vue';
 import UserProfileSidebar from '@/Components/Chat/UserProfileSidebar.vue';
 import ConfirmationModal from '@/Components/Chat/ConfirmationModal.vue';
+import ConfirmDeleteMessage from '@/Components/ConfirmDeleteMessage.vue';
 import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { getMessageText } from '@/utils/helpers';
@@ -141,6 +148,13 @@ const setupEchoChannel = (user) => {
                     localMessages.value = [];
                 }
             })
+            .listen('InBetweenMessageDeleted', (e) => {
+                console.log('In-between message deleted event received:', e);
+                const index = localMessages.value.findIndex(m => m.id === e.message_id);
+                if (index !== -1) {
+                    localMessages.value.splice(index, 1);
+                }
+            })
             .error((error) => {
                 console.error('Echo channel error:', error);
             });
@@ -157,6 +171,7 @@ const cleanupEchoChannel = () => {
             // Stop listening to all events on the channel before leaving
             currentChannel.stopListening('ChatMessageSent');
             currentChannel.stopListening('MessagesDeleted');
+            currentChannel.stopListening('InBetweenMessageDeleted');
             window.Echo.leave(currentChannel.name);
             currentChannel = null;
             console.log('Echo channel cleaned up');
@@ -354,8 +369,35 @@ const copyMessage = (messageId) => {
     }
 };
 
+const deleteConfirmModal = ref(false);
+const messageToDelete = ref(null);
+
 const deleteMessage = (messageId) => {
-    console.log('Deleting message:', messageId);
-    // Placeholder for delete logic
+    messageToDelete.value = messageId;
+    deleteConfirmModal.value = true;
 };
+
+const handleDeleteConfirmMessage = () => {
+    if (messageToDelete.value) {
+        console.log('Deleting message:', messageToDelete.value);
+
+        router.delete(
+            route('message.destroy', {
+                message_id: messageToDelete.value
+            }),
+            {
+                preserveScroll: true,
+
+                onError: (errors) => {
+                    console.error('Error deleting single message:', errors);
+                },
+            }
+        );
+    }
+
+    deleteConfirmModal.value = false;
+    messageToDelete.value = null;
+};
+
+
 </script>

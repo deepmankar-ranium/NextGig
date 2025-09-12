@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Actions\Messages\DeleteDirectMessagesAction;
@@ -10,6 +11,12 @@ use App\Services\DirectMessageService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\DirectMessage;
+use App\Events\InBetweenMessageDeleted;
+
+
+use Illuminate\Support\Facades\Log;
+
 
 class MessagesController extends Controller
 {
@@ -98,5 +105,36 @@ class MessagesController extends Controller
         $this->DeleteDirectMessagesAction->deleteMessages($sender_id, $receiver_id);
 
         return redirect()->route('messages.show', ['user' => $receiver_id]);
+    }
+
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy($message_id)
+    {
+        $message = DirectMessage::find($message_id);
+        $user = auth()->user();
+
+
+        if (!$message) {
+            return abort(404, 'Message not found.');
+        }
+
+
+        if ($message->sender_id !== $user->id) {
+            return abort(403, 'Unauthorized action.');
+        }
+
+        $message->delete();
+
+        Log::info('Dispatching InBetweenMessageDeleted event', ['message_id' => $message->id, 'sender_id' => $message->sender_id, 'receiver_id' => $message->receiver_id]);
+        InBetweenMessageDeleted::dispatch($message->sender_id, $message->receiver_id, $message->id);
+
+
+        return redirect()->back()->with('status', 'Message deleted successfully.');
     }
 }
