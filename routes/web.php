@@ -42,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/apply/{jobListing}', [JobApplicationController::class, 'apply'])->middleware('throttle:writes');
     Route::put('/applications/{application}', [JobApplicationController::class, 'update'])->middleware('throttle:writes');
     Route::post('/applications/{application}/viewed', [JobApplicationController::class, 'markViewed'])->middleware('throttle:writes');
+    Route::get('/applications/{application}/resume', [JobApplicationController::class, 'resume'])->name('applications.resume');
 
     // User-specific job routes
     Route::get('/posted-jobs', [EmployerJobListingController::class, 'show']);

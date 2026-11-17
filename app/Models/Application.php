@@ -19,6 +19,16 @@ class Application extends Model
         'application_status'
     ];
 
+    /** Internal storage path; clients get `has_resume_file` / the download route instead. */
+    protected $hidden = ['resume_path'];
+
+    protected $appends = ['has_resume_file'];
+
+    public function getHasResumeFileAttribute(): bool
+    {
+        return filled($this->resume_path);
+    }
+
     protected $attributes = [
         'application_status' => self::STATUS_APPLIED,
     ];

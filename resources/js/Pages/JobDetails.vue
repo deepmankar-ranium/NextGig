@@ -14,7 +14,10 @@ import {
   Trash2,
   Building2,       // instead of <Building>
   IndianRupeeIcon,  // instead of <CurrencyDollarIcon>
-  X                // close button
+  X,               // close button
+  FileText,
+  Upload,
+  CheckCircle2
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -36,6 +39,10 @@ const props = defineProps({
   match: {
     type: Object,
     default: null
+  },
+  resumeOnFile: {
+    type: Object,
+    default: null
   }
 });
 
@@ -46,15 +53,38 @@ const handleApplyClick = () => {
 };
 
 const form = useForm({
-  resume_text: '',
+  resume: null,
   cover_letter: ''
+});
+
+// With a resume on file the seeker can just apply; "Use a different PDF" swaps it for this
+// and future applications.
+const replacingResume = ref(false);
+const needsFile = computed(() => !props.resumeOnFile || replacingResume.value);
+const fileName = ref('');
+const onResumeFile = (e) => {
+  form.resume = e.target.files[0] ?? null;
+  fileName.value = form.resume?.name ?? '';
+  form.clearErrors('resume');
+};
+const cancelReplace = () => {
+  replacingResume.value = false;
+  form.resume = null;
+  fileName.value = '';
+};
+const updatedAgo = computed(() => {
+  if (!props.resumeOnFile?.updated_at) return '';
+  const days = Math.floor((Date.now() - new Date(props.resumeOnFile.updated_at)) / 86400000);
+  return days < 1 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
 });
 
 const submitApplication = () => {
   form.post(`/apply/${props.job.id}`, {
+    forceFormData: true,
     preserveScroll: true,
     onSuccess: () => {
       showApplyForm.value = false;
+      cancelReplace();
       form.reset();
     }
   });
@@ -204,24 +234,52 @@ const formattedSalary = computed(() => {
                     Employers may sort applicants by a match score calculated from skills and experience only.
                     It is a suggestion: a person reviews every application and makes every decision.
                   </p>
+                  <!-- Resume -->
                   <div>
-                    <label for="resume_text" class="block text-sm font-medium text-gray-700">Resume</label>
-                    <div class="mt-1">
-                      <textarea v-model="form.resume_text" id="resume_text" rows="8" class="block w-full shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" placeholder="Paste your resume here..."></textarea>
+                    <p class="label">Resume</p>
+
+                    <div v-if="resumeOnFile && !replacingResume" class="mt-2 flex items-start gap-3 rounded-lg border border-gray-200 p-3">
+                      <span class="rounded-md bg-indigo-50 p-2"><FileText class="h-5 w-5 text-indigo-600" /></span>
+                      <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-900">Your resume on file</p>
+                        <p class="text-xs text-gray-500">Updated {{ updatedAgo }}<template v-if="resumeOnFile.skills?.length"> · {{ resumeOnFile.skills.join(', ') }}</template></p>
+                        <div class="mt-2 flex gap-3 text-xs font-medium">
+                          <button type="button" class="text-indigo-600 hover:underline" @click="replacingResume = true">Use a different PDF</button>
+                          <Link href="/resume" class="text-gray-500 hover:underline">Edit profile</Link>
+                        </div>
+                      </div>
+                      <CheckCircle2 class="h-5 w-5 shrink-0 text-green-600" />
                     </div>
-                     <p v-if="form.errors.resume_text" class="mt-1 text-sm text-red-500">{{ form.errors.resume_text }}</p>
+
+                    <div v-if="needsFile" class="mt-2">
+                      <label class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors"
+                        :class="form.errors.resume ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50/40'">
+                        <input type="file" accept="application/pdf" class="sr-only" @change="onResumeFile" />
+                        <Upload class="h-6 w-6 text-gray-400" />
+                        <span class="mt-2 text-sm font-medium text-gray-900">{{ fileName || 'Upload your resume' }}</span>
+                        <span class="text-xs text-gray-500">{{ fileName ? 'Click to choose a different file' : 'PDF, up to 5 MB' }}</span>
+                      </label>
+                      <p class="mt-1 text-xs text-gray-500">It's saved to your profile, so next time you can apply in one click.</p>
+                      <button v-if="resumeOnFile" type="button" class="mt-1 text-xs font-medium text-gray-500 hover:underline" @click="cancelReplace">Keep the resume on file</button>
+                    </div>
+                    <p v-if="form.errors.resume" class="mt-1 text-sm text-red-600">{{ form.errors.resume }}</p>
                   </div>
+
+                  <!-- Cover letter (optional) -->
                   <div>
-                    <label for="cover_letter" class="block text-sm font-medium text-gray-700">Cover Letter</label>
-                    <div class="mt-1">
-                      <textarea v-model="form.cover_letter" id="cover_letter" rows="8" class="block w-full shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" placeholder="Why are you a great fit for this role?"></textarea>
+                    <div class="flex items-baseline justify-between">
+                      <label for="cover_letter" class="label">Cover letter <span class="font-normal text-gray-400">(optional)</span></label>
+                      <span class="text-xs text-gray-400">{{ form.cover_letter.length }}/5000</span>
                     </div>
-                    <p v-if="form.errors.cover_letter" class="mt-1 text-sm text-red-500">{{ form.errors.cover_letter }}</p>
+                    <textarea v-model="form.cover_letter" id="cover_letter" rows="6" maxlength="5000" class="input mt-1"
+                      :placeholder="`A few lines on why you'd be great for ${job.title}`"></textarea>
+                    <p v-if="form.errors.cover_letter" class="mt-1 text-sm text-red-600">{{ form.errors.cover_letter }}</p>
                   </div>
+
                   <div class="flex justify-end space-x-3">
-                    <button @click="showApplyForm = false" type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button type="submit" :disabled="form.processing" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">
-                      {{ form.processing ? 'Submitting...' : 'Submit Application' }}
+                    <button @click="showApplyForm = false" type="button" class="btn-secondary">Cancel</button>
+                    <button type="submit" :disabled="form.processing || (needsFile && !form.resume)" class="btn-primary">
+                      {{ form.processing ? 'Sending…' : 'Send application' }}
                     </button>
                   </div>
                 </form>

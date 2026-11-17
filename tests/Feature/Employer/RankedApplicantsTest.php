@@ -103,11 +103,12 @@ class RankedApplicantsTest extends TestCase
 
     public function test_every_status_change_is_audited_with_actor_and_time(): void
     {
+        \Illuminate\Support\Facades\Storage::fake('local');
         $owner = $this->employerUser();
         $job = $this->jobFor($owner);
-        $seeker = $this->seekerUser();
+        $seeker = $this->withResumeOnFile($this->seekerUser());
 
-        $this->actingAs($seeker)->post("/apply/{$job->id}", ['resume_text' => 'r', 'cover_letter' => 'c'])->assertRedirect();
+        $this->actingAs($seeker)->post("/apply/{$job->id}", ['cover_letter' => 'c'])->assertRedirect();
         $application = Application::firstOrFail();
         $this->assertSame('applied', $application->application_status);
 

@@ -75,6 +75,17 @@ const scoreClass = (s) => (s === null ? 'bg-gray-100 text-gray-500' : s >= 75 ? 
 
 // ---- Documents (opening one records "viewed") ----
 const doc = ref(null);
+
+// The PDF opens in a new tab; the server records "viewed" when the owner opens it.
+const openResume = (application) => {
+  if (application.has_resume_file) {
+    window.open(`/applications/${application.id}/resume`, '_blank', 'noopener');
+    if (application.application_status === 'applied') application.application_status = 'viewed';
+    return;
+  }
+  openDoc('Resume', application.resume_text, application);
+};
+
 const openDoc = (title, content, application) => {
   doc.value = { title, content };
   if (application?.application_status === 'applied') {
@@ -180,8 +191,8 @@ const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, {
                 <td class="px-4 py-3"><StageBadge :status="a.application_status" /></td>
                 <td class="px-4 py-3">
                   <div class="flex gap-1">
-                    <button type="button" class="btn-ghost btn-sm" @click="openDoc('Resume', a.resume_text, a)"><FileText class="h-4 w-4" /> Resume</button>
-                    <button type="button" class="btn-ghost btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)">Letter</button>
+                    <button type="button" class="btn-ghost btn-sm" @click="openResume(a)"><FileText class="h-4 w-4" /> Resume</button>
+                    <button v-if="a.cover_letter" type="button" class="btn-ghost btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)">Letter</button>
                   </div>
                 </td>
                 <td class="px-4 py-3">
@@ -247,8 +258,8 @@ const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, {
           </div>
 
           <div class="flex flex-wrap gap-2">
-            <button type="button" class="btn-secondary btn-sm" @click="openDoc('Resume', a.resume_text, a)"><FileText class="h-4 w-4" /> Resume</button>
-            <button type="button" class="btn-secondary btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)">Letter</button>
+            <button type="button" class="btn-secondary btn-sm" @click="openResume(a)"><FileText class="h-4 w-4" /> Resume</button>
+            <button v-if="a.cover_letter" type="button" class="btn-secondary btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)">Letter</button>
             <Link v-if="a.job_seeker?.user_id" :href="`/messages/${a.job_seeker.user_id}`" class="btn-secondary btn-sm"><MessageSquare class="h-4 w-4" /> Message</Link>
           </div>
 

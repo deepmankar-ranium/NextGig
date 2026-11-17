@@ -27,11 +27,12 @@ class ApplicationTimelineTest extends TestCase
     {
         parent::setUp();
 
+        \Illuminate\Support\Facades\Storage::fake('local');
         $this->owner = $this->employerUser();
-        $this->seeker = $this->seekerUser();
+        $this->seeker = $this->withResumeOnFile($this->seekerUser());
         $job = $this->jobFor($this->owner);
 
-        $this->actingAs($this->seeker)->post("/apply/{$job->id}", ['resume_text' => 'r', 'cover_letter' => 'c']);
+        $this->actingAs($this->seeker)->post("/apply/{$job->id}", ['cover_letter' => 'c']);
         $this->application = Application::firstOrFail();
     }
 
@@ -175,7 +176,7 @@ class ApplicationTimelineTest extends TestCase
         $this->move('rejected');
 
         $this->actingAs($this->seeker)
-            ->post("/apply/{$this->application->jobListing_id}", ['resume_text' => 'r2', 'cover_letter' => 'c2'])
+            ->post("/apply/{$this->application->jobListing_id}", ['cover_letter' => 'c2'])
             ->assertRedirect();
 
         $this->assertSame('applied', $this->application->fresh()->application_status);

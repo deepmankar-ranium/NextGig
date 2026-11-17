@@ -69,6 +69,24 @@ class JobListingService
             'isJobSeeker' => $isJobSeeker,
             'applicationStatus' => $application ? $application->application_status : null,
             'match' => $isJobSeeker && $user->jobseeker ? $this->matchPayload($user->jobseeker, $job) : null,
+            'resumeOnFile' => $isJobSeeker && $user->jobseeker ? $this->resumeOnFile($user->jobseeker) : null,
+        ];
+    }
+
+    /**
+     * What the apply panel needs to know about the seeker's saved resume.
+     */
+    private function resumeOnFile(Jobseeker $seeker): ?array
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+
+        if (blank($seeker->resume) || ! $disk->exists($seeker->resume)) {
+            return null;
+        }
+
+        return [
+            'updated_at' => date(DATE_ATOM, $disk->lastModified($seeker->resume)),
+            'skills' => array_slice($seeker->profileSkills(), 0, 6),
         ];
     }
 

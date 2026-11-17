@@ -23,7 +23,7 @@ class JobseekerFactory extends Factory
 
         return [
             'user_id' => $user->id,
-            'resume' => fake()->filePath(), // Simulating a resume file path
+            'resume' => null, // No file by default; tests use withResumeOnFile()
             'email'=>fake()->email(),
             'skills' => implode(',', fake()->randomElements([
                 'PHP', 'Laravel', 'JavaScript', 'React', 'Vue.js', 
