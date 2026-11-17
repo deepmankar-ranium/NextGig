@@ -22,18 +22,33 @@ judgement. Say so in the README.
 Automated emails to candidates. Interview scheduling.
 
 ## Acceptance criteria
-- [ ] A JD draft is never published without an explicit employer action.
-- [ ] Prompts contain no protected attributes; a test asserts this.
-- [ ] Rankings are visible only to the employer who owns the job.
-- [ ] No code path changes application status without a human request.
-- [ ] Every status change is recorded with the actor and a timestamp.
+- [x] A JD draft is never published without an explicit employer action.
+- [x] Prompts contain no protected attributes; a test asserts this.
+- [x] Rankings are visible only to the employer who owns the job.
+- [x] No code path changes application status without a human request.
+- [x] Every status change is recorded with the actor and a timestamp.
 
 ## Tests
 - Prompt-content test: name, email and gender are absent from what's sent to the provider.
 - Ownership: employer B cannot see employer A's rankings.
 - Audit entry written on each status change.
 
-## Unresolved questions
-1. Show seekers that AI ranking is used (a transparency notice)? Recommended: yes.
+## Decisions (2026-11-17)
+1. **Yes, transparency notice** on the apply form: scores use skills and experience only, and a
+   person makes every decision.
 
 ## Notes
+Branch `feature/m04-employer-ai`.
+
+- **JD writer**: `POST /Jobs/draft` (employers, `throttle:ai`) → `JobDescriptionWriter`. Input is
+  only the title, notes and min years. Returns description text, skills, matching `tag_ids` and
+  `new_skills` (skills with no tag yet). It fills the create form; it never saves a job.
+- **Ranked applicants**: `/view-applications` sorts by the M3 match score (code, no AI call) with a
+  "why?" row: matched / missing skills and the status history. `?ranked=0` (button) shows the
+  plain newest-first list. Inputs are skills and years only, so protected attributes can't
+  influence the order. Seekers' `resume_text` / `profile` stay hidden from the payload.
+- **Audit trail**: `application_status_history` (append-only model `ApplicationStatusChange`;
+  updates/deletes throw). Every change goes through `Application::transitionTo($status, $actor)`,
+  used by apply and by the employer's status update. M5 builds the timeline on this table.
+- Fixed: new applications were saved as `'Pending'` (capital P), not a valid enum value.
+

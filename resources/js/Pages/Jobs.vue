@@ -5,6 +5,8 @@ import Pagination from '../Components/Pagination.vue';
 import axios from 'axios';
 import { ref, computed, onMounted, watch } from 'vue';
 import JobCard from '@/Components/JobCard.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
+import Tabs from '@/Components/UI/Tabs.vue';
 import withRecentlyPostedBanner from '@/Components/withRecentlyPostedBanner.vue';
 import { ChevronLeftIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-vue-next';
 
@@ -15,6 +17,10 @@ const props = defineProps({
     required: true
   },
   isEmployer: {
+    type: Boolean,
+    default: false
+  },
+  isJobSeeker: {
     type: Boolean,
     default: false
   },
@@ -29,10 +35,9 @@ const searchJobs =async(e)=>{
   isLoading.value = true;
   try {
     const response = await axios.get('/search', {
-      params: { q: searchQuery.value },
+      params: { q: searchQuery.value, ...sortParam() },
     });
     jobListingsData.value=response.data.searchResults;
-    console.log(jobListingsData.value);
   } catch (error) {
       console.error('Search request failed:', error);
   } finally {
@@ -56,6 +61,20 @@ const handleBack = () => {
 const jobListingsData = ref(props.jobListings);
 const isLoading = ref(false);
 const selectedTag = ref('');
+const sortByMatch = ref(new URLSearchParams(window.location.search).get('sort') === 'match');
+const sortParam = () => (sortByMatch.value ? { sort: 'match' } : {});
+
+const setTab = (key) => {
+  if ((key === 'match') !== sortByMatch.value) toggleMatchSort();
+};
+
+const toggleMatchSort = async () => {
+  sortByMatch.value = !sortByMatch.value;
+  const url = new URL(window.location);
+  sortByMatch.value ? url.searchParams.set('sort', 'match') : url.searchParams.delete('sort');
+  window.history.replaceState({}, '', url);
+  await filterJobs(selectedTag.value);
+};
 
 // API calls
 const filterJobs = async (tag) => {
@@ -65,7 +84,7 @@ const filterJobs = async (tag) => {
     selectedTag.value = tag;
 
     const response = await axios.get('/filter', {
-      params: { tag }
+      params: { tag, ...sortParam() }
     });
 
     jobListingsData.value = response.data.jobListings;
@@ -84,7 +103,8 @@ const handlePageChange = async (page) => {
     const response = await axios.get('/filter', {
       params: {
         tag: selectedTag.value,
-        page
+        page,
+        ...sortParam()
       }
     });
 
@@ -127,36 +147,19 @@ const showPagination = computed(() =>
 
 <template>
   <AppLayout>
-    <div class="bg-gray-50 min-h-screen">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="page">
 
-        <!-- Page Header -->
-        <div class="md:flex md:items-center md:justify-between pb-8 border-b border-gray-200">
-          <div class="min-w-0 flex-1">
-            <button @click="handleBack" class="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-              <ChevronLeftIcon class="h-5 w-5 mr-1" />
-              Back
-            </button>
-            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Available Job Positions
-            </h1>
-            <p class="mt-2 text-lg text-gray-600">
-              Find your next career move from our curated list of opportunities.
-            </p>
-          </div>
-          <div v-if="isEmployer" class="mt-6 flex space-x-3 md:mt-0 md:ml-4">
-            <Link
-              href="/Jobs/create"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <PlusIcon class="-ml-1 mr-2 h-5 w-5" />
-              Post a New Job
-            </Link>
-          </div>
-        </div>
+        <PageHeader title="Jobs" :subtitle="isJobSeeker ? 'Every job shows how well it matches your skills.' : 'Browse every open role on NextGig.'">
+          <template v-if="isEmployer" #actions>
+            <Link href="/jobs/create" class="btn-primary"><PlusIcon class="h-4 w-4" /> Post a job</Link>
+          </template>
+          <template v-if="isJobSeeker" #tabs>
+            <Tabs :model-value="sortByMatch ? 'match' : 'all'" @update:model-value="setTab" :tabs="[{ key: 'all', label: 'All jobs' }, { key: 'match', label: 'Best matches' }]" label="Job list" />
+          </template>
+        </PageHeader>
 
         <!-- Filters Panel -->
-        <div class="mt-8 p-6 bg-white rounded-xl shadow-md space-y-6">
+        <div class="card card-body space-y-6">
             <!-- Search Form -->
             <form @submit.prevent="searchJobs">
                 <label for="search" class="block text-sm font-medium text-gray-700">Search by keyword</label>
@@ -216,7 +219,7 @@ const showPagination = computed(() =>
                   <Link 
                     v-for="job in jobListingsData.data" 
                     :key="job.id" 
-                    :href="`/Jobs/job/${job.id}`"
+                    :href="`/jobs/${job.id}`"
                     class="block"
                   >
                     <withRecentlyPostedBanner :job="job">
@@ -239,6 +242,6 @@ const showPagination = computed(() =>
           class="mt-10" 
         />
       </div>
-    </div>
+    
   </AppLayout>
 </template>

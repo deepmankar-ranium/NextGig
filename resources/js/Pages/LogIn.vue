@@ -1,12 +1,13 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
-import { useForm, Link } from '@inertiajs/vue3';
+import { useForm, Link, usePage } from '@inertiajs/vue3';
 import { EyeIcon, EyeOffIcon, MailIcon, LockIcon } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
 
 const props = defineProps({
   status: String,
 });
+const page = usePage();
 
 const form = useForm({
   email: '',
@@ -59,6 +60,7 @@ watch(() => props.status, (newStatus) => {
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
       <div class="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10">
+        <div v-if="page.props.errors?.google" role="alert" class="mb-6 rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ page.props.errors.google }}</div>
         <form @submit.prevent="submit" class="space-y-6">
           <!-- Email -->
           <div>

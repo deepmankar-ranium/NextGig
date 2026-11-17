@@ -18,7 +18,7 @@ const deleteJob = () => {
 };
 
 const confirmDelete = () => {
-    form.delete(`/Jobs/job/${props.job.id}`);
+    form.delete(`/jobs/${props.job.id}`);
     showDeleteModal.value = false;
 };
 
@@ -32,6 +32,7 @@ const form = useForm({
     title: props.job.title || '',
     description: props.job.description || '',
     salary: Math.round(props.job.salary) || 0,
+    min_years_experience: props.job.min_years_experience ?? '',
     employer_id: props.job.employer_id || null,
     tags: selectedTags.value
 });
@@ -46,7 +47,7 @@ const submit = () => {
 };
 
 const confirmEdit = () => {
-    form.patch(`/Jobs/job/${props.job.id}`);
+    form.patch(`/jobs/${props.job.id}`);
     showEditModal.value = false;
 };
 </script>
@@ -91,6 +92,14 @@ const confirmEdit = () => {
                     <input type="number" v-model="form.salary" id="salary"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
                     <p v-if="form.errors.salary" class="text-red-500 text-sm mt-1">{{ form.errors.salary }}</p>
+                </div>
+                <div class="form-group">
+                    <label for="min_years_experience" class="block text-sm font-medium text-gray-700 mb-1">
+                        Minimum years of experience (optional):
+                    </label>
+                    <input type="number" min="0" max="40" v-model="form.min_years_experience" id="min_years_experience"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500" />
+                    <p v-if="form.errors.min_years_experience" class="text-red-500 text-sm mt-1">{{ form.errors.min_years_experience }}</p>
                 </div>
                 <div>
                     <label class="block font-medium text-lg">Select Tags:</label>

@@ -1,53 +1,136 @@
-<p align="center">
-  <a href="https://laravel.com" target="_blank">
-    <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
-  </a>
-</p>
+# NextGig
 
-# NextGig 🚀
+**A real-time hiring platform with explainable AI matching.** Job seekers see *why* they match a
+job and what's missing. Employers get a ranked, explainable shortlist and live application
+timelines. A person makes every hiring decision.
 
-**NextGig** is a web application designed to efficiently connect job seekers with employers. Built on the Laravel framework, this project serves as my first learning endeavor in laravel. It provides a user-friendly interface for both job seekers and employers to manage job listings, applications, and profiles.
+Built with Laravel 12, Inertia.js + Vue 3, Tailwind CSS, MySQL, Pusher (Laravel Echo) and Google
+Gemini.
 
-## 🌟 Features
+## Features
 
-- **Job Listings**: 
-  - Users can browse and apply for the latest job opportunities.
-  
-- **Employer Dashboard**: 
-  - Employers can create, edit, and manage job listings.
-  
-- **User Authentication**: 
-  - Secure login and registration process to ensure user data security.
-  
-- **Search Functionality**: 
-  - Easily search for jobs by title or description.
-  
-- **Responsive Design**: 
-  - The application is optimized for both desktop and mobile devices.
+**For job seekers**
+- **Resume → profile.** Upload a PDF; skills, years of experience and roles are extracted and shown
+  to you to review and edit before they're used anywhere.
+- **Match score on every job** (0–100) with the skills you have, the ones you're missing, and an
+  on-demand AI explanation with 2–3 concrete tips. "Best matches for you" sorts the job list.
+- **Live application timeline.** Applied → Viewed → Shortlisted → Interview → Offer. Updates arrive
+  in real time (toast + badge), and important stages also send an email.
+- **Career assistant** chat that knows your profile.
 
-## 🛠 Project Stack
+**For employers**
+- **Job-description writer.** Turn a title and a few notes into a structured draft with suggested
+  tags. It only fills the form; you edit and publish it yourself.
+- **Ranked applicants** with a "why?" panel (matched / missing skills, status history). Ranking can
+  be switched off.
+- **Audit trail** of every status change: who, what, when.
+- Tags, job posting, direct messages with applicants.
 
-- **Backend**: Laravel
-- **Frontend**: IertiaJs + VueJs
-- **Database**: MySQL
-- **Styling**: Tailwind CSS
+## How matching works
 
+The score is computed by plain code, not by the AI (`app/Matching/MatchScorer.php`):
 
-## 📚 Usage
+```
+skills     = |job's skills the seeker has| / |job's skills|
+experience = min(1, seeker's years / job's minimum years)
 
-- **For Job Seekers**: 
-  - Create an account, browse job listings, and apply for jobs that match your skills.
-  
-- **For Employers**: 
-  - Register as an employer, create job listings, and manage applications.
+score = round(100 × skills)                              if the job sets no minimum years
+score = round(100 × (0.8 × skills + 0.2 × experience))   otherwise
+```
 
-### Authorization Conditions
+- A job's skills are its tags. Skills are compared exactly after normalisation (lower-case plus an
+  alias table, e.g. `VueJS` → `vue.js`, in `config/skills.php`).
+- If the job lists no skills or the seeker has none, there's no score (not a misleading 0%).
+- Scores are cached in `job_matches` and recomputed by queued jobs when a profile or job changes.
+  Listing jobs never calls the AI.
+- A golden set of resume/job pairs (`tests/Unit/Matching/MatchScorerTest.php`) pins the formula.
 
-- **User Authentication**: 
-  - Users must register and log in to access certain features of the application, such as applying for jobs and managing listings.
-  
-- **Middleware Protection**: 
-  - Routes that require authentication are protected by middleware. If a user tries to access these routes without being logged in, they will be redirected to the login page.
+The AI only **explains** a score that already exists. It receives skills, years, the job title and
+the score — never names, emails or resume text — and its answer is **grounded**: if it mentions a
+skill that isn't in your profile or the job, the explanation is replaced by a plain template.
 
+## Human in the loop
 
-Thank you for checking out **NextGig**! I hope you find it useful in your job search or hiring process. Happy coding! 🎉
+Hiring is a high-risk use of AI (EU AI Act; New York City Local Law 144 requires bias audits for
+automated hiring tools). NextGig is designed around that:
+
+- **AI never makes a decision.** There is no auto-reject. Every status change is an explicit action
+  by a person and is recorded with the actor and time (`application_status_history`, append-only).
+- **Ranking uses skills and experience only.** Name, email, photo, gender, age and location are not
+  inputs to the score, and contact details are redacted from resumes before any AI call.
+- **Transparency.** Applicants are told on the apply form that employers may sort by match score.
+  Every AI output is labelled "AI suggestion, not a hiring decision."
+- Employers can turn ranking off and see the plain list.
+
+## Security
+
+This started as my first Laravel project. Before adding AI, I audited it and found broken access
+control — then fixed each issue test-first (`tests/Feature/Security`):
+
+| Issue | Fix |
+| --- | --- |
+| Any employer could change the status of **any** application | Only the employer who owns the job (policy) |
+| The inbox listed **every user's name and email** | Only people you've talked to; no emails |
+| Anyone could self-register as **Admin** | Only Employer / Job Seeker selectable |
+| Employers could post jobs under **another employer's** account | Ownership checked on create and update |
+| Job pages leaked the employer's login email | Relation no longer sent to the browser |
+| Any employer could delete tags other employers use | Tags owned per employer |
+| "Delete conversation" wiped it for both people | Hides it only for you |
+| No rate limits | Login, registration, password reset, writes and AI calls are throttled; AI also has a daily cap |
+
+## Demo accounts
+
+After seeding demo data (`php artisan demo:reset`):
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Job seeker | `seeker@nextgig.test` | `password` |
+| Employer | `employer@nextgig.test` | `password` |
+
+The seeker has applications at different stages; the employer has a role with ranked applicants.
+
+## Running locally
+
+Requirements: PHP 8.2+ (8.3 recommended), Composer, Node 20+, MySQL.
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+# set DB_* in .env, then:
+php artisan migrate
+php artisan demo:reset        # optional: demo data + demo accounts
+npm run dev
+php artisan serve             # or Laravel Herd
+php artisan queue:work        # match recompute + emails
+```
+
+**AI:** set `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`, default `gemini-3.1-flash-lite`).
+Without a key, AI features show a friendly "not configured" message; everything else works.
+`AI_PER_MINUTE` and `AI_DAILY_CAP` set the per-user limits.
+
+**Real time:** set `BROADCAST_CONNECTION=pusher` and the `PUSHER_*` / `VITE_PUSHER_*` keys (or
+point Echo at Laravel Reverb). With the default `log` driver everything works; updates just appear
+on refresh instead of live.
+
+## Tests
+
+```bash
+php artisan test
+```
+
+Tests use in-memory SQLite and a fake AI provider, so they never touch your database or call
+Gemini. CI (`.github/workflows/tests.yml`) runs the suite and a production frontend build on every
+pull request.
+
+## Project layout
+
+| Path | What's there |
+| --- | --- |
+| `app/AI` | `AiProvider` interface, Gemini and fake providers, output validation |
+| `app/Resume` | PDF text extraction, PII redaction, skill normalisation, profile parser |
+| `app/Matching` | Scorer, cached match service, grounded explainer |
+| `app/Employer` | Job-description writer |
+| `docs/milestones` | What was built, milestone by milestone, with decisions |
+| `docs/architecture` | AI matching and messaging design notes |

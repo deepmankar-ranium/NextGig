@@ -11,7 +11,7 @@ class JobListing extends Model
 
 
 
-    protected $fillable = ['title', 'description', 'salary', 'employer_id'];
+    protected $fillable = ['title', 'description', 'salary', 'employer_id', 'min_years_experience'];
 
    
     public function employer()
@@ -25,6 +25,6 @@ class JobListing extends Model
     }
     public function applications()
     {
-        return $this->hasMany(Application::class);
+        return $this->hasMany(Application::class, 'jobListing_id');
     }
 }

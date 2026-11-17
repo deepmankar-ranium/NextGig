@@ -3,13 +3,12 @@
 namespace App\Actions\Chat;
 
 use App\Models\ChatMessage;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class ClearChatAction
 {
-    public function execute(): void
+    public function execute(User $user): void
     {
-        $userId = Auth::user()->id;
-        ChatMessage::where('user_id', $userId)->delete();
+        ChatMessage::where('user_id', $user->id)->delete();
     }
 }

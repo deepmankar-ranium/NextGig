@@ -1,247 +1,179 @@
-<template>
-  <AppLayout>
-    <div class="bg-gray-50 py-8">
-      <div class="max-w-4xl mx-auto h-[calc(100vh-10rem)] flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200"
-           :class="{ 'blur-sm pointer-events-none': isModalOpen }">
-        <!-- Header -->
-        <header class="sticky top-0 z-10 bg-white/70 backdrop-blur-lg rounded-t-2xl border-b border-gray-200">
-          <div class="flex justify-between items-center px-6 py-4">
-            <div class="flex items-center gap-4">
-              <div class="p-2 bg-indigo-100 rounded-full">
-                <MessageCircle class="w-6 h-6 text-indigo-600" />
-              </div>
-              <h2 class="text-xl font-bold text-gray-800">Chat Assistant</h2>
-            </div>
-            <button @click="showClearChatModal"
-                    class="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors">
-              <Trash2 class="w-4 h-4" />
-              <span class="hidden sm:inline">Clear Chat</span>
-            </button>
-          </div>
-        </header>
-
-        <!-- Chat Messages -->
-        <div ref="chatBox" class="flex-1 overflow-y-auto px-6 py-4 space-y-6 scroll-smooth">
-          <div v-for="(msg, index) in messages"
-               :key="index"
-               :class="['transition-all duration-300 ease-out animate-message']">
-            <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
-              <div class="flex gap-3 max-w-[85%]">
-                <div v-if="msg.role === 'bot'" class="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  <MessageCircle class="w-5 h-5 text-gray-500" />
-                </div>
-                <div :class="[
-                  'p-4 rounded-2xl shadow-sm',
-                  msg.role === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                ]">
-                  <p class="whitespace-pre-wrap">{{ msg.content }}</p>
-                </div>
-              </div>
-            </div>
-             <p :class="[
-                'text-xs text-gray-400 mt-2',
-                msg.role === 'user' ? 'text-right' : 'text-left ml-11'
-              ]">{{ msg.time }}</p>
-          </div>
-        </div>
-
-        <!-- Input Area -->
-        <footer class="sticky bottom-0 z-10 bg-white/70 backdrop-blur-lg rounded-b-2xl border-t border-gray-200 p-4">
-          <div class="flex items-center gap-4">
-            <input v-model="message"
-                   @keyup.enter="sendMessage"
-                   :disabled="isLoading"
-                   placeholder="Type your message..."
-                   class="flex-1 p-4 bg-gray-100 border-transparent rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-            <button @click="sendMessage"
-                    :disabled="isLoading || !message.trim()"
-                    class="p-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
-              <Loader2 v-if="isLoading" class="w-6 h-6 animate-spin" />
-              <Send v-else class="w-6 h-6" />
-            </button>
-          </div>
-        </footer>
-      </div>
-
-      <ConfirmModal
-       :isOpen="isModalOpen" @update:isOpen="val => isModalOpen = val"
-        @confirm="handleConfirm"
-        @cancel="handleCancel"
-      />
-    </div>
-  </AppLayout>
-</template>
-
-
 <script setup>
-import AppLayout from "@/Layout/AppLayout.vue";
-import { ref, onMounted, nextTick } from "vue";
-import { Send, Trash2, Loader2, MessageCircle } from 'lucide-vue-next';
-import ConfirmModal from "@/Components/ConfirmModal.vue";
-import axios from "axios";
-import { get } from "lodash";
+import { ref, computed, nextTick, onMounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { Sparkles, RotateCcw, Copy, Check, AlertCircle } from 'lucide-vue-next';
+import AppLayout from '@/Layout/AppLayout.vue';
+import Composer from '@/Components/Chat/Composer.vue';
+import Avatar from '@/Components/Chat/Avatar.vue';
+import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue';
+import { formatAssistant, timeLabel } from '@/utils/chat';
 
-const chatBox = ref(null);
-const message = ref("");
-const messages = ref([]);
-const isLoading = ref(false);
-const isModalOpen = ref(false);
+const page = usePage();
+const me = computed(() => page.props.auth.user);
+const isEmployer = computed(() => me.value?.role_id === 2);
 
-const createMessage = (role, content) => ({
-  role,
-  content,
-  time: new Date().toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true
-  }),
-  animate: true
-});
-
-const scrollToBottom = async () => {
-  await nextTick();
-  if (chatBox.value) {
-    chatBox.value.scrollTop = chatBox.value.scrollHeight;
-  }
+const SUGGESTIONS = {
+  seeker: [
+    'Which skills should I learn next for backend roles?',
+    'How do I prepare for a technical interview?',
+    'Write a short, specific opening line for a cover letter',
+    'How can I explain a career gap?',
+  ],
+  employer: [
+    'Write 5 interview questions for a Laravel developer',
+    'How do I make a job post more inclusive?',
+    'What should a fair take-home task look like?',
+    'How do I give helpful feedback to rejected candidates?',
+  ],
 };
+const suggestions = computed(() => SUGGESTIONS[isEmployer.value ? 'employer' : 'seeker']);
 
-const handleConfirm = async (event) => {
-  if (event.confirmed) {
-    await clearChat();
-  }
-};
+const messages = ref([]); // { role: 'user'|'bot', content, at, error? }
+const draft = ref('');
+const loading = ref(true);
+const thinking = ref(false);
+const confirmClear = ref(false);
+const copied = ref(null);
+const scroller = ref(null);
+const composer = ref(null);
 
-const handleCancel = () => {
-  console.log("User canceled clearing chat");
-};
+const scrollToBottom = () => nextTick(() => scroller.value?.scrollTo({ top: scroller.value.scrollHeight, behavior: 'smooth' }));
 
-const showClearChatModal = () => {
-  isModalOpen.value = true;
-};
-
-const clearChat = async () => {
-  try {
-    await axios.post('/clear-chat');
-    messages.value = [];
-    await getChat();
-  } catch (error) {
-    console.error("Error clearing chat:", error);
-  }
-};
-
-const getChat = async () => {
+const load = async () => {
   try {
     const { data } = await axios.get('/chat-history');
-
-    messages.value = data.history.map(item => ({
-        role: item.sender === 'user' ? 'user' : 'bot',
-        content: item.message,
-        time: new Date(item.created_at).toLocaleTimeString("en-US", {
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true
-        })
-    }));
-
-    if (messages.value.length === 0) {
-        await createIntroMessage();
-    }
-
-    await scrollToBottom();
-  } catch (error) {
-    console.error("Error fetching chat history:", error);
-  }
-};
-
-const createIntroMessage = async () => {
-  try {
-    const { data } = await axios.post('/create-intro-message');
-    if (data.status === 'success' && data.message) {
-      messages.value.push({
-        role: 'bot',
-        content: data.message,
-        time: new Date().toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true
-        })
-      });
-    }
-  } catch (error) {
-    console.error("Error creating intro message:", error);
-  }
-};
-
-const sendMessage = async () => {
-  if (!message.value.trim()) return;
-
-  const userMessage = message.value;
-  message.value = "";
-
-  try {
-    isLoading.value = true;
-
-    messages.value.push(createMessage("user", userMessage));
-    await scrollToBottom();
-
-    const response = await axios.post('/chat', { message: userMessage });
-
-    if (response.data.status === 'success') {
-      messages.value.push(createMessage("bot", response.data.response));
-      await scrollToBottom();
-    } else {
-      messages.value.push(createMessage("bot", "Sorry, I encountered an error. Please try again."));
-    }
-  } catch (error) {
-    console.error('Request failed:', error);
-    messages.value.push(createMessage("bot", "Sorry, I encountered an error. Please try again."));
+    messages.value = data.history.map((m) => ({ role: m.sender === 'user' ? 'user' : 'bot', content: m.message, at: m.created_at }));
+  } catch {
+    messages.value = [];
   } finally {
-    isLoading.value = false;
-    await scrollToBottom();
+    loading.value = false;
+    scrollToBottom();
   }
 };
 
-onMounted(() => {
-    getChat();
-});
+const send = async (text = draft.value) => {
+  const content = text.trim();
+  if (!content || thinking.value) return;
 
+  draft.value = '';
+  messages.value.push({ role: 'user', content, at: new Date().toISOString() });
+  thinking.value = true;
+  scrollToBottom();
+
+  try {
+    const { data } = await axios.post('/chat', { message: content });
+    if (typeof data?.response !== 'string' || !data.response.trim()) throw new Error('Empty reply');
+    messages.value.push({ role: 'bot', content: data.response, at: new Date().toISOString() });
+  } catch (e) {
+    const msg = e.response?.data?.message || e.response?.data?.response || 'The assistant is unavailable right now. Please try again in a minute.';
+    messages.value.push({ role: 'bot', content: msg, at: new Date().toISOString(), error: true });
+  } finally {
+    thinking.value = false;
+    scrollToBottom();
+    composer.value?.focus();
+  }
+};
+
+const clear = async () => {
+  confirmClear.value = false;
+  await axios.post('/clear-chat').catch(() => {});
+  messages.value = [];
+};
+
+const copy = async (i) => {
+  try {
+    await navigator.clipboard.writeText(messages.value[i].content);
+    copied.value = i;
+    setTimeout(() => { if (copied.value === i) copied.value = null; }, 1500);
+  } catch { /* clipboard unavailable */ }
+};
+
+onMounted(load);
 </script>
 
-<style scoped>
-.animate-message {
-  animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+<template>
+  <AppLayout full-height>
+    <div class="flex h-[calc(100dvh-8rem)] flex-col bg-white md:h-[calc(100dvh-4rem)]">
+      <!-- Header -->
+      <header class="shrink-0 border-b border-gray-200">
+        <div class="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100"><Sparkles class="h-4 w-4 text-indigo-600" /></span>
+          <div class="min-w-0 flex-1">
+            <h1 class="text-sm font-semibold text-gray-900">Career assistant</h1>
+            <p class="truncate text-xs text-gray-500">AI suggestions only. Double-check anything important.</p>
+          </div>
+          <button v-if="messages.length" type="button" @click="confirmClear = true" class="btn-ghost btn-sm" title="Start a new conversation">
+            <RotateCcw class="h-4 w-4" /><span class="hidden sm:inline">New chat</span>
+          </button>
+        </div>
+      </header>
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+      <!-- Conversation -->
+      <div ref="scroller" class="flex-1 overflow-y-auto" aria-live="polite">
+        <div class="mx-auto max-w-3xl px-4 py-6">
+          <div v-if="loading" class="flex justify-center py-20"><span class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" /></div>
 
-/* Custom Scrollbar */
-div::-webkit-scrollbar {
-  width: 6px;
-}
+          <!-- Welcome -->
+          <div v-else-if="!messages.length" class="flex flex-col items-center pt-8 text-center sm:pt-16">
+            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600"><Sparkles class="h-6 w-6 text-white" /></span>
+            <h2 class="mt-4 text-xl font-semibold text-gray-900">How can I help{{ me?.full_name ? `, ${me.full_name.split(' ')[0]}` : '' }}?</h2>
+            <p class="mt-1 max-w-md text-sm text-gray-500">
+              {{ isEmployer ? 'Ask about job posts, interviews or hiring fairly.' : 'Ask about your job search, resume, cover letters or interviews. I know the skills on your profile.' }}
+            </p>
+            <div class="mt-8 grid w-full gap-2 sm:grid-cols-2">
+              <button v-for="s in suggestions" :key="s" type="button" @click="send(s)"
+                class="rounded-xl border border-gray-200 px-4 py-3 text-left text-sm text-gray-700 transition-colors hover:border-indigo-300 hover:bg-indigo-50">
+                {{ s }}
+              </button>
+            </div>
+          </div>
 
-div::-webkit-scrollbar-track {
-  background: transparent;
-}
+          <!-- Messages -->
+          <div v-else class="space-y-6">
+            <div v-for="(m, i) in messages" :key="i" class="flex gap-3" :class="m.role === 'user' ? 'justify-end' : ''">
+              <template v-if="m.role === 'user'">
+                <div class="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-indigo-600 px-4 py-2.5 text-sm leading-relaxed text-white">{{ m.content }}</div>
+              </template>
+              <template v-else>
+                <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full" :class="m.error ? 'bg-red-100' : 'bg-indigo-100'">
+                  <AlertCircle v-if="m.error" class="h-4 w-4 text-red-600" />
+                  <Sparkles v-else class="h-4 w-4 text-indigo-600" />
+                </span>
+                <div class="group min-w-0 flex-1">
+                  <div v-if="m.error" class="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-800">{{ m.content }}</div>
+                  <div v-else class="break-words text-sm leading-relaxed text-gray-800 [&>p:first-child]:mt-0" v-html="formatAssistant(m.content)"></div>
+                  <div v-if="!m.error" class="mt-1 flex items-center gap-2 text-[11px] text-gray-400">
+                    <span>{{ timeLabel(m.at) }}</span>
+                    <button type="button" @click="copy(i)" class="inline-flex items-center gap-1 rounded px-1 py-0.5 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-700 focus:opacity-100 group-hover:opacity-100">
+                      <Check v-if="copied === i" class="h-3 w-3 text-green-600" /><Copy v-else class="h-3 w-3" />
+                      {{ copied === i ? 'Copied' : 'Copy' }}
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </div>
 
-div::-webkit-scrollbar-thumb {
-  background-color: #D1D5DB;
-  border-radius: 20px;
-}
+            <!-- Typing indicator -->
+            <div v-if="thinking" class="flex gap-3" aria-label="Assistant is typing">
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-100"><Sparkles class="h-4 w-4 text-indigo-600" /></span>
+              <div class="flex items-center gap-1 rounded-2xl bg-gray-100 px-4 py-3">
+                <span v-for="d in 3" :key="d" class="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" :style="{ animationDelay: `${d * 120}ms` }" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-div::-webkit-scrollbar-thumb:hover {
-  background-color: #9CA3AF;
-}
+      <!-- Composer -->
+      <div class="shrink-0">
+        <div class="mx-auto max-w-3xl">
+          <Composer ref="composer" v-model="draft" :busy="thinking" :max-length="1000" placeholder="Ask about jobs, resumes, interviews…" autofocus class="border-t-0 sm:pb-4" @send="send()" />
+        </div>
+      </div>
+    </div>
 
-.scroll-smooth {
-  overscroll-behavior: contain;
-}
-</style>
+    <ConfirmDialog v-if="confirmClear" title="Start a new conversation?" message="This clears your chat history with the assistant."
+      confirm-label="Clear" danger @confirm="clear" @cancel="confirmClear = false" />
+  </AppLayout>
+</template>

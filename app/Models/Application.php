@@ -20,26 +20,65 @@ class Application extends Model
     ];
 
     protected $attributes = [
-        'application_status' => self::STATUS_PENDING, // Default value
+        'application_status' => self::STATUS_APPLIED,
     ];
 
-    // Define application status constants
-    const STATUS_PENDING = 'pending';
-    const STATUS_APPROVED = 'approved';
+    // Pipeline stages, in order. Rejected can happen from any open stage.
+    const STATUS_APPLIED = 'applied';
+    const STATUS_VIEWED = 'viewed';
+    const STATUS_SHORTLISTED = 'shortlisted';
+    const STATUS_INTERVIEW = 'interview';
+    const STATUS_OFFER = 'offer';
     const STATUS_REJECTED = 'rejected';
 
+    /** Stages the seeker gets an email for. */
+    const EMAIL_STAGES = [self::STATUS_SHORTLISTED, self::STATUS_INTERVIEW, self::STATUS_OFFER];
+
     /**
-     * Get all possible application statuses.
-     *
-     * @return array
+     * @return list<string>
      */
     public static function getApplicationStatuses(): array
     {
-        return [
-            self::STATUS_PENDING,
-            self::STATUS_APPROVED,
-            self::STATUS_REJECTED,
-        ];
+        return [...self::pipeline(), self::STATUS_REJECTED];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function pipeline(): array
+    {
+        return [self::STATUS_APPLIED, self::STATUS_VIEWED, self::STATUS_SHORTLISTED, self::STATUS_INTERVIEW, self::STATUS_OFFER];
+    }
+
+    public function isClosed(): bool
+    {
+        return in_array($this->application_status, [self::STATUS_OFFER, self::STATUS_REJECTED], true);
+    }
+
+    /**
+     * Forward moves (skipping is fine) and rejecting an open application are always allowed.
+     * Anything else — going back a stage, or reopening an offer/rejection — needs $reopen,
+     * an explicit choice by the employer.
+     */
+    public function canTransitionTo(string $to, bool $reopen = false): bool
+    {
+        $from = $this->application_status;
+
+        if ($to === $from || ! in_array($to, self::getApplicationStatuses(), true)) {
+            return false;
+        }
+
+        if ($reopen) {
+            return true;
+        }
+
+        if ($to === self::STATUS_REJECTED) {
+            return ! $this->isClosed();
+        }
+
+        $order = array_flip(self::pipeline());
+
+        return ! $this->isClosed() && isset($order[$from]) && $order[$to] > $order[$from];
     }
 
     /**
@@ -52,6 +91,30 @@ class Application extends Model
 
     public function jobSeeker()
     {
-        return $this->belongsTo(JobSeeker::class, 'jobSeeker_id');
+        return $this->belongsTo(Jobseeker::class, 'jobSeeker_id');
+    }
+
+    public function statusHistory()
+    {
+        return $this->hasMany(ApplicationStatusChange::class)->orderBy('id');
+    }
+
+    /**
+     * The only way to change a status: always records who did it and when.
+     */
+    public function transitionTo(string $status, ?User $actor): void
+    {
+        $from = $this->exists ? $this->getOriginal('application_status') : null;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($status, $actor, $from) {
+            $this->application_status = $status;
+            $this->save();
+
+            $this->statusHistory()->create([
+                'from_status' => $from,
+                'to_status' => $status,
+                'changed_by' => $actor?->id,
+            ]);
+        });
     }
 }

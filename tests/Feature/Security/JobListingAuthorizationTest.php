@@ -23,14 +23,14 @@ class JobListingAuthorizationTest extends TestCase
     public function test_employer_can_open_create_job_page(): void
     {
         $this->actingAs($this->employerUser())
-            ->get('/Jobs/create')
+            ->get('/jobs/create')
             ->assertOk();
     }
 
     public function test_job_seeker_cannot_open_create_job_page(): void
     {
         $this->actingAs($this->seekerUser())
-            ->get('/Jobs/create')
+            ->get('/jobs/create')
             ->assertForbidden();
     }
 
@@ -39,7 +39,7 @@ class JobListingAuthorizationTest extends TestCase
         $employer = $this->employerUser();
 
         $this->actingAs($this->seekerUser())
-            ->post('/Jobs/create', $this->payload($employer->employer->id))
+            ->post('/jobs/create', $this->payload($employer->employer->id))
             ->assertForbidden();
 
         $this->assertDatabaseCount('job_listings', 0);
@@ -50,7 +50,7 @@ class JobListingAuthorizationTest extends TestCase
         $victim = $this->employerUser();
 
         $this->actingAs($this->employerUser())
-            ->post('/Jobs/create', $this->payload($victim->employer->id))
+            ->post('/jobs/create', $this->payload($victim->employer->id))
             ->assertForbidden();
 
         $this->assertDatabaseCount('job_listings', 0);
@@ -61,11 +61,11 @@ class JobListingAuthorizationTest extends TestCase
         $job = $this->jobFor($this->employerUser());
         $seeker = $this->seekerUser();
 
-        $this->actingAs($seeker)->get("/Jobs/job/{$job->id}/edit")->assertForbidden();
+        $this->actingAs($seeker)->get("/jobs/{$job->id}/edit")->assertForbidden();
         $this->actingAs($seeker)
-            ->patch("/Jobs/job/{$job->id}", $this->payload($job->employer_id))
+            ->patch("/jobs/{$job->id}", $this->payload($job->employer_id))
             ->assertForbidden();
-        $this->actingAs($seeker)->delete("/Jobs/job/{$job->id}")->assertForbidden();
+        $this->actingAs($seeker)->delete("/jobs/{$job->id}")->assertForbidden();
 
         $this->assertDatabaseHas('job_listings', ['id' => $job->id, 'title' => $job->title]);
     }
@@ -75,11 +75,11 @@ class JobListingAuthorizationTest extends TestCase
         $job = $this->jobFor($this->employerUser());
         $intruder = $this->employerUser();
 
-        $this->actingAs($intruder)->get("/Jobs/job/{$job->id}/edit")->assertForbidden();
+        $this->actingAs($intruder)->get("/jobs/{$job->id}/edit")->assertForbidden();
         $this->actingAs($intruder)
-            ->patch("/Jobs/job/{$job->id}", $this->payload($intruder->employer->id))
+            ->patch("/jobs/{$job->id}", $this->payload($intruder->employer->id))
             ->assertForbidden();
-        $this->actingAs($intruder)->delete("/Jobs/job/{$job->id}")->assertForbidden();
+        $this->actingAs($intruder)->delete("/jobs/{$job->id}")->assertForbidden();
 
         $this->assertDatabaseHas('job_listings', ['id' => $job->id, 'employer_id' => $job->employer_id]);
     }
@@ -89,7 +89,7 @@ class JobListingAuthorizationTest extends TestCase
         $owner = $this->employerUser();
         $job = $this->jobFor($owner);
 
-        $this->actingAs($owner)->delete("/Jobs/job/{$job->id}")->assertRedirect('/Jobs');
+        $this->actingAs($owner)->delete("/jobs/{$job->id}")->assertRedirect('/jobs');
 
         $this->assertDatabaseMissing('job_listings', ['id' => $job->id]);
     }

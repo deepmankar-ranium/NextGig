@@ -27,10 +27,10 @@ class ApplicationAuthorizationTest extends TestCase
         $application = $this->applicationTo($owner);
 
         $this->actingAs($owner)
-            ->put("/applications/{$application->id}", ['application_status' => 'approved'])
+            ->put("/applications/{$application->id}", ['application_status' => 'shortlisted'])
             ->assertRedirect();
 
-        $this->assertSame('approved', $application->fresh()->application_status);
+        $this->assertSame('shortlisted', $application->fresh()->application_status);
     }
 
     public function test_other_employer_cannot_update_application_status(): void
@@ -42,7 +42,7 @@ class ApplicationAuthorizationTest extends TestCase
             ->put("/applications/{$application->id}", ['application_status' => 'rejected'])
             ->assertForbidden();
 
-        $this->assertSame('pending', $application->fresh()->application_status);
+        $this->assertSame('applied', $application->fresh()->application_status);
     }
 
     public function test_job_seeker_cannot_update_application_status(): void
@@ -50,10 +50,10 @@ class ApplicationAuthorizationTest extends TestCase
         $application = $this->applicationTo($this->employerUser());
 
         $this->actingAs($application->jobSeeker->user)
-            ->put("/applications/{$application->id}", ['application_status' => 'approved'])
+            ->put("/applications/{$application->id}", ['application_status' => 'shortlisted'])
             ->assertForbidden();
 
-        $this->assertSame('pending', $application->fresh()->application_status);
+        $this->assertSame('applied', $application->fresh()->application_status);
     }
 
     public function test_job_seeker_cannot_view_employer_applications_page(): void

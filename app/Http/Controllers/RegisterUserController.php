@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Auth\AuthenticateUserAction;
+use App\Actions\Auth\HandleGoogleCallbackAction;
 use App\Actions\Auth\LogoutUserAction;
 use App\Actions\Auth\RegisterUserAction;
 use App\Http\Requests\AuthenticationRequest;
@@ -24,19 +25,26 @@ class RegisterUserController extends Controller
         ]);
     }
 
-    public function storeRole(Request $request)
+    public function storeRole(Request $request, HandleGoogleCallbackAction $googleSignup)
     {
         $request->validate([
             // Admin (1) cannot be self-assigned.
             'role_id' => 'required|integer|in:2,3',
         ]);
 
+        // Finishing a Google sign-up: create the account now, no password form needed.
+        if (session()->has(HandleGoogleCallbackAction::SESSION_KEY)) {
+            if ($googleSignup->completePendingSignup((int) $request->role_id)) {
+                return redirect('/home');
+            }
+        }
+
         session(['user_role' => $request->role_id]);
 
         return redirect()->route('register-2');
     }
 
-    public function showRegister2()
+    public function showRegisterDetails()
     {
         $role_id = session('user_role');
 
@@ -44,7 +52,7 @@ class RegisterUserController extends Controller
             return redirect('/register')->withErrors(['role_id' => 'You must select a valid role before registering.']);
         }
 
-        return Inertia::render('Register2');
+        return Inertia::render('RegisterDetails');
     }
 
     public function register(RegisterUserRequest $request, RegisterUserAction $registerUserAction)
@@ -57,7 +65,7 @@ class RegisterUserController extends Controller
 
         $registerUserAction->execute($request->validated(), $role_id);
 
-        return redirect('/Home');
+        return redirect('/home');
     }
 
     public function logIn()
@@ -69,7 +77,7 @@ class RegisterUserController extends Controller
     {
         $authenticateUserAction->execute($request->only('email', 'password'), $request->boolean('remember'));
 
-        return redirect()->intended('/Home');
+        return redirect()->intended('/home');
     }
 
     public function logout(Request $request, LogoutUserAction $logoutUserAction)

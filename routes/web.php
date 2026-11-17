@@ -13,6 +13,9 @@ use Inertia\Inertia;
 use App\Http\Controllers\GPTController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\MessagesController;
+use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\JobMatchController;
+use App\Http\Controllers\JobDraftController;
 
 
 Route::get('/', function () {
@@ -21,14 +24,16 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
     // Job Listing routes
-    Route::get('/Home', [JobListingController::class, 'index'])->name('home');
-    Route::get('/Jobs', [JobListingController::class, 'jobs'])->name('Jobs');
-    Route::get('/Jobs/create', [JobListingController::class, 'create']);
-    Route::post('/Jobs/create', [JobListingController::class, 'store'])->middleware('throttle:writes')->name('jobs.store');
-    Route::get('/Jobs/job/{jobListing}', [JobListingController::class, 'show']);
-    Route::get('/Jobs/job/{jobListing}/edit', [JobListingController::class, 'edit']);
-    Route::patch('/Jobs/job/{jobListing}', [JobListingController::class, 'update']);
-    Route::delete('/Jobs/job/{jobListing}', [JobListingController::class, 'destroy']);
+    Route::get('/home', [JobListingController::class, 'index'])->name('home');
+    Route::get('/jobs', [JobListingController::class, 'jobs'])->name('jobs.index');
+    Route::get('/jobs/create', [JobListingController::class, 'create']);
+    Route::post('/jobs/draft', [JobDraftController::class, 'store'])->middleware('throttle:ai')->name('jobs.draft');
+    Route::post('/jobs/create', [JobListingController::class, 'store'])->middleware('throttle:writes')->name('jobs.store');
+    Route::get('/jobs/{jobListing}', [JobListingController::class, 'show'])->whereNumber('jobListing');
+    Route::get('/jobs/{jobListing}/edit', [JobListingController::class, 'edit'])->whereNumber('jobListing');
+    Route::patch('/jobs/{jobListing}', [JobListingController::class, 'update'])->whereNumber('jobListing');
+    Route::delete('/jobs/{jobListing}', [JobListingController::class, 'destroy'])->whereNumber('jobListing');
+    Route::post('/jobs/{jobListing}/match/explain', [JobMatchController::class, 'explain'])->middleware('throttle:ai')->whereNumber('jobListing')->name('jobs.match.explain');
     Route::get('/search', [JobListingController::class, 'search'])->name('search');
     Route::get('/filter', [JobListingController::class, 'filterJobs']);
 
@@ -36,6 +41,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/view-applications', [JobApplicationController::class, 'show']);
     Route::post('/apply/{jobListing}', [JobApplicationController::class, 'apply'])->middleware('throttle:writes');
     Route::put('/applications/{application}', [JobApplicationController::class, 'update'])->middleware('throttle:writes');
+    Route::post('/applications/{application}/viewed', [JobApplicationController::class, 'markViewed'])->middleware('throttle:writes');
 
     // User-specific job routes
     Route::get('/posted-jobs', [EmployerJobListingController::class, 'show']);
@@ -64,12 +70,24 @@ Route::middleware(['auth'])->group(function () {
 
     // Profile routes
     Route::get('/profile', [ProfileController::class,'profile']);
+
+    // Resume + parsed profile (job seekers, own data only)
+    Route::get('/resume', [ResumeController::class, 'show'])->name('resume.show');
+    Route::post('/resume', [ResumeController::class, 'upload'])->middleware('throttle:ai')->name('resume.upload');
+    Route::put('/resume/profile', [ResumeController::class, 'update'])->middleware('throttle:writes')->name('resume.profile');
 });
+
+// Old capitalised URLs (before 2026-11) → permanent redirects, so bookmarks and emails keep working.
+Route::permanentRedirect('/Home', '/home');
+Route::permanentRedirect('/Jobs', '/jobs');
+Route::permanentRedirect('/Jobs/create', '/jobs/create');
+Route::get('/Jobs/job/{id}', fn (string $id) => redirect("/jobs/{$id}", 301))->whereNumber('id');
+Route::get('/Jobs/job/{id}/edit', fn (string $id) => redirect("/jobs/{$id}/edit", 301))->whereNumber('id');
 
 // Authentication routes (throttled, no auth middleware)
 Route::get('/register', [RegisterUserController::class, 'show']);
 Route::post('/register/store-role', [RegisterUserController::class, 'storeRole'])->middleware('throttle:auth');
-Route::get('/register-2', [RegisterUserController::class, 'showRegister2'])->name('register-2');
+Route::get('/register-2', [RegisterUserController::class, 'showRegisterDetails'])->name('register-2');
 Route::post('/register-2/register', [RegisterUserController::class, 'register'])->middleware('throttle:auth');
 Route::get('/login', [RegisterUserController::class, 'logIn']);
 Route::post('/login', [RegisterUserController::class, 'authenticate'])->middleware('throttle:login')->name('login');

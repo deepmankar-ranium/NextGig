@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { useForm, Link } from '@inertiajs/vue3'
+import { useForm, Link, usePage } from '@inertiajs/vue3'
 import { User, Briefcase } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -52,6 +52,7 @@ const iconByName = (name) => (name === 'Employer' ? Briefcase : User)
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
       <div class="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10">
+        <div v-if="usePage().props.flash?.status" role="status" class="mb-6 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-800">{{ usePage().props.flash.status }}</div>
         <form @submit.prevent="submit" class="space-y-8">
           <div>
             <h3 class="text-lg leading-6 font-medium text-gray-900 text-center">

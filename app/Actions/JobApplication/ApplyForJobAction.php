@@ -12,42 +12,34 @@ class ApplyForJobAction
     public function execute(JobListing $jobListing, array $data)
     {
         $user = Auth::user();
-        $jobSeeker = $user->jobSeeker;
+        $jobSeeker = $user->jobseeker;
 
-        if (!$jobSeeker) {
+        if (! $jobSeeker) {
             return ['error' => 'Job Seeker profile not found.'];
         }
 
-        $existingApplication = Application::where('jobListing_id', $jobListing->id)
+        $application = Application::where('jobListing_id', $jobListing->id)
             ->where('jobSeeker_id', $jobSeeker->id)
             ->first();
 
-        if ($existingApplication) {
-            if ($existingApplication->application_status === 'rejected') {
-                $existingApplication->update([
-                    'resume_text' => $data['resume_text'],
-                    'cover_letter' => $data['cover_letter'],
-                    'application_status' => 'pending',
-                ]);
-
-                event(new JobApplied($existingApplication));
-
-                return ['success' => 'Application resubmitted successfully.'];
-            } else {
-                return ['error' => 'You have already applied for this job.'];
-            }
+        if ($application && $application->application_status !== Application::STATUS_REJECTED) {
+            return ['error' => 'You have already applied for this job.'];
         }
 
-        $newApplication = Application::create([
+        $resubmitted = $application !== null;
+
+        $application ??= new Application([
             'jobListing_id' => $jobListing->id,
             'jobSeeker_id' => $jobSeeker->id,
+        ]);
+        $application->fill([
             'resume_text' => $data['resume_text'],
             'cover_letter' => $data['cover_letter'],
-            'application_status' => 'Pending',
         ]);
+        $application->transitionTo(Application::STATUS_APPLIED, $user);
 
-        event(new JobApplied($newApplication));
+        event(new JobApplied($application));
 
-        return ['success' => 'Application submitted successfully.'];
+        return ['success' => $resubmitted ? 'Application resubmitted successfully.' : 'Application submitted successfully.'];
     }
 }

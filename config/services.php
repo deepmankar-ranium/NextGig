@@ -35,9 +35,18 @@ return [
         ],
     ],
     'google' => [
-   'client_id' => env('GOOGLE_CLIENT_ID'),
-   'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-   'redirect' => env('GOOGLE_REDIRECT_URL'),
-   ]
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        // Relative by default, so it follows whatever host the app runs on (nextgig.test, production…).
+        'redirect' => env('GOOGLE_REDIRECT_URL', '/auth/google/callback'),
+    ],
+
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        // Free-tier model as of 2026-11; check https://ai.google.dev/gemini-api/docs/models before changing.
+        'model' => env('GEMINI_MODEL', 'gemini-3.1-flash-lite'),
+        'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+        'timeout' => (int) env('GEMINI_TIMEOUT', 20),
+    ],
 
 ];

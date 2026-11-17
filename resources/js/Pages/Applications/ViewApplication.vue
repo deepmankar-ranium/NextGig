@@ -1,365 +1,303 @@
+<script setup>
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { router, Link } from '@inertiajs/vue3';
+import axios from 'axios';
+import AppLayout from '@/Layout/AppLayout.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
+import Tabs from '@/Components/UI/Tabs.vue';
+import EmptyState from '@/Components/UI/EmptyState.vue';
+import StageBadge from '@/Components/UI/StageBadge.vue';
+import { Check, X, FileText, Search, MessageSquare, Users, ChevronDown } from 'lucide-vue-next';
+import { STAGE_LABELS, nextStages } from '@/utils/stages';
+
+const props = defineProps({
+  applications: { type: Array, required: true },
+  ranked: { type: Boolean, default: true },
+});
+
+// ---- Tabs + filters (kept in the URL so dashboard links can deep-link) ----
+const TAB_STAGES = {
+  all: null,
+  new: ['applied', 'viewed'],
+  progress: ['shortlisted', 'interview'],
+  offer: ['offer'],
+  rejected: ['rejected'],
+};
+const params = new URLSearchParams(window.location.search);
+const activeTab = ref(TAB_STAGES[params.get('tab')] !== undefined ? params.get('tab') : 'all');
+const jobFilter = ref(params.get('job') || '');
+const searchQuery = ref('');
+
+watch([activeTab, jobFilter], () => {
+  const url = new URL(window.location);
+  activeTab.value === 'all' ? url.searchParams.delete('tab') : url.searchParams.set('tab', activeTab.value);
+  jobFilter.value ? url.searchParams.set('job', jobFilter.value) : url.searchParams.delete('job');
+  window.history.replaceState(window.history.state, '', url);
+});
+
+const jobs = computed(() => {
+  const map = new Map();
+  props.applications.forEach((a) => a.job_listing && map.set(String(a.job_listing.id), a.job_listing.title));
+  return [...map].map(([id, title]) => ({ id, title }));
+});
+
+const inJob = computed(() => props.applications.filter((a) => !jobFilter.value || String(a.job_listing?.id) === jobFilter.value));
+const countFor = (key) => (TAB_STAGES[key] ? inJob.value.filter((a) => TAB_STAGES[key].includes(a.application_status)).length : inJob.value.length);
+
+const tabs = computed(() => [
+  { key: 'all', label: 'All', count: countFor('all') },
+  { key: 'new', label: 'New', count: countFor('new') },
+  { key: 'progress', label: 'In progress', count: countFor('progress') },
+  { key: 'offer', label: 'Offers', count: countFor('offer') },
+  { key: 'rejected', label: 'Rejected', count: countFor('rejected') },
+]);
+
+const visible = computed(() => {
+  const stages = TAB_STAGES[activeTab.value];
+  const q = searchQuery.value.trim().toLowerCase();
+
+  return inJob.value.filter((a) => (!stages || stages.includes(a.application_status))
+    && (!q || a.job_seeker?.name?.toLowerCase().includes(q) || a.job_listing?.title?.toLowerCase().includes(q)));
+});
+
+const toggleRanking = () => {
+  router.get('/view-applications', {
+    ...(props.ranked ? { ranked: 0 } : {}),
+    ...(activeTab.value !== 'all' ? { tab: activeTab.value } : {}),
+    ...(jobFilter.value ? { job: jobFilter.value } : {}),
+  }, { preserveScroll: true });
+};
+
+// ---- "Why?" panel ----
+const expanded = ref(null);
+const toggleWhy = (id) => { expanded.value = expanded.value === id ? null : id; };
+const scoreClass = (s) => (s === null ? 'bg-gray-100 text-gray-500' : s >= 75 ? 'bg-green-100 text-green-700' : s >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600');
+
+// ---- Documents (opening one records "viewed") ----
+const doc = ref(null);
+const openDoc = (title, content, application) => {
+  doc.value = { title, content };
+  if (application?.application_status === 'applied') {
+    axios.post(`/applications/${application.id}/viewed`)
+      .then(() => { application.application_status = 'viewed'; })
+      .catch(() => {});
+  }
+};
+
+// ---- Stage changes ----
+const confirm = ref(null); // { id, status, reopen }
+const isProcessing = ref(false);
+const askMove = (id, status, reopen = false) => { confirm.value = { id, status, reopen }; };
+
+const doMove = () => {
+  const { id, status, reopen } = confirm.value;
+  router.put(`/applications/${id}`, { application_status: status, reopen }, {
+    preserveScroll: true,
+    preserveState: true,
+    onStart: () => { isProcessing.value = true; },
+    onFinish: () => { isProcessing.value = false; },
+    onSuccess: () => { confirm.value = null; },
+  });
+};
+
+const onKey = (e) => {
+  if (e.key !== 'Escape') return;
+  doc.value = null;
+  confirm.value = null;
+};
+onMounted(() => document.addEventListener('keydown', onKey));
+onUnmounted(() => document.removeEventListener('keydown', onKey));
+
+const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : '');
+</script>
+
 <template>
   <AppLayout>
-    <div class="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <!-- Header -->
-      <div class="max-w-7xl mx-auto">
-        <div class="md:flex md:items-center md:justify-between pb-8">
-          <div class="min-w-0 flex-1">
-            <button @click="handleBack" class="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-              <ChevronLeftIcon class="h-5 w-5 mr-1" />
-              Back
-            </button>
-            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Job Applications
-            </h1>
-            <p class="mt-2 text-lg text-gray-600">
-              Manage and review candidate applications for your job postings.
-            </p>
-          </div>
+    <div class="page">
+      <PageHeader title="Applicants" subtitle="Review candidates for your roles. You make every decision.">
+        <template #actions>
+          <button type="button" @click="toggleRanking" class="btn-secondary">
+            {{ ranked ? 'Sorted by match · turn off' : 'Newest first · sort by match' }}
+          </button>
+        </template>
+        <template #tabs>
+          <Tabs v-model="activeTab" :tabs="tabs" label="Applicant stages" />
+        </template>
+      </PageHeader>
+
+      <!-- Filters -->
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row">
+        <div class="relative flex-1">
+          <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input v-model="searchQuery" type="search" placeholder="Search applicant or role" class="input pl-9" aria-label="Search applicants" />
         </div>
+        <select v-model="jobFilter" class="input sm:w-64" aria-label="Filter by role">
+          <option value="">All roles</option>
+          <option v-for="j in jobs" :key="j.id" :value="j.id">{{ j.title }}</option>
+        </select>
+      </div>
+      <p v-if="ranked" class="mb-4 text-xs text-gray-500">
+        Match scores use only skills and years of experience. They're a suggestion: nobody is rejected automatically.
+      </p>
 
-        <!-- Filters section -->
-        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="md:col-span-2">
-              <label for="search-applications" class="block text-sm font-medium text-gray-700">Search by applicant or job</label>
-              <div class="mt-1 relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search class="w-5 h-5 text-gray-400" />
-                </div>
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  id="search-applications"
-                  placeholder="e.g., 'Jane Doe' or 'Software Engineer'"
-                  class="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-              </div>
-            </div>
+      <EmptyState v-if="!visible.length" :icon="Users"
+        :title="applications.length ? 'No applicants here' : 'No applicants yet'"
+        :text="applications.length ? 'Try another tab or role.' : 'When people apply to your roles, they show up here.'" />
 
-            <div>
-              <label for="status-filter" class="block text-sm font-medium text-gray-700">Filter by status</label>
-              <VueMultiselect
-                id="status-filter"
-                v-model="filterStatus"
-                :options="statusOptions"
-                :searchable="false"
-                placeholder="Select a status"
-                class="multiselect-custom mt-1"
-                label="text"
-                track-by="value"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Applications Table -->
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500">
-              <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                <tr>
-                  <th v-for="header in tableHeaders" :key="header" scope="col" class="px-6 py-3">
-                    {{ header }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="application in filteredApplications"
-                  :key="application.id"
-                  class="bg-white border-b hover:bg-gray-50 transition-colors"
-                >
-                  <td class="px-6 py-4 font-medium text-gray-900">#{{ application.id }}</td>
-                  <td class="px-6 py-4 font-medium text-gray-900">{{ application.job_listing?.title || 'N/A' }}</td>
-                  <td class="px-6 py-4 font-medium text-gray-900">
-                    <div class="flex items-center gap-2">
-                      <span>{{ application.job_seeker?.name || 'N/A' }}</span>
-                      <Link
-                        v-if="application.job_seeker?.user_id"
-                        :href="`/messages/${application.job_seeker.user_id}`"
-                        class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md"
-                        title="Message applicant"
-                      >
-                        <MessageSquare class="w-4 h-4" />
-                      </Link>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4">
-                    <button
-                      @click="openPopup('resume', application.resume_text)"
-                      class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                    >
-                      <FileText class="w-4 h-4 mr-2" />
-                      Resume
+      <!-- Desktop table -->
+      <div v-else class="card hidden overflow-hidden md:block">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+            <tr>
+              <th class="px-4 py-3 font-medium">Applicant</th>
+              <th class="px-4 py-3 font-medium">Role</th>
+              <th v-if="ranked" class="px-4 py-3 font-medium">Match</th>
+              <th class="px-4 py-3 font-medium">Stage</th>
+              <th class="px-4 py-3 font-medium">Documents</th>
+              <th class="px-4 py-3 font-medium">Move to</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <template v-for="a in visible" :key="a.id">
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium text-gray-900">{{ a.job_seeker?.name || 'Applicant' }}</span>
+                    <Link v-if="a.job_seeker?.user_id" :href="`/messages/${a.job_seeker.user_id}`" class="text-gray-400 hover:text-indigo-600" title="Message applicant">
+                      <MessageSquare class="h-4 w-4" />
+                    </Link>
+                  </div>
+                  <p class="text-xs text-gray-500">Applied {{ formatDate(a.created_at) }}</p>
+                </td>
+                <td class="px-4 py-3 text-gray-700">{{ a.job_listing?.title }}</td>
+                <td v-if="ranked" class="px-4 py-3">
+                  <button v-if="a.match" type="button" @click="toggleWhy(a.id)" class="inline-flex items-center gap-1">
+                    <span class="badge" :class="scoreClass(a.match.score)">{{ a.match.score === null ? '—' : `${a.match.score}%` }}</span>
+                    <ChevronDown class="h-4 w-4 text-gray-400 transition-transform" :class="{ 'rotate-180': expanded === a.id }" />
+                    <span class="sr-only">Why this score</span>
+                  </button>
+                </td>
+                <td class="px-4 py-3"><StageBadge :status="a.application_status" /></td>
+                <td class="px-4 py-3">
+                  <div class="flex gap-1">
+                    <button type="button" class="btn-ghost btn-sm" @click="openDoc('Resume', a.resume_text, a)"><FileText class="h-4 w-4" /> Resume</button>
+                    <button type="button" class="btn-ghost btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)">Letter</button>
+                  </div>
+                </td>
+                <td class="px-4 py-3">
+                  <div v-if="nextStages(a.application_status).length" class="flex flex-wrap gap-1">
+                    <button v-for="s in nextStages(a.application_status)" :key="s" type="button" :disabled="isProcessing"
+                      @click="askMove(a.id, s)"
+                      class="btn btn-sm border"
+                      :class="s === 'rejected' ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'">
+                      {{ s === 'rejected' ? 'Reject' : STAGE_LABELS[s] }}
                     </button>
-                  </td>
-                  <td class="px-6 py-4">
-                    <button
-                      @click="openPopup('coverLetter', application.cover_letter)"
-                      class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                    >
-                      <FileText class="w-4 h-4 mr-2" />
-                      Letter
-                    </button>
-                  </td>
-                  <td class="px-6 py-4">
-                    <span
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                      :class="statusClasses(application.application_status)"
-                    >
-                      <span class="w-2 h-2 rounded-full mr-1.5" :class="statusDotClasses(application.application_status)" />
-                      {{ application.application_status }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4">
-                    <div class="flex items-center gap-2" v-if="application.application_status === 'pending'">
-                      <button
-                       @click="showConfirmPopup(application.id, 'approved')"
-                        class="p-2 text-green-600 hover:bg-green-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="isProcessing"
-                        title="Approve"
-                      >
-                        <Check class="w-5 h-5" />
-                      </button>
-                      <button
-                        @click="showConfirmPopup(application.id, 'rejected')"
-                        class="p-2 text-red-600 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="isProcessing"
-                        title="Reject"
-                      >
-                        <X class="w-5 h-5" />
-                      </button>
+                  </div>
+                  <button v-else type="button" class="btn-secondary btn-sm" @click="askMove(a.id, 'shortlisted', true)">Reopen…</button>
+                </td>
+              </tr>
+              <tr v-if="ranked && expanded === a.id && a.match" class="bg-indigo-50/40">
+                <td :colspan="6" class="px-4 py-4">
+                  <div class="grid gap-4 text-sm md:grid-cols-3">
+                    <div>
+                      <p class="mb-1 font-medium text-gray-700">Has</p>
+                      <p v-if="!a.match.matched.length" class="text-gray-500">None of the listed skills</p>
+                      <span v-for="s in a.match.matched" :key="s" class="badge mb-1 mr-1 bg-green-100 text-green-700">{{ s }}</span>
                     </div>
-                  </td>
-                </tr>
-                <tr v-if="filteredApplications.length === 0">
-                    <td :colspan="tableHeaders.length" class="text-center py-10 text-gray-500">
-                        No applications found for the selected criteria.
-                    </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    <div>
+                      <p class="mb-1 font-medium text-gray-700">Missing</p>
+                      <p v-if="!a.match.missing.length" class="text-gray-500">Nothing</p>
+                      <span v-for="s in a.match.missing" :key="s" class="badge mb-1 mr-1 bg-red-100 text-red-700">{{ s }}</span>
+                    </div>
+                    <div>
+                      <p class="mb-1 font-medium text-gray-700">History</p>
+                      <ul class="space-y-1 text-xs text-gray-600">
+                        <li v-for="(h, i) in a.history" :key="i">{{ STAGE_LABELS[h.to] ?? h.to }} · {{ h.by }} · {{ new Date(h.at).toLocaleString() }}</li>
+                      </ul>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Content Modal -->
-      <div v-if="isPopupVisible" class="fixed inset-0 z-40 flex items-center justify-center p-4" @click="closePopup">
-        <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
-        <div
-          class="relative bg-white rounded-lg max-w-2xl w-full mx-auto overflow-hidden shadow-xl transform transition-all"
-          @click.stop
-        >
-          <div class="p-6">
-            <div class="max-h-[70vh] overflow-y-auto pr-4">
-              <pre class="whitespace-pre-wrap font-sans text-sm text-gray-700">{{ popupContent }}</pre>
+      <!-- Mobile cards -->
+      <ul v-if="visible.length" class="space-y-3 md:hidden">
+        <li v-for="a in visible" :key="a.id" class="card card-body space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="font-semibold text-gray-900">{{ a.job_seeker?.name || 'Applicant' }}</p>
+              <p class="truncate text-sm text-gray-500">{{ a.job_listing?.title }} · {{ formatDate(a.created_at) }}</p>
             </div>
-            <div class="mt-6 flex justify-end">
-              <button
-                @click="closePopup"
-                class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-              >
-                Close
-              </button>
-            </div>
+            <StageBadge :status="a.application_status" class="shrink-0" />
           </div>
-        </div>
-      </div>
 
-      <!-- Confirmation Modal -->
-      <div v-if="isConfirmPopupVisible" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click="closeConfirmPopup">
-        <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
-        <div
-          class="relative bg-white rounded-lg max-w-sm w-full mx-auto overflow-hidden shadow-xl transform transition-all"
-          @click.stop
-        >
-          <div class="p-6 text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full" :class="confirmStatus === 'approved' ? 'bg-green-100' : 'bg-red-100'">
-                <Check v-if="confirmStatus === 'approved'" class="h-6 w-6 text-green-600" />
-                <X v-else class="h-6 w-6 text-red-600" />
-            </div>
-            <h3 class="text-lg font-medium mt-5">Confirm Status Update</h3>
-            <p class="text-gray-500 text-sm mt-2 mb-6">
-              Are you sure you want to mark this application as <span class="font-semibold">{{ confirmStatus }}</span>?
-            </p>
-            <div class="flex justify-center gap-4">
-              <button
-                @click="closeConfirmPopup"
-                class="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                @click="updateStatus(confirmApplicationId, confirmStatus)"
-                class="px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium"
-                :class="confirmStatus === 'approved' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'"
-                :disabled="isProcessing"
-              >
-                {{ isProcessing ? 'Processing...' : 'Confirm' }}
-              </button>
-            </div>
+          <button v-if="ranked && a.match" type="button" @click="toggleWhy(a.id)" class="flex w-full items-center justify-between text-sm">
+            <span class="text-gray-600">Match</span>
+            <span class="flex items-center gap-1">
+              <span class="badge" :class="scoreClass(a.match.score)">{{ a.match.score === null ? '—' : `${a.match.score}%` }}</span>
+              <ChevronDown class="h-4 w-4 text-gray-400" :class="{ 'rotate-180': expanded === a.id }" />
+            </span>
+          </button>
+          <div v-if="ranked && expanded === a.id && a.match" class="space-y-2 rounded-lg bg-indigo-50/50 p-3 text-xs">
+            <p><span class="font-medium text-gray-700">Has:</span> {{ a.match.matched.join(', ') || 'none' }}</p>
+            <p><span class="font-medium text-gray-700">Missing:</span> {{ a.match.missing.join(', ') || 'nothing' }}</p>
           </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="btn-secondary btn-sm" @click="openDoc('Resume', a.resume_text, a)"><FileText class="h-4 w-4" /> Resume</button>
+            <button type="button" class="btn-secondary btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)">Letter</button>
+            <Link v-if="a.job_seeker?.user_id" :href="`/messages/${a.job_seeker.user_id}`" class="btn-secondary btn-sm"><MessageSquare class="h-4 w-4" /> Message</Link>
+          </div>
+
+          <div class="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+            <template v-if="nextStages(a.application_status).length">
+              <button v-for="s in nextStages(a.application_status)" :key="s" type="button" :disabled="isProcessing"
+                @click="askMove(a.id, s)" class="btn btn-sm border"
+                :class="s === 'rejected' ? 'border-red-200 text-red-700' : 'border-indigo-200 text-indigo-700'">
+                {{ s === 'rejected' ? 'Reject' : STAGE_LABELS[s] }}
+              </button>
+            </template>
+            <button v-else type="button" class="btn-secondary btn-sm" @click="askMove(a.id, 'shortlisted', true)">Reopen…</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Document viewer -->
+    <div v-if="doc" class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4" @click="doc = null">
+      <div class="max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl" @click.stop role="dialog" aria-modal="true" :aria-label="doc.title">
+        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+          <h3 class="font-semibold text-gray-900">{{ doc.title }}</h3>
+          <button type="button" class="btn-ghost btn-sm" @click="doc = null" aria-label="Close"><X class="h-5 w-5" /></button>
+        </div>
+        <pre class="max-h-[65vh] overflow-y-auto whitespace-pre-wrap px-5 py-4 font-sans text-sm text-gray-700">{{ doc.content }}</pre>
+      </div>
+    </div>
+
+    <!-- Confirm stage change -->
+    <div v-if="confirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click="confirm = null">
+      <div class="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl" @click.stop role="dialog" aria-modal="true">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full" :class="confirm.status === 'rejected' ? 'bg-red-100' : 'bg-green-100'">
+          <X v-if="confirm.status === 'rejected'" class="h-6 w-6 text-red-600" />
+          <Check v-else class="h-6 w-6 text-green-600" />
+        </div>
+        <h3 class="mt-4 text-lg font-semibold text-gray-900">
+          {{ confirm.reopen ? 'Reopen application?' : `Move to ${STAGE_LABELS[confirm.status]}?` }}
+        </h3>
+        <p class="mt-2 text-sm text-gray-500">
+          <template v-if="confirm.reopen">It moves back to {{ STAGE_LABELS[confirm.status] }}. This is recorded in the history.</template>
+          <template v-else>The applicant sees this in real time{{ ['shortlisted', 'interview', 'offer'].includes(confirm.status) ? ' and gets an email' : '' }}.</template>
+        </p>
+        <div class="mt-6 flex justify-center gap-3">
+          <button type="button" class="btn-secondary" @click="confirm = null">Cancel</button>
+          <button type="button" :class="confirm.status === 'rejected' ? 'btn-danger' : 'btn-primary'" :disabled="isProcessing" @click="doMove">
+            {{ isProcessing ? 'Saving…' : 'Confirm' }}
+          </button>
         </div>
       </div>
     </div>
   </AppLayout>
 </template>
-
-<style>
-.multiselect-custom .multiselect__tags {
-  border-color: #d1d5db; /* gray-300 */
-  border-radius: 0.375rem; /* rounded-md */
-}
-.multiselect-custom .multiselect__input, .multiselect-custom .multiselect__single {
-    background-color: transparent;
-}
-.multiselect-custom .multiselect__tag {
-  background-color: #4f46e5; /* indigo-600 */
-}
-.multiselect-custom .multiselect__tag-icon:focus, .multiselect-custom .multiselect__tag-icon:hover {
-  background-color: #4338ca; /* indigo-700 */
-}
-.multiselect-custom .multiselect__option--highlight {
-  background-color: #6366f1; /* indigo-500 */
-}
-.multiselect-custom .multiselect__option--selected {
-  background-color: #eef2ff; /* indigo-50 */
-  color: #3730a3; /* indigo-800 */
-}
-.multiselect-custom.multiselect--active .multiselect__tags {
-    border-color: #6366f1; /* indigo-500 */
-    box-shadow: 0 0 0 1px #6366f1; /* focus:ring-indigo-500 */
-}
-</style>
-
-<script setup>
-import { ref, computed } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
-import VueMultiselect from 'vue-multiselect'
-import AppLayout from '@/Layout/AppLayout.vue'
-import 'vue-multiselect/dist/vue-multiselect.css'
-import { Check, X, FileText, Search, ChevronLeftIcon, MessageSquare } from 'lucide-vue-next'
-import { onMounted, onUnmounted } from 'vue'
-
-const props = defineProps({
-  applications: {
-    type: Array,
-    required: true
-  }
-})
-
-const handleBack = () => {
-  window.history.back();
-};
-
-const tableHeaders = ['ID', 'Job Listing', 'Applicant', 'Resume', 'Cover Letter', 'Status', 'Actions']
-const statusOptions = ref([
-  { text: "All", value: "" },
-  { text: "Pending", value: "pending" },
-  { text: "Approved", value: "approved" },
-  { text: "Rejected", value: "rejected" }
-])
-
-// Search and filter states
-const searchQuery = ref('')
-const filterStatus = ref({ text: "All", value: "" })
-
-// Popup states
-const isPopupVisible = ref(false)
-const popupContent = ref('')
-
-// Confirmation states
-
-
-const filteredApplications = computed(() => {
-  return props.applications.filter(app => {
-    const matchesSearch = !searchQuery.value ||
-      app.job_listing?.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      app.job_seeker?.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-
-    const matchesStatus = !filterStatus.value.value ||
-      app.application_status === filterStatus.value.value
-
-    return matchesSearch && matchesStatus
-  })
-})
-
-// Status styling helpers
-const statusClasses = status => ({
-  'bg-yellow-100 text-yellow-800': status === 'pending',
-  'bg-green-100 text-green-800': status === 'approved',
-  'bg-red-100 text-red-800': status === 'rejected'
-})
-
-const statusDotClasses = status => ({
-  'bg-yellow-400': status === 'pending',
-  'bg-green-400': status === 'approved',
-  'bg-red-400': status === 'rejected'
-})
-
-// Content popup handlers
-const openPopup = (type, content) => {
-  popupContent.value = content
-  isPopupVisible.value = true
-}
-
-const closePopup = () => {
-  isPopupVisible.value = false
-  popupContent.value = ''
-}
-
-const isConfirmPopupVisible = ref(false);
-const confirmApplicationId = ref(null);
-const confirmStatus = ref('');
-const isProcessing = ref(false);
-
-const showConfirmPopup = (applicationId, status) => {
-  confirmApplicationId.value = applicationId;
-  confirmStatus.value = status;
-  isConfirmPopupVisible.value = true;
-};
-
-const closeConfirmPopup = () => {
-  isConfirmPopupVisible.value = false;
-};
-
-const updateStatus = (applicationId, status) => {
-  router.put(`/applications/${applicationId}`, { application_status: status }, {
-    preserveScroll: true,
-    onStart: () => isProcessing.value = true,
-    onFinish: () => isProcessing.value = false,
-    onSuccess: () => {
-      isConfirmPopupVisible.value = false;
-    }
-  });
-};
-
-// Keyboard handlers
-const handleEscKey = (event) => {
-  if (event.key === 'Escape') {
-    if (isPopupVisible.value) closePopup()
-    if (isConfirmPopupVisible.value) closeConfirmPopup()
-  }
-}
-
-
-onMounted(() => {
-  document.addEventListener('keydown', handleEscKey)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleEscKey)
-})
-</script>
-
-<style>
-.multiselect-custom {
-  width: 100%;
-}
-
-/* Prevent body scroll when modal is open */
-body.modal-open {
-  overflow: hidden;
-}
-</style>

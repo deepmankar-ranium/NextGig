@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layout/AppLayout.vue';
+import MatchPanel from '@/Components/MatchPanel.vue';
+import { STAGE_LABELS } from '@/utils/stages';
 
 // ✅ Import only icons that exist in lucide-vue-next
 import {
@@ -30,6 +32,10 @@ const props = defineProps({
   isOwner: {
     type: Boolean,
     default: false
+  },
+  match: {
+    type: Object,
+    default: null
   }
 });
 
@@ -65,17 +71,17 @@ const formattedSalary = computed(() => {
 
 <template>
   <AppLayout>
-    <div class="bg-gray-50 min-h-screen">
-      <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div>
+      <div class="page">
         <!-- Page Header -->
-        <div class="pb-8 border-b border-gray-200">
-            <button @click="handleBack" class="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-                <ChevronLeftIcon class="h-5 w-5 mr-1" />
-                Back
-            </button>
+        <div class="pb-6 border-b border-gray-200">
+            <Link :href="isOwner ? '/posted-jobs' : '/jobs'" class="mb-3 inline-flex items-center text-sm text-gray-500 hover:text-gray-800">
+                <ChevronLeftIcon class="h-4 w-4 mr-1" />
+                {{ isOwner ? 'My postings' : 'All jobs' }}
+            </Link>
             <div class="lg:flex lg:items-center lg:justify-between">
                 <div class="min-w-0 flex-1">
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">{{ job.title }}</h1>
+                    <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{{ job.title }}</h1>
                     <div class="mt-2 flex items-center text-sm text-gray-500">
                         <!-- FIXED Building icon -->
                         <Building2 class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />
@@ -87,21 +93,19 @@ const formattedSalary = computed(() => {
                 <div class="mt-5 flex lg:mt-0 lg:ml-4 space-x-3">
                     <button
                       v-if="isJobSeeker"
-                      :disabled="applicationStatus === 'approved' || applicationStatus === 'pending'"
+                      :disabled="!!applicationStatus && applicationStatus !== 'rejected'"
                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white"
                       :class="{
-                        'bg-gray-400 cursor-not-allowed': applicationStatus === 'pending' || applicationStatus === 'approved',
-                        'bg-green-600': applicationStatus === 'approved',
-                        'bg-yellow-500': applicationStatus === 'pending',
+                        'bg-gray-400 cursor-not-allowed': applicationStatus && applicationStatus !== 'rejected' && applicationStatus !== 'offer',
+                        'bg-green-600 cursor-not-allowed': applicationStatus === 'offer',
                         'bg-indigo-600 hover:bg-indigo-700': !applicationStatus || applicationStatus === 'rejected'
                       }"
                       @click="handleApplyClick"
                     >
                       {{
-                        applicationStatus === 'pending' ? 'Application Pending'
-                        : applicationStatus === 'approved' ? 'Approved'
+                        !applicationStatus ? 'Apply Now'
                         : applicationStatus === 'rejected' ? 'Apply Again'
-                        : 'Apply Now'
+                        : `Application: ${STAGE_LABELS[applicationStatus] ?? applicationStatus}`
                       }}
                     </button>
 
@@ -115,7 +119,7 @@ const formattedSalary = computed(() => {
 
                     <Link
                       v-if="isOwner"
-                      :href="`/Jobs/job/${job.id}/edit`"
+                      :href="`/jobs/${job.id}/edit`"
                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
                     >
                       Edit Job
@@ -135,7 +139,8 @@ const formattedSalary = computed(() => {
             </div>
 
             <!-- Right Column (Summary) -->
-            <div class="mt-8 lg:mt-0">
+            <div class="mt-8 lg:mt-0 space-y-6">
+                <MatchPanel v-if="match" :job-id="job.id" :match="match" />
                 <div class="bg-white p-6 rounded-xl shadow-md space-y-5">
                     <h3 class="text-lg font-bold text-gray-900">Job Overview</h3>
                     <div class="flex items-center">
@@ -151,6 +156,13 @@ const formattedSalary = computed(() => {
                         <div>
                             <p class="text-sm text-gray-500">Date Posted</p>
                             <p class="font-semibold text-gray-800">{{ new Date(job.created_at).toLocaleDateString() }}</p>
+                        </div>
+                    </div>
+                    <div v-if="job.min_years_experience" class="flex items-center">
+                        <CalendarIcon class="h-5 w-5 text-gray-400 mr-3" />
+                        <div>
+                            <p class="text-sm text-gray-500">Experience</p>
+                            <p class="font-semibold text-gray-800">{{ job.min_years_experience }}+ years</p>
                         </div>
                     </div>
                     <div v-if="job.tags.length > 0">
@@ -188,6 +200,10 @@ const formattedSalary = computed(() => {
               </div>
               <div class="border-t border-gray-200 px-6 py-4">
                 <form @submit.prevent="submitApplication" class="space-y-6">
+                  <p class="rounded-md bg-blue-50 p-3 text-xs text-blue-800">
+                    Employers may sort applicants by a match score calculated from skills and experience only.
+                    It is a suggestion: a person reviews every application and makes every decision.
+                  </p>
                   <div>
                     <label for="resume_text" class="block text-sm font-medium text-gray-700">Resume</label>
                     <div class="mt-1">

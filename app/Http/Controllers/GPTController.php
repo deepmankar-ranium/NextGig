@@ -7,6 +7,7 @@ use App\Actions\Chat\CreateIntroMessageAction;
 use App\Actions\Chat\SendMessageAction;
 use App\Http\Requests\ChatRequest;
 use App\Services\ChatService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class GPTController extends Controller
@@ -17,7 +18,7 @@ class GPTController extends Controller
 
     public function chat(ChatRequest $request, SendMessageAction $action)
     {
-        $response = $action->execute($request->validated('message'));
+        $response = $action->execute($request->user(), $request->validated('message'));
 
         if ($response) {
             return response()->json([
@@ -27,9 +28,9 @@ class GPTController extends Controller
         }
 
         return response()->json([
-            'response' => 'Sorry, I encountered an error. Please try again.',
+            'response' => 'The assistant is unavailable right now. Please try again in a minute.',
             'status' => 'error'
-        ], 500);
+        ], 503);
     }
 
     public function getChatHistory()
@@ -42,10 +43,10 @@ class GPTController extends Controller
         ]);
     }
 
-    public function clearChat(ClearChatAction $action, CreateIntroMessageAction $createIntroMessageAction)
+    public function clearChat(Request $request, ClearChatAction $action)
     {
-        $action->execute();
-        $createIntroMessageAction->execute(); // Re-create intro message after clearing
+        // The page shows its own welcome screen with suggestions once the history is empty.
+        $action->execute($request->user());
 
         return response()->json([
             'status' => 'success'
@@ -57,20 +58,11 @@ class GPTController extends Controller
         return Inertia::render('Chat');
     }
 
-    public function createIntroMessage(CreateIntroMessageAction $action)
+    public function createIntroMessage(Request $request, CreateIntroMessageAction $action)
     {
-        $introMessage = $action->execute();
-
-        if ($introMessage) {
-            return response()->json([
-                'status' => 'success',
-                'message' => $introMessage->message
-            ]);
-        }
-
         return response()->json([
-            'status' => 'error',
-            'message' => 'Failed to create intro message'
-        ], 500);
+            'status' => 'success',
+            'message' => $action->execute($request->user())->message,
+        ]);
     }
 }

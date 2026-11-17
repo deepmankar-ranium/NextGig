@@ -15,9 +15,6 @@ use App\Models\DirectMessage;
 use App\Events\InBetweenMessageDeleted;
 
 
-use Illuminate\Support\Facades\Log;
-
-
 class MessagesController extends Controller
 {
     /**
@@ -74,6 +71,10 @@ class MessagesController extends Controller
 
         if ($user && $user->is($me)) {
             $user = null;
+        }
+
+        if ($user) {
+            $this->directMessageService->markConversationRead($me, $user);
         }
 
         return Inertia::render('Messages/Inbox', [
@@ -142,7 +143,6 @@ class MessagesController extends Controller
 
         $message->delete();
 
-        Log::info('Dispatching InBetweenMessageDeleted event', ['message_id' => $message->id, 'sender_id' => $message->sender_id, 'receiver_id' => $message->receiver_id]);
         InBetweenMessageDeleted::dispatch($message->sender_id, $message->receiver_id, $message->id);
 
 

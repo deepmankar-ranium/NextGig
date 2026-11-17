@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\Application; // Import the Application model
 
 return new class extends Migration
 {
@@ -13,8 +12,10 @@ return new class extends Migration
     public function up()
     {
         Schema::table('applications', function (Blueprint $table) {
-            $table->enum('application_status', Application::getApplicationStatuses()) // Fetch from model
-                  ->default(Application::STATUS_PENDING); // Use model constant
+            // Original values, pinned so this historical migration doesn't change when the
+            // model's stages do (see 2026_11_17_000007_use_pipeline_stages_for_applications).
+            $table->enum('application_status', ['pending', 'approved', 'rejected'])
+                  ->default('pending');
       
         });
     }
