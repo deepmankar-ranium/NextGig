@@ -61,6 +61,31 @@ class ProfileUpdateTest extends TestCase
         Storage::disk('uploads')->assertMissing($second);
     }
 
+    public function test_small_photos_and_gifs_are_accepted(): void
+    {
+        $user = $this->seekerUser();
+
+        $this->actingAs($user)->post('/profile', [
+            'full_name' => 'A B',
+            'photo' => UploadedFile::fake()->image('tiny.gif', 20, 30),
+        ])->assertSessionHasNoErrors();
+
+        [$w, $h] = getimagesizefromstring(Storage::disk('uploads')->get($user->fresh()->photo_path));
+        $this->assertSame([20, 20], [$w, $h]);
+    }
+
+    public function test_unreadable_image_gets_a_friendly_error(): void
+    {
+        $user = $this->seekerUser();
+        $fake = UploadedFile::fake()->createWithContent('broken.jpg', "\xFF\xD8\xFF\xE0 not really a jpeg");
+
+        $this->actingAs($user)->post('/profile', ['full_name' => 'A B', 'photo' => $fake])
+            ->assertSessionHasErrors('photo');
+
+        $this->assertNull($user->fresh()->photo_path);
+        $this->assertEmpty(Storage::disk('uploads')->allFiles());
+    }
+
     public function test_rejects_non_images_and_blank_names(): void
     {
         $user = $this->seekerUser();
