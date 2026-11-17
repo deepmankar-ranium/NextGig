@@ -53,6 +53,17 @@
           </div>
         </div>
 
+        <!-- Ranking toggle -->
+        <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg bg-white px-4 py-3 shadow-sm">
+          <p class="text-sm text-gray-600">
+            <span class="font-medium text-gray-800">{{ ranked ? 'Sorted by match score' : 'Plain list (newest first)' }}.</span>
+            Match scores are an AI-assisted suggestion; no applicant is rejected automatically.
+          </p>
+          <button type="button" @click="toggleRanking" class="shrink-0 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            {{ ranked ? 'Turn ranking off' : 'Turn ranking on' }}
+          </button>
+        </div>
+
         <!-- Applications Table -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
           <div class="overflow-x-auto">
@@ -65,11 +76,8 @@
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  v-for="application in filteredApplications"
-                  :key="application.id"
-                  class="bg-white border-b hover:bg-gray-50 transition-colors"
-                >
+                <template v-for="application in filteredApplications" :key="application.id">
+                <tr class="bg-white border-b hover:bg-gray-50 transition-colors">
                   <td class="px-6 py-4 font-medium text-gray-900">#{{ application.id }}</td>
                   <td class="px-6 py-4 font-medium text-gray-900">{{ application.job_listing?.title || 'N/A' }}</td>
                   <td class="px-6 py-4 font-medium text-gray-900">
@@ -84,6 +92,14 @@
                         <MessageSquare class="w-4 h-4" />
                       </Link>
                     </div>
+                  </td>
+                  <td v-if="ranked" class="px-6 py-4">
+                    <button v-if="application.match" @click="toggleWhy(application.id)" class="text-left">
+                      <span class="font-semibold" :class="application.match.score === null ? 'text-gray-400' : application.match.score >= 75 ? 'text-green-600' : application.match.score >= 50 ? 'text-amber-600' : 'text-gray-700'">
+                        {{ application.match.score === null ? '—' : application.match.score + '%' }}
+                      </span>
+                      <span class="block text-xs text-indigo-600 underline">why?</span>
+                    </button>
                   </td>
                   <td class="px-6 py-4">
                     <button
@@ -133,6 +149,32 @@
                     </div>
                   </td>
                 </tr>
+                <tr v-if="ranked && expanded === application.id && application.match" class="bg-indigo-50/40 border-b">
+                  <td :colspan="tableHeaders.length" class="px-6 py-4">
+                    <div class="grid gap-4 md:grid-cols-3 text-sm">
+                      <div>
+                        <p class="font-medium text-gray-700 mb-1">Matches</p>
+                        <p v-if="!application.match.matched.length" class="text-gray-500">None</p>
+                        <span v-for="s in application.match.matched" :key="s" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">{{ s }}</span>
+                      </div>
+                      <div>
+                        <p class="font-medium text-gray-700 mb-1">Missing</p>
+                        <p v-if="!application.match.missing.length" class="text-gray-500">None</p>
+                        <span v-for="s in application.match.missing" :key="s" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs">{{ s }}</span>
+                      </div>
+                      <div>
+                        <p class="font-medium text-gray-700 mb-1">Status history</p>
+                        <ul class="space-y-1 text-xs text-gray-600">
+                          <li v-for="(h, i) in application.history" :key="i">
+                            {{ h.to }} · {{ h.by }} · {{ new Date(h.at).toLocaleString() }}
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    <p class="mt-3 text-xs text-gray-500">Score uses only the applicant's skills and years of experience against this job's tags. Name, email, photo, gender, age and location are never used. You make every decision.</p>
+                  </td>
+                </tr>
+                </template>
                 <tr v-if="filteredApplications.length === 0">
                     <td :colspan="tableHeaders.length" class="text-center py-10 text-gray-500">
                         No applications found for the selected criteria.
@@ -246,14 +288,26 @@ const props = defineProps({
   applications: {
     type: Array,
     required: true
+  },
+  ranked: {
+    type: Boolean,
+    default: true
   }
 })
+
+const expanded = ref(null)
+const toggleWhy = (id) => { expanded.value = expanded.value === id ? null : id }
+const toggleRanking = () => {
+  router.get('/view-applications', props.ranked ? { ranked: 0 } : {}, { preserveScroll: true })
+}
 
 const handleBack = () => {
   window.history.back();
 };
 
-const tableHeaders = ['ID', 'Job Listing', 'Applicant', 'Resume', 'Cover Letter', 'Status', 'Actions']
+const tableHeaders = computed(() => props.ranked
+  ? ['ID', 'Job Listing', 'Applicant', 'Match', 'Resume', 'Cover Letter', 'Status', 'Actions']
+  : ['ID', 'Job Listing', 'Applicant', 'Resume', 'Cover Letter', 'Status', 'Actions'])
 const statusOptions = ref([
   { text: "All", value: "" },
   { text: "Pending", value: "pending" },
