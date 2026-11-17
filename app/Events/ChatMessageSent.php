@@ -52,7 +52,10 @@ class ChatMessageSent implements ShouldBroadcast
     {
         // Only public fields: never the sender's email or other account data.
         return [
-            'message' => $this->message->only(['id', 'sender_id', 'receiver_id', 'message', 'read_at', 'created_at']),
+            'message' => [
+                ...$this->message->only(['id', 'sender_id', 'receiver_id', 'job_listing_id', 'message', 'read_at', 'created_at']),
+                'job_listing' => $this->message->jobListing?->only(['id', 'title']),
+            ],
             'user' => ['id' => $this->user->id, 'full_name' => $this->user->full_name],
         ];
     }

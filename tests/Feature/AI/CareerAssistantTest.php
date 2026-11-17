@@ -42,4 +42,53 @@ class CareerAssistantTest extends TestCase
             ->assertStatus(503)
             ->assertJson(['status' => 'error']);
     }
+
+    private function applyTo(\App\Models\User $seeker, \App\Models\JobListing $job, string $stage = 'interview'): void
+    {
+        \App\Models\Application::create([
+            'jobListing_id' => $job->id, 'jobSeeker_id' => $seeker->jobseeker->id,
+            'application_status' => $stage, 'resume_text' => 'SECRET RESUME', 'cover_letter' => '',
+        ]);
+    }
+
+    public function test_seeker_context_has_applications_and_the_focus_job(): void
+    {
+        $ai = $this->fakeAi()->pushText('ok');
+        $seeker = $this->seekerUser();
+        $job = $this->jobFor($this->employerUser(), ['title' => 'Frontend Engineer', 'description' => 'Build Vue apps']);
+        $this->applyTo($seeker, $job);
+
+        $this->actingAs($seeker)->postJson('/chat', ['message' => 'Help me prepare', 'job_id' => $job->id])->assertOk();
+
+        $system = $ai->calls[0]['system'];
+        $this->assertStringContainsString('"job_title":"Frontend Engineer","stage":"interview"', $system);
+        $this->assertStringContainsString('"focus_job":{"title":"Frontend Engineer"', $system);
+        $this->assertStringContainsString('Build Vue apps', $system);
+        $this->assertStringNotContainsString('SECRET RESUME', $ai->sentText());
+    }
+
+    public function test_employer_context_has_postings_with_counts_but_no_applicant_details(): void
+    {
+        $ai = $this->fakeAi()->pushText('ok');
+        $employer = $this->employerUser();
+        $job = $this->jobFor($employer, ['title' => 'Backend Developer']);
+        $applicant = $this->seekerUser();
+        $this->applyTo($applicant, $job, 'shortlisted');
+
+        $this->actingAs($employer)->postJson('/chat', ['message' => 'Interview questions?', 'job_id' => $job->id])->assertOk();
+
+        $sent = $ai->sentText();
+        $this->assertStringContainsString('Backend Developer', $sent);
+        $this->assertStringContainsString('"applicants_by_stage":{"shortlisted":1}', $sent);
+        $this->assertStringNotContainsString($applicant->full_name, $sent);
+        $this->assertStringNotContainsString($applicant->email, $sent);
+    }
+
+    public function test_employer_cannot_focus_on_another_employers_job(): void
+    {
+        $this->fakeAi()->pushText('ok');
+        $job = $this->jobFor($this->employerUser());
+
+        $this->actingAs($this->employerUser())->postJson('/chat', ['message' => 'hi', 'job_id' => $job->id])->assertForbidden();
+    }
 }

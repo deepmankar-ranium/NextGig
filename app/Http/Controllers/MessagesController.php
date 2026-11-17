@@ -13,6 +13,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\DirectMessage;
 use App\Events\InBetweenMessageDeleted;
+use App\Messaging\MessagingRules;
+use App\Models\JobListing;
+use App\Models\UserReport;
+use Illuminate\Http\Request;
 
 
 class MessagesController extends Controller
@@ -56,21 +60,20 @@ class MessagesController extends Controller
     }
 
     /**
-     * Display the messages inbox page.
-     *
-     * This method renders the main chat interface. It fetches all users for the sidebar
-     * and the conversation messages for the currently selected user.
-     *
-     * @param  User|null  $user The user currently selected in the chat interface (optional).
-     * @return Response The Inertia response for the messages inbox view.
+     * The inbox, with one conversation open if $user is given. A conversation can be opened only
+     * when messaging is allowed (see MessagingRules) or the two people have already talked.
      */
-    public function show(User $user = null): Response
+    public function show(Request $request, MessagingRules $rules, ?User $user = null): Response|RedirectResponse
     {
-        // Render the Inertia view with necessary data from the service.
-        $me = auth()->user();
+        $me = $request->user();
 
         if ($user && $user->is($me)) {
             $user = null;
+        }
+
+        if ($user && ! $rules->canContact($me, $user)) {
+            return redirect()->route('messages.show')
+                ->with('status', 'You can message employers of posted jobs, and employers can message their applicants.');
         }
 
         if ($user) {
@@ -81,28 +84,52 @@ class MessagesController extends Controller
             'users'        => $this->directMessageService->getUsersForInbox($me, $user),
             'selectedUser' => $user ? $this->directMessageService->publicProfile($user->loadMissing('role')) : null,
             'messages'     => $user ? $this->directMessageService->getMessagesBetween($me, $user) : [],
+            'conversation' => $user ? $this->conversationContext($request, $rules, $me, $user) : null,
+            'reportReasons' => UserReport::REASONS,
         ]);
     }
 
     /**
-     * Store a new message in the database.
-     *
-     * This method validates the incoming request, uses the action to send the message,
-     * and then redirects back to the chat interface with the recipient selected.
-     *
-     * @param  StoreMessageRequest  $request The validated request containing message data.
-     * @return RedirectResponse A redirect to the chat interface.
+     * What the thread header needs: block state, the applications that link the two people,
+     * and which job new messages are about.
+     */
+    private function conversationContext(Request $request, MessagingRules $rules, User $me, User $other): array
+    {
+        $applications = $rules->applicationsBetween($me, $other)->map(fn ($a) => [
+            'id' => $a->id,
+            'job_id' => $a->jobListing?->id,
+            'title' => $a->jobListing?->title,
+            'status' => $a->application_status,
+        ])->filter(fn ($a) => $a['job_id'])->values();
+
+        $about = null;
+        $requested = $request->integer('job') ?: null;
+        if ($requested && $rules->jobBelongsToEither($requested, $me, $other)) {
+            $about = JobListing::select('id', 'title')->find($requested)?->only(['id', 'title']);
+        }
+
+        return [
+            'block' => $rules->blockState($me, $other),
+            'can_send' => $rules->canSend($me, $other),
+            'applications' => $applications,
+            'about' => $about,
+        ];
+    }
+
+    /**
+     * Send a message; the page re-renders with the conversation open.
      */
     public function store(StoreMessageRequest $request): RedirectResponse
     {
-        // Use the action to send the message with validated data.
+        $jobId = $request->validated('job_listing_id');
+
         $this->sendMessageAction->execute(
             $request->user(),
-            $request->validated('receiver_id'),
-            $request->validated('message')
+            (int) $request->validated('receiver_id'),
+            $request->validated('message'),
+            $jobId ? (int) $jobId : null,
         );
 
-        // Redirect to the chat view with the recipient selected.
         return redirect()->route('messages.show', ['user' => $request->validated('receiver_id')]);
     }
 

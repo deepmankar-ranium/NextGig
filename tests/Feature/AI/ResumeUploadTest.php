@@ -165,4 +165,14 @@ class ResumeUploadTest extends TestCase
             ->assertStatus(429)
             ->assertJson(['status' => 'error', 'message' => "You've reached the AI usage limit. Please try again later."]);
     }
+
+    public function test_parse_summary_reports_counts_new_skills_and_thin_results(): void
+    {
+        $summary = \App\Http\Controllers\ResumeController::parseSummary(['php'], ['skills' => ['php', 'laravel', 'vue.js'], 'years_experience' => 3, 'roles' => ['Dev']]);
+        $this->assertStringContainsString('found 3 skills, 3 years of experience, 1 role', $summary);
+        $this->assertStringContainsString('New: laravel, vue.js', $summary);
+
+        $thin = \App\Http\Controllers\ResumeController::parseSummary([], ['skills' => ['php'], 'years_experience' => null, 'roles' => []]);
+        $this->assertStringContainsString('fewer than expected', $thin);
+    }
 }

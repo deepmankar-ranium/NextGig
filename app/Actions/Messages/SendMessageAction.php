@@ -2,31 +2,28 @@
 
 namespace App\Actions\Messages;
 
-use App\Models\User;
-use App\Models\DirectMessage;
 use App\Events\ChatMessageSent;
+use App\Jobs\EmailUnreadMessage;
+use App\Models\DirectMessage;
+use App\Models\User;
 
 class SendMessageAction
 {
-    /**
-     * Execute the action.
-     *
-     * @param \App\Models\User $sender
-     * @param int $receiverId
-     * @param string $messageText
-     * @return \App\Models\DirectMessage
-     */
-    public function execute(User $sender, int $receiverId, string $messageText): DirectMessage
+    /** How long a message must stay unread before the receiver gets an email about it. */
+    public const EMAIL_AFTER_MINUTES = 15;
+
+    public function execute(User $sender, int $receiverId, string $messageText, ?int $jobListingId = null): DirectMessage
     {
-        // Create the direct message record
         $message = DirectMessage::create([
             'sender_id' => $sender->id,
             'receiver_id' => $receiverId,
+            'job_listing_id' => $jobListingId,
             'message' => $messageText,
         ]);
 
-        // Broadcast the event for real-time updates
         ChatMessageSent::dispatch($message, $sender);
+
+        EmailUnreadMessage::dispatch($message->id)->delay(now()->addMinutes(self::EMAIL_AFTER_MINUTES));
 
         return $message;
     }

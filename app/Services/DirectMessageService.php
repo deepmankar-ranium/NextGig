@@ -56,6 +56,7 @@ class DirectMessageService
     {
         return DirectMessage::between($viewer->id, $other->id)
             ->visibleTo($viewer->id)
+            ->with('jobListing:id,title')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();

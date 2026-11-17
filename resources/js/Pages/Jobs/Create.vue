@@ -115,7 +115,7 @@ const draftNewSkills = ref([]);
 
 const draftWithAi = async () => {
   if (!form.title.trim() || !draftNotes.value.trim()) {
-    draftError.value = 'Add a job title and a few notes first.';
+    draftError.value = !form.title.trim() ? 'Add the job title first.' : 'Add a few notes about the role.';
     return;
   }
   drafting.value = true;
@@ -169,21 +169,6 @@ onMounted(() => {
         <!-- Form Card -->
         <div class="mt-8">
           <form @submit.prevent="submit" class="space-y-8">
-            <div class="bg-indigo-50 border border-indigo-100 p-6 rounded-xl">
-                <h2 class="text-sm font-semibold text-indigo-900 flex items-center gap-2"><Sparkles class="h-4 w-4" /> Draft with AI (optional)</h2>
-                <p class="text-xs text-indigo-800 mt-1">Enter the job title below, jot a few notes here, and we'll draft the description and suggest tags. Nothing is published until you review it and click submit.</p>
-                <textarea v-model="draftNotes" rows="3" class="mt-3 w-full rounded-md border-indigo-200 text-sm" placeholder="e.g. Laravel + Vue, build internal tools, mentor juniors, remote-friendly team"></textarea>
-                <div class="mt-2 flex items-center gap-3">
-                    <button type="button" @click="draftWithAi" :disabled="drafting" class="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
-                        {{ drafting ? 'Drafting…' : 'Draft description' }}
-                    </button>
-                    <span v-if="draftError" class="text-sm text-red-600">{{ draftError }}</span>
-                </div>
-                <p v-if="draftNewSkills.length" class="mt-2 text-xs text-indigo-800">
-                    Suggested skills without a tag yet: <strong>{{ draftNewSkills.join(', ') }}</strong>. Create them in the <Link href="/tags" class="underline">Tag Manager</Link> if you want them used for matching.
-                </p>
-            </div>
-
             <div class="bg-white p-8 rounded-xl shadow-md">
                 <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                     <div class="sm:col-span-6">
@@ -208,15 +193,15 @@ onMounted(() => {
                         <label for="salary" class="block text-sm font-medium text-gray-700">Salary (per year)</label>
                         <div class="mt-1 relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">$</span>
+                                <span class="text-gray-500 sm:text-sm">₹</span>
                             </div>
                             <input 
                                 type="number" v-model="form.salary" id="salary"
                                 class="block w-full pl-7 pr-12 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                placeholder="0.00"
+                                placeholder="e.g. 1200000"
                             />
                             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">USD</span>
+                                <span class="text-gray-500 sm:text-sm">INR</span>
                             </div>
                         </div>
                         <p v-if="form.errors?.salary" class="text-red-500 text-sm mt-1">{{ form.errors.salary }}</p>
@@ -228,6 +213,24 @@ onMounted(() => {
                             class="mt-1 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g. 3" />
                         <p class="text-xs text-gray-500 mt-1">Used with the job's tags to compute candidates' match scores.</p>
                         <p v-if="form.errors?.min_years_experience" class="text-red-500 text-sm mt-1">{{ form.errors.min_years_experience }}</p>
+                    </div>
+
+                    <!-- AI draft: sits right above the description it writes, and uses the title and years above. -->
+                    <div class="sm:col-span-6 rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+                        <h2 class="flex items-center gap-2 text-sm font-semibold text-indigo-900"><Sparkles class="h-4 w-4" /> Draft the description with AI (optional)</h2>
+                        <p class="mt-1 text-xs text-indigo-800">
+                            Uses the job title{{ form.title.trim() ? ` "${form.title.trim()}"` : '' }} and minimum years above, plus your notes. It fills the description and suggests tags; nothing is published until you click Create.
+                        </p>
+                        <textarea v-model="draftNotes" rows="3" class="mt-3 w-full rounded-md border-indigo-200 text-sm" placeholder="e.g. Laravel + Vue, build internal tools, mentor juniors, remote-friendly team"></textarea>
+                        <div class="mt-2 flex flex-wrap items-center gap-3">
+                            <button type="button" @click="draftWithAi" :disabled="drafting" class="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+                                {{ drafting ? 'Drafting…' : (form.description.trim() ? 'Redraft description' : 'Draft description') }}
+                            </button>
+                            <span v-if="draftError" class="text-sm text-red-600">{{ draftError }}</span>
+                        </div>
+                        <p v-if="draftNewSkills.length" class="mt-2 text-xs text-indigo-800">
+                            Suggested skills without a tag yet: <strong>{{ draftNewSkills.join(', ') }}</strong>. Create them in the <Link href="/tags" class="underline">Tag Manager</Link> if you want them used for matching.
+                        </p>
                     </div>
 
                     <div class="sm:col-span-6">

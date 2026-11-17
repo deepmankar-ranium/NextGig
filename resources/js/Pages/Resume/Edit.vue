@@ -58,7 +58,7 @@ const saveProfile = () => form.put('/resume/profile', { preserveScroll: true });
           <template #tabs><AccountTabs /></template>
         </PageHeader>
 
-        <div v-if="status" class="rounded-md bg-green-50 p-4 text-sm text-green-800">{{ status }}</div>
+        <div v-if="status" class="rounded-md p-4 text-sm" :class="status.includes('fewer than expected') ? 'bg-amber-50 text-amber-900' : 'bg-green-50 text-green-800'">{{ status }}</div>
 
         <!-- Upload -->
         <section class="card card-body">

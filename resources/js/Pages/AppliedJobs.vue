@@ -42,6 +42,14 @@
             <p v-if="app.application_status === 'rejected'" class="mt-4 text-sm text-red-700">
               The employer decided not to move forward ({{ formatDate(reachedAt(app, 'rejected')) }}). You can apply again from the job page.
             </p>
+            <div class="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+              <Link :href="assistantLinkFor(app.job_listing.id, app.job_listing.title, app.application_status).href" class="btn-secondary btn-sm">
+                <Sparkles class="h-4 w-4 text-indigo-600" /> {{ assistantLinkFor(app.job_listing.id, app.job_listing.title, app.application_status).label }}
+              </Link>
+              <Link v-if="app.job_listing.employer?.user_id" :href="`/messages/${app.job_listing.employer.user_id}?job=${app.job_listing.id}`" class="btn-ghost btn-sm">
+                <MessageSquare class="h-4 w-4" /> Message employer
+              </Link>
+            </div>
           </li>
         </ul>
     </div>
@@ -55,9 +63,9 @@ import { ref, computed, watch, onMounted } from 'vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import Tabs from '@/Components/UI/Tabs.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
-import { ClipboardList } from 'lucide-vue-next';
+import { ClipboardList, Sparkles, MessageSquare } from 'lucide-vue-next';
 import { useNotificationStore } from '@/store/notifications';
-import { PIPELINE, STAGE_LABELS, stageBadgeClass } from '@/utils/stages';
+import { PIPELINE, STAGE_LABELS, stageBadgeClass, assistantLinkFor } from '@/utils/stages';
 
 const props = defineProps({
   appliedJobs: { type: Array, default: () => [] },

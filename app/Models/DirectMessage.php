@@ -14,6 +14,7 @@ class DirectMessage extends Model
     protected $fillable = [
         'sender_id',
         'receiver_id',
+        'job_listing_id',
         'message',
     ];
 
@@ -36,6 +37,11 @@ class DirectMessage extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function jobListing(): BelongsTo
+    {
+        return $this->belongsTo(JobListing::class);
     }
 
     public function receiver(): BelongsTo
