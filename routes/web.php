@@ -13,6 +13,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\GPTController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\MessagesController;
+use App\Http\Controllers\ResumeController;
 
 
 Route::get('/', function () {
@@ -64,6 +65,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Profile routes
     Route::get('/profile', [ProfileController::class,'profile']);
+
+    // Resume + parsed profile (job seekers, own data only)
+    Route::get('/resume', [ResumeController::class, 'show'])->name('resume.show');
+    Route::post('/resume', [ResumeController::class, 'upload'])->middleware('throttle:ai')->name('resume.upload');
+    Route::put('/resume/profile', [ResumeController::class, 'update'])->middleware('throttle:writes')->name('resume.profile');
 });
 
 // Authentication routes (throttled, no auth middleware)
