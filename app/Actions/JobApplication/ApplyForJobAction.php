@@ -2,41 +2,60 @@
 
 namespace App\Actions\JobApplication;
 
+use App\Actions\Resume\UploadResumeAction;
 use App\Events\JobApplied;
 use App\Models\Application;
 use App\Models\JobListing;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class ApplyForJobAction
 {
-    public function execute(JobListing $jobListing, array $data)
+    public function __construct(private readonly UploadResumeAction $resumes)
     {
-        $user = Auth::user();
-        $jobSeeker = $user->jobseeker;
+    }
 
-        if (! $jobSeeker) {
-            return ['error' => 'Job Seeker profile not found.'];
-        }
+    /**
+     * @return array{success?: string, error?: string}
+     *
+     * @throws \App\Resume\ResumeException  the uploaded PDF has no readable text
+     */
+    public function execute(User $user, JobListing $jobListing, ?UploadedFile $resume, ?string $coverLetter): array
+    {
+        $seeker = $user->jobseeker;
 
         $application = Application::where('jobListing_id', $jobListing->id)
-            ->where('jobSeeker_id', $jobSeeker->id)
+            ->where('jobSeeker_id', $seeker->id)
             ->first();
 
         if ($application && $application->application_status !== Application::STATUS_REJECTED) {
             return ['error' => 'You have already applied for this job.'];
         }
 
+        if ($resume) {
+            $this->resumes->storeForApplication($seeker, $resume);
+        }
+
         $resubmitted = $application !== null;
 
         $application ??= new Application([
             'jobListing_id' => $jobListing->id,
-            'jobSeeker_id' => $jobSeeker->id,
+            'jobSeeker_id' => $seeker->id,
         ]);
         $application->fill([
-            'resume_text' => $data['resume_text'],
-            'cover_letter' => $data['cover_letter'],
+            'resume_text' => (string) $seeker->resume_text,
+            'cover_letter' => trim((string) $coverLetter),
         ]);
         $application->transitionTo(Application::STATUS_APPLIED, $user);
+
+        // Snapshot the PDF so later resume changes don't alter what this employer received.
+        $snapshot = "applications/application-{$application->id}.pdf";
+        if ($seeker->resume && Storage::disk('local')->exists($seeker->resume)) {
+            Storage::disk('local')->delete($snapshot);
+            Storage::disk('local')->copy($seeker->resume, $snapshot);
+            $application->forceFill(['resume_path' => $snapshot])->save();
+        }
 
         event(new JobApplied($application));
 

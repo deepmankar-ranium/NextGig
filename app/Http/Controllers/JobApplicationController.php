@@ -7,6 +7,8 @@ use App\Actions\JobApplication\UpdateApplicationStatusAction;
 use App\Http\Requests\ApplyForJobRequest;
 use App\Http\Requests\UpdateApplicationStatusRequest;
 use App\Models\Application;
+use App\Resume\ResumeException;
+use Illuminate\Support\Facades\Storage;
 use App\Models\JobListing;
 use App\Services\JobApplicationService;
 use Illuminate\Http\Request;
@@ -32,7 +34,11 @@ class JobApplicationController extends Controller
 
     public function apply(ApplyForJobRequest $request, JobListing $jobListing, ApplyForJobAction $action)
     {
-        $result = $action->execute($jobListing, $request->validated());
+        try {
+            $result = $action->execute($request->user(), $jobListing, $request->file('resume'), $request->validated('cover_letter'));
+        } catch (ResumeException $e) {
+            return back()->withErrors(['resume' => $e->userMessage()]);
+        }
 
         if (isset($result['error'])) {
             return redirect()->back()->withErrors($result);
@@ -56,5 +62,29 @@ class JobApplicationController extends Controller
         abort_unless($request->user()->can('update', $application), 403);
 
         return response()->json(['viewed' => $action->markViewed($application, $request->user())]);
+    }
+
+    /**
+     * The resume PDF submitted with an application. The owning employer opening it counts as
+     * "viewed"; the applicant can open their own copy too.
+     */
+    public function resume(Request $request, Application $application, UpdateApplicationStatusAction $action)
+    {
+        $user = $request->user();
+        $isOwner = $user->can('update', $application);
+        abort_unless($isOwner || $application->jobSeeker?->user_id === $user->id, 403);
+        abort_unless($application->resume_path && Storage::disk('local')->exists($application->resume_path), 404);
+
+        if ($isOwner) {
+            $action->markViewed($application, $user);
+        }
+
+        $name = str($application->jobSeeker?->name ?? 'applicant')->slug().'-resume.pdf';
+
+        return Storage::disk('local')->response($application->resume_path, $name, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$name.'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }
