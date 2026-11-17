@@ -112,7 +112,6 @@ const handleConfirm = async (event) => {
 };
 
 const handleCancel = () => {
-  console.log("User canceled clearing chat");
 };
 
 const showClearChatModal = () => {

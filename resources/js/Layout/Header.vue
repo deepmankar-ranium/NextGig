@@ -12,8 +12,8 @@ const isEmployer = computed(() => page.props.auth.user?.role_id === 2);
 const isJobSeeker = computed(() => page.props.auth.user?.role_id === 3);
 
 const navItems = computed(() => [
-  { name: 'Home', href: '/Home', icon: Home },
-  { name: 'Jobs', href: '/Jobs', icon: Briefcase },
+  { name: 'Home', href: '/home', icon: Home },
+  { name: 'Jobs', href: '/jobs', icon: Briefcase },
   { name: 'Profile', href: '/profile', icon: User },
   ...(isEmployer.value ? [{ name: 'Posted Jobs', href: '/posted-jobs', icon: Briefcase }] : []),
   ...(isJobSeeker.value ? [{ name: 'Applied Jobs', href: '/applied-jobs', icon: Briefcase, badge: notificationStore.applicationUpdates > 0 ? notificationStore.applicationUpdates : null }] : []),
@@ -30,7 +30,7 @@ const navItems = computed(() => [
       <div class="flex justify-between items-center h-20">
         <!-- Logo -->
         <div class="flex-shrink-0">
-          <Link href="/Home" class="text-3xl font-bold text-indigo-600">NextGig</Link>
+          <Link href="/home" class="text-3xl font-bold text-indigo-600">NextGig</Link>
         </div>
 
         <!-- Desktop Navigation -->

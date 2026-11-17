@@ -4,7 +4,7 @@ namespace App\Actions\Auth;
 
 use App\Models\User;
 use App\Models\Employer;
-use App\Models\JobSeeker;
+use App\Models\Jobseeker;
 use Illuminate\Support\Facades\Hash;
 use App\Events\UserRegistered;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +32,7 @@ class RegisterUserAction
                 'description' => $data['description'] ?? null,
             ]);
         } elseif ($role_id == 3) {
-            JobSeeker::create([
+            Jobseeker::create([
                 'user_id' => $user->id,
                 'name' => $data['name'] ?? $user->full_name,
                 'email' => $user->email,

@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             JobListingSeeder::class, 
             TagSeeder::class,
             JobListingTagSeeder::class,
-            JobseekerSeeder::class,
+            JobSeekerSeeder::class,
             EmployerSeeder::class,
             JobApplicationSeeder::class,
           

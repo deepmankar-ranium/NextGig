@@ -29,7 +29,7 @@ class JobDescriptionDraftTest extends TestCase
         $vue = Tag::create(['name' => 'Vue.js']);
         $employer = $this->employerUser();
 
-        $this->actingAs($employer)->postJson('/Jobs/draft', [
+        $this->actingAs($employer)->postJson('/jobs/draft', [
             'title' => 'Backend Developer',
             'notes' => 'Laravel, Vue, mentor juniors',
         ])
@@ -51,7 +51,7 @@ class JobDescriptionDraftTest extends TestCase
         $this->fakeAi();
 
         $this->actingAs($this->seekerUser())
-            ->postJson('/Jobs/draft', ['title' => 'x', 'notes' => 'y'])
+            ->postJson('/jobs/draft', ['title' => 'x', 'notes' => 'y'])
             ->assertForbidden();
     }
 
@@ -60,7 +60,7 @@ class JobDescriptionDraftTest extends TestCase
         $this->fakeAi()->pushJson(['overview' => '', 'responsibilities' => 'nope']);
 
         $this->actingAs($this->employerUser())
-            ->postJson('/Jobs/draft', ['title' => 'Dev', 'notes' => 'stuff'])
+            ->postJson('/jobs/draft', ['title' => 'Dev', 'notes' => 'stuff'])
             ->assertStatus(503)
             ->assertJsonPath('status', 'error');
     }

@@ -119,7 +119,7 @@ const formattedSalary = computed(() => {
 
                     <Link
                       v-if="isOwner"
-                      :href="`/Jobs/job/${job.id}/edit`"
+                      :href="`/jobs/${job.id}/edit`"
                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
                     >
                       Edit Job

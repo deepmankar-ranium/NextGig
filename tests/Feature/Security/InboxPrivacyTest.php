@@ -56,7 +56,7 @@ class InboxPrivacyTest extends TestCase
         $job = $this->jobFor($employer);
 
         $this->actingAs($this->seekerUser())
-            ->get("/Jobs/job/{$job->id}")
+            ->get("/jobs/{$job->id}")
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('job.employer.user_id', $employer->id)

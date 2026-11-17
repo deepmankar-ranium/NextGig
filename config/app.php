@@ -42,6 +42,11 @@ return [
     'debug' => (bool) env('APP_DEBUG', false),
 
     /*
+    | Public demo: enables the nightly `demo:reset` schedule and allows the command to run.
+    */
+    'demo_mode' => (bool) env('DEMO_MODE', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------

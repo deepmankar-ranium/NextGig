@@ -29,7 +29,6 @@ export const useNotificationStore = defineStore('notifications', {
 
             window.Echo.private(`user.${userId}`)
                 .listen('ChatMessageSent', (event) => {
-                    console.log('New chat message event received:', event)
                     this.setHasNewMessages(true)
                     this.fetchUnreadCount();
 

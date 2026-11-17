@@ -96,7 +96,7 @@ import { Target, Eye, Users } from 'lucide-vue-next';
                 Whether you're looking for your next role or searching for top talent, we're here to help.
             </p>
             <div class="mt-8 flex justify-center gap-4">
-                <a href="/Jobs" class="inline-block bg-white text-indigo-600 font-bold rounded-lg px-8 py-3 hover:bg-indigo-50 transition-colors duration-300">
+                <a href="/jobs" class="inline-block bg-white text-indigo-600 font-bold rounded-lg px-8 py-3 hover:bg-indigo-50 transition-colors duration-300">
                     Browse Jobs
                 </a>
                 <a href="/contact" class="inline-block bg-indigo-600 text-white border border-indigo-400 font-bold rounded-lg px-8 py-3 hover:bg-indigo-500 transition-colors duration-300">

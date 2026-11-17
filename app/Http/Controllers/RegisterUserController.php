@@ -36,7 +36,7 @@ class RegisterUserController extends Controller
         return redirect()->route('register-2');
     }
 
-    public function showRegister2()
+    public function showRegisterDetails()
     {
         $role_id = session('user_role');
 
@@ -44,7 +44,7 @@ class RegisterUserController extends Controller
             return redirect('/register')->withErrors(['role_id' => 'You must select a valid role before registering.']);
         }
 
-        return Inertia::render('Register2');
+        return Inertia::render('RegisterDetails');
     }
 
     public function register(RegisterUserRequest $request, RegisterUserAction $registerUserAction)
@@ -57,7 +57,7 @@ class RegisterUserController extends Controller
 
         $registerUserAction->execute($request->validated(), $role_id);
 
-        return redirect('/Home');
+        return redirect('/home');
     }
 
     public function logIn()
@@ -69,7 +69,7 @@ class RegisterUserController extends Controller
     {
         $authenticateUserAction->execute($request->only('email', 'password'), $request->boolean('remember'));
 
-        return redirect()->intended('/Home');
+        return redirect()->intended('/home');
     }
 
     public function logout(Request $request, LogoutUserAction $logoutUserAction)

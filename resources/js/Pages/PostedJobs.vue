@@ -36,7 +36,7 @@ const handleBack = () => {
           </div>
           <div class="mt-6 flex space-x-3 md:mt-0 md:ml-4">
             <Link
-              href="/Jobs/create"
+              href="/jobs/create"
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               <PlusIcon class="-ml-1 mr-2 h-5 w-5" />
@@ -66,7 +66,7 @@ const handleBack = () => {
           <Link 
             v-for="job in jobListings.data" 
             :key="job.id" 
-            :href="`/Jobs/job/${job.id}`"
+            :href="`/jobs/${job.id}`"
             class="block"
           >
             <withRecentlyPostedBanner :job="job">
@@ -84,7 +84,7 @@ const handleBack = () => {
             <p class="mt-1 text-sm text-gray-500">Get started by posting a new job.</p>
             <div class="mt-6">
                 <Link
-                    href="/Jobs/create"
+                    href="/jobs/create"
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                     <PlusIcon class="-ml-1 mr-2 h-5 w-5" />

@@ -38,7 +38,7 @@ class JobApplicationController extends Controller
             return redirect()->back()->withErrors($result);
         }
 
-        return redirect()->route('Jobs')->with($result);
+        return redirect()->route('jobs.index')->with($result);
     }
 
     public function update(UpdateApplicationStatusRequest $request, Application $application, UpdateApplicationStatusAction $action)

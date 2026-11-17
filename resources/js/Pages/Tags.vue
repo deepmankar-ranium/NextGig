@@ -42,7 +42,6 @@ const createTag = () => {
             closePopup();
         },
         onError: (errors) => {
-            console.log(errors); // Handle validation errors
         }
     });
 };
@@ -56,7 +55,6 @@ const deleteTags = () => {
             showDeleteConfirm.value = false;
         },
         onError: (errors) => {
-            console.log(errors);
         }
     });
 };

@@ -73,7 +73,7 @@ class JobListingController extends Controller
     public function store(StoreJobListingRequest $request, CreateJobListingAction $action)
     {
         $action->execute($request->validated());
-        return redirect('/Jobs')->with('success', 'Job listing created successfully!');
+        return redirect('/jobs')->with('success', 'Job listing created successfully!');
     }
 
     public function edit(JobListing $jobListing)
@@ -88,13 +88,13 @@ class JobListingController extends Controller
     public function update(UpdateJobListingRequest $request, JobListing $jobListing, UpdateJobListingAction $action)
     {
         $action->execute($jobListing, $request->validated());
-        return redirect("/Jobs/job/{$jobListing->id}")->with('success', 'Job listing updated successfully!');
+        return redirect("/jobs/{$jobListing->id}")->with('success', 'Job listing updated successfully!');
     }
 
     public function destroy(JobListing $jobListing, DeleteJobListingAction $action)
     {
         $action->execute($jobListing);
-        return redirect("/Jobs")->with('success', 'Job deleted successfully!');
+        return redirect("/jobs")->with('success', 'Job deleted successfully!');
     }
 
     public function search(Request $request)

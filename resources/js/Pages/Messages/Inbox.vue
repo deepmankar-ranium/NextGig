@@ -133,13 +133,11 @@ const setupEchoChannel = (user) => {
     try {
         currentChannel = window.Echo.private(channelName)
             .listen('ChatMessageSent', (e) => {
-                console.log('New message received:', e.message);
                 if (e.message.sender_id !== currentUser.value.id) {
                     localMessages.value.push(e.message);
                 }
             })
             .listen('InBetweenMessageDeleted', (e) => {
-                console.log('In-between message deleted event received:', e);
                 const index = localMessages.value.findIndex(m => m.id === e.message_id);
                 if (index !== -1) {
                     localMessages.value.splice(index, 1);
@@ -149,7 +147,6 @@ const setupEchoChannel = (user) => {
                 console.error('Echo channel error:', error);
             });
 
-        console.log('Echo channel setup:', channelName);
     } catch (error) {
         console.error('Failed to setup Echo channel:', error);
     }
@@ -163,7 +160,6 @@ const cleanupEchoChannel = () => {
             currentChannel.stopListening('InBetweenMessageDeleted');
             window.Echo.leave(currentChannel.name);
             currentChannel = null;
-            console.log('Echo channel cleaned up');
         } catch (error) {
             console.error('Error cleaning up Echo channel:', error);
         }
@@ -341,7 +337,6 @@ const cancelHideModal = () => {
 };
 
 const replyToMessage = (messageId) => {
-    console.log('Replying to message:', messageId);
     // Placeholder for reply logic
 };
 
@@ -350,7 +345,6 @@ const copyMessage = (messageId) => {
     if (message) {
         try {
             navigator.clipboard.writeText(getMessageText(message));
-            console.log('Message copied to clipboard');
         } catch (err) {
             console.error('Failed to copy message: ', err);
         }
@@ -367,7 +361,6 @@ const deleteMessage = (messageId) => {
 
 const handleDeleteConfirmMessage = () => {
     if (messageToDelete.value) {
-        console.log('Deleting message:', messageToDelete.value);
 
         router.delete(
             route('message.destroy', {

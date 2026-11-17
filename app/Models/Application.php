@@ -91,7 +91,7 @@ class Application extends Model
 
     public function jobSeeker()
     {
-        return $this->belongsTo(JobSeeker::class, 'jobSeeker_id');
+        return $this->belongsTo(Jobseeker::class, 'jobSeeker_id');
     }
 
     public function statusHistory()

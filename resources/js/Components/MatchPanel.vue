@@ -25,7 +25,7 @@ const explain = async () => {
   loading.value = true;
   error.value = '';
   try {
-    const { data } = await axios.post(`/Jobs/job/${props.jobId}/match/explain`);
+    const { data } = await axios.post(`/jobs/${props.jobId}/match/explain`);
     explanation.value = data.explanation;
   } catch (e) {
     error.value = e.response?.data?.message || 'Could not load an explanation right now.';
