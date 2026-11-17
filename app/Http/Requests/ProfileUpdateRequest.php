@@ -18,7 +18,9 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'full_name' => ['required', 'string', 'min:2', 'max:255'],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:min_width=64,min_height=64,max_width=8000,max_height=8000'],
+            // Normally a small JPEG the browser has already cropped. If the browser couldn't read
+            // the file (e.g. HEIC in Chrome), the original arrives and the server converts it.
+            'photo' => ['nullable', 'file', 'max:25600', 'mimetypes:image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,image/bmp,image/x-ms-bmp'],
             'remove_photo' => ['nullable', 'boolean'],
         ];
     }
@@ -26,10 +28,8 @@ class ProfileUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'photo.image' => 'Choose a JPG, PNG or WebP image.',
-            'photo.mimes' => 'Choose a JPG, PNG or WebP image.',
-            'photo.max' => 'Your photo must be 5 MB or smaller.',
-            'photo.dimensions' => 'Your photo must be at least 64×64 pixels.',
+            'photo.mimetypes' => "That file isn't a photo we can use. Try a different one.",
+            'photo.max' => 'That photo is too large. Try a different one.',
         ];
     }
 }

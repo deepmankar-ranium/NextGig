@@ -6,6 +6,7 @@ import AppLayout from '@/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import AccountTabs from '@/Components/UI/AccountTabs.vue';
 import Avatar from '@/Components/Chat/Avatar.vue';
+import PhotoCropper from '@/Components/UI/PhotoCropper.vue';
 
 const props = defineProps({
   user: Object,
@@ -31,27 +32,44 @@ const hasPhoto = computed(() => !!shownPhoto.value);
 const revokePreview = () => { if (preview.value) URL.revokeObjectURL(preview.value); preview.value = null; };
 onBeforeUnmount(revokePreview);
 
+// Picking a photo opens the framing dialog. If this browser can't show the file (e.g. an
+// iPhone HEIC photo in Chrome), it's uploaded as-is and the server converts and centres it.
+const cropSrc = ref(null);
+const pickedName = ref('');
+
 const pickPhoto = (e) => {
   const file = e.target.files?.[0];
   e.target.value = '';
   if (!file) return;
   form.clearErrors('photo');
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-    form.setError('photo', 'Choose a JPG, PNG or WebP image.');
-    return;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    form.setError('photo', 'Your photo must be 5 MB or smaller.');
-    return;
-  }
+
+  const url = URL.createObjectURL(file);
+  const probe = new Image();
+  probe.onload = () => { cropSrc.value = url; };
+  probe.onerror = () => {
+    URL.revokeObjectURL(url);
+    revokePreview();
+    form.photo = file;
+    form.remove_photo = false;
+    pickedName.value = file.name;
+  };
+  probe.src = url;
+};
+
+const closeCropper = () => { if (cropSrc.value) URL.revokeObjectURL(cropSrc.value); cropSrc.value = null; };
+
+const useCropped = (blob) => {
+  closeCropper();
   revokePreview();
-  preview.value = URL.createObjectURL(file);
-  form.photo = file;
+  pickedName.value = '';
+  form.photo = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
   form.remove_photo = false;
+  preview.value = URL.createObjectURL(blob);
 };
 
 const removePhoto = () => {
   revokePreview();
+  pickedName.value = '';
   form.photo = null;
   form.remove_photo = !!props.user.photo_url;
 };
@@ -92,7 +110,7 @@ const roleLabel = computed(() => (({ 2: 'Employer', 3: 'Job seeker' })[props.use
               <Camera class="h-6 w-6 text-white" />
             </span>
           </button>
-          <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="pickPhoto" />
+          <input ref="fileInput" type="file" accept="image/*,.heic,.heif" class="hidden" @change="pickPhoto" />
 
           <div class="text-center sm:text-left">
             <p class="text-lg font-semibold text-gray-900">{{ form.full_name || user.full_name }}</p>
@@ -105,7 +123,7 @@ const roleLabel = computed(() => (({ 2: 'Employer', 3: 'Job seeker' })[props.use
                 <Trash2 class="h-4 w-4" /> Remove
               </button>
             </div>
-            <p class="mt-2 text-xs text-gray-500">JPG, PNG or WebP, up to 5 MB. Cropped to a square.</p>
+            <p v-if="pickedName" class="mt-2 text-xs text-gray-500">{{ pickedName }} will be used. Save to see it.</p>
             <p v-if="form.errors.photo" class="mt-1 text-xs text-red-600">{{ form.errors.photo }}</p>
           </div>
         </div>
@@ -133,12 +151,14 @@ const roleLabel = computed(() => (({ 2: 'Employer', 3: 'Job seeker' })[props.use
 
         <div class="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 sm:px-8">
           <span v-if="saved" class="flex items-center gap-1 text-sm text-green-700"><CheckCircle2 class="h-4 w-4" /> Saved</span>
-          <button v-if="dirty" type="button" class="btn-ghost" :disabled="form.processing" @click="revokePreview(); form.reset(); form.clearErrors()">Cancel</button>
+          <button v-if="dirty" type="button" class="btn-ghost" :disabled="form.processing" @click="revokePreview(); pickedName = ''; form.reset(); form.clearErrors()">Cancel</button>
           <button type="submit" class="btn-primary" :disabled="!dirty || form.processing">
             {{ form.processing ? 'Saving…' : 'Save changes' }}
           </button>
         </div>
       </form>
     </div>
+
+    <PhotoCropper v-if="cropSrc" :src="cropSrc" @done="useCropped" @cancel="closeCropper" />
   </AppLayout>
 </template>

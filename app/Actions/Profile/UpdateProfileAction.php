@@ -7,7 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use RuntimeException;
+use Illuminate\Validation\ValidationException;
 
 class UpdateProfileAction
 {
@@ -54,10 +54,7 @@ class UpdateProfileAction
      */
     private function squareJpeg(UploadedFile $file): string
     {
-        $src = @imagecreatefromstring((string) file_get_contents($file->getRealPath()));
-        if (! $src) {
-            throw new RuntimeException('Unreadable image.');
-        }
+        $src = $this->decode($file);
 
         $src = $this->applyExifOrientation($src, $file);
         $w = imagesx($src);
@@ -77,6 +74,34 @@ class UpdateProfileAction
         imagedestroy($dst);
 
         return $bytes;
+    }
+
+    /**
+     * GD reads JPEG/PNG/WebP/GIF/BMP; Imagick (when installed) covers HEIC/AVIF from phones.
+     */
+    private function decode(UploadedFile $file): \GdImage
+    {
+        $bytes = (string) file_get_contents($file->getRealPath());
+        $img = @imagecreatefromstring($bytes);
+
+        if (! $img && class_exists(\Imagick::class)) {
+            try {
+                $im = new \Imagick();
+                $im->readImageBlob($bytes);
+                $im->autoOrient();
+                $im->setImageFormat('png');
+                $img = @imagecreatefromstring($im->getImageBlob());
+                $im->clear();
+            } catch (\ImagickException) {
+                $img = false;
+            }
+        }
+
+        if (! $img) {
+            throw ValidationException::withMessages(['photo' => "We couldn't read that photo. Try a different one."]);
+        }
+
+        return $img;
     }
 
     private function applyExifOrientation(\GdImage $img, UploadedFile $file): \GdImage
