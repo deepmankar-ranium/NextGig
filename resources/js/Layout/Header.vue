@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Home, Briefcase, User, Info, LogOut, Menu, X, MessageSquare } from 'lucide-vue-next';
+import { Home, Briefcase, User, Info, LogOut, Menu, X, MessageSquare, FileText, Sparkles } from 'lucide-vue-next';
 import { useNotificationStore } from '../store/notifications';
 
 const isMenuOpen = ref(false);
@@ -17,9 +17,10 @@ const navItems = computed(() => [
   { name: 'Profile', href: '/profile', icon: User },
   ...(isEmployer.value ? [{ name: 'Posted Jobs', href: '/posted-jobs', icon: Briefcase }] : []),
   ...(isJobSeeker.value ? [{ name: 'Applied Jobs', href: '/applied-jobs', icon: Briefcase }] : []),
+  ...(isJobSeeker.value ? [{ name: 'Resume', href: '/resume', icon: FileText }] : []),
   { name: 'Inbox', href: '/messages', icon: MessageSquare , badge: notificationStore.unreadCount > 0 ? notificationStore.unreadCount : null},
   { name: 'About', href: '/about', icon: Info },
-  { name: 'Chat With AI', href: '/chat', icon: Info },
+  { name: 'Career Assistant', href: '/chat', icon: Sparkles },
 ]);
 </script>
 

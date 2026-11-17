@@ -193,8 +193,9 @@ const sendMessage = async () => {
       messages.value.push(createMessage("bot", "Sorry, I encountered an error. Please try again."));
     }
   } catch (error) {
-    console.error('Request failed:', error);
-    messages.value.push(createMessage("bot", "Sorry, I encountered an error. Please try again."));
+    const friendly = error.response?.data?.message || error.response?.data?.response
+      || "Sorry, I encountered an error. Please try again.";
+    messages.value.push(createMessage("bot", friendly));
   } finally {
     isLoading.value = false;
     await scrollToBottom();
