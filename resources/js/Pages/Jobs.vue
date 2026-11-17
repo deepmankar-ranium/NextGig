@@ -5,6 +5,8 @@ import Pagination from '../Components/Pagination.vue';
 import axios from 'axios';
 import { ref, computed, onMounted, watch } from 'vue';
 import JobCard from '@/Components/JobCard.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
+import Tabs from '@/Components/UI/Tabs.vue';
 import withRecentlyPostedBanner from '@/Components/withRecentlyPostedBanner.vue';
 import { ChevronLeftIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-vue-next';
 
@@ -61,6 +63,10 @@ const isLoading = ref(false);
 const selectedTag = ref('');
 const sortByMatch = ref(new URLSearchParams(window.location.search).get('sort') === 'match');
 const sortParam = () => (sortByMatch.value ? { sort: 'match' } : {});
+
+const setTab = (key) => {
+  if ((key === 'match') !== sortByMatch.value) toggleMatchSort();
+};
 
 const toggleMatchSort = async () => {
   sortByMatch.value = !sortByMatch.value;
@@ -141,36 +147,19 @@ const showPagination = computed(() =>
 
 <template>
   <AppLayout>
-    <div class="bg-gray-50 min-h-screen">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="page">
 
-        <!-- Page Header -->
-        <div class="md:flex md:items-center md:justify-between pb-8 border-b border-gray-200">
-          <div class="min-w-0 flex-1">
-            <button @click="handleBack" class="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-              <ChevronLeftIcon class="h-5 w-5 mr-1" />
-              Back
-            </button>
-            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Available Job Positions
-            </h1>
-            <p class="mt-2 text-lg text-gray-600">
-              Find your next career move from our curated list of opportunities.
-            </p>
-          </div>
-          <div v-if="isEmployer" class="mt-6 flex space-x-3 md:mt-0 md:ml-4">
-            <Link
-              href="/jobs/create"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <PlusIcon class="-ml-1 mr-2 h-5 w-5" />
-              Post a New Job
-            </Link>
-          </div>
-        </div>
+        <PageHeader title="Jobs" :subtitle="isJobSeeker ? 'Every job shows how well it matches your skills.' : 'Browse every open role on NextGig.'">
+          <template v-if="isEmployer" #actions>
+            <Link href="/jobs/create" class="btn-primary"><PlusIcon class="h-4 w-4" /> Post a job</Link>
+          </template>
+          <template v-if="isJobSeeker" #tabs>
+            <Tabs :model-value="sortByMatch ? 'match' : 'all'" @update:model-value="setTab" :tabs="[{ key: 'all', label: 'All jobs' }, { key: 'match', label: 'Best matches' }]" label="Job list" />
+          </template>
+        </PageHeader>
 
         <!-- Filters Panel -->
-        <div class="mt-8 p-6 bg-white rounded-xl shadow-md space-y-6">
+        <div class="card card-body space-y-6">
             <!-- Search Form -->
             <form @submit.prevent="searchJobs">
                 <label for="search" class="block text-sm font-medium text-gray-700">Search by keyword</label>
@@ -196,18 +185,6 @@ const showPagination = computed(() =>
                 </div>
             </form>
             
-            <!-- Best matches -->
-            <div v-if="isJobSeeker" class="pt-6 border-t border-gray-200 flex items-center justify-between">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-700">Best matches for you</h3>
-                    <p class="text-xs text-gray-500">Sort by your match score. AI suggestion, not a hiring decision.</p>
-                </div>
-                <button type="button" @click="toggleMatchSort" :disabled="isLoading"
-                    :class="['px-3 py-1 text-sm rounded-full transition-colors', sortByMatch ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300']">
-                    {{ sortByMatch ? 'On' : 'Off' }}
-                </button>
-            </div>
-
             <!-- Tags Filter -->
             <div v-if="tags?.length" class="pt-6 border-t border-gray-200">
                 <div class="flex items-center justify-between">
@@ -265,6 +242,6 @@ const showPagination = computed(() =>
           class="mt-10" 
         />
       </div>
-    </div>
+    
   </AppLayout>
 </template>

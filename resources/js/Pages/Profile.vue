@@ -1,5 +1,8 @@
 <script setup>
 import AppLayout from '@/Layout/AppLayout.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
+import AccountTabs from '@/Components/UI/AccountTabs.vue';
+import { initials } from '@/utils/nav';
 import { Link } from '@inertiajs/vue3';
 import { ChevronLeftIcon, User, Mail, Briefcase, Edit } from 'lucide-vue-next';
 
@@ -14,32 +17,21 @@ const handleBack = () => {
 
 <template>
   <AppLayout>
-    <div class="bg-gray-50 min-h-screen">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-        <!-- Page Header -->
-        <div class="pb-8 border-b border-gray-200">
-          <button @click="handleBack" class="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-            <ChevronLeftIcon class="h-5 w-5 mr-1" />
-            Back
-          </button>
-          <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-            Account Profile
-          </h1>
-          <p class="mt-2 text-lg text-gray-600">
-            View and manage your profile details.
-          </p>
-        </div>
+    <div>
+      <div class="page-narrow">
+        <PageHeader title="Account" subtitle="Your sign-in details.">
+          <template #tabs><AccountTabs /></template>
+        </PageHeader>
 
         <!-- Profile Card -->
-        <div class="mt-8 bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="card overflow-hidden">
           <div class="p-8">
             <div class="md:flex md:items-center md:justify-between">
                 <div class="flex items-center space-x-5">
                     <div class="flex-shrink-0">
                         <div class="relative">
-                            <div class="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
-                                <User class="h-12 w-12 text-gray-500" />
+                            <div class="h-16 w-16 rounded-full bg-indigo-600 flex items-center justify-center text-xl font-semibold text-white">
+                                {{ initials(user.full_name) }}
                             </div>
                         </div>
                     </div>

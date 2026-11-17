@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Matching\MatchService;
 use App\Models\Application;
+use App\Models\DirectMessage;
 use App\Models\Employer;
 use App\Models\JobListing;
 use App\Models\Jobseeker;
@@ -106,6 +107,40 @@ class DemoSeeder extends Seeder
         }
 
         Jobseeker::all()->each(fn (Jobseeker $s) => $matches->recomputeForSeeker($s));
+
+        $this->conversation($employerUser, $seekerUser, [
+            [0, 'Hi Asha, thanks for applying to the Senior Laravel Developer role. Your Laravel work stood out.', 60 * 26],
+            [1, 'Thank you! I\'m really interested in the invoicing product.', 60 * 25],
+            [0, 'Great. Would you be free for a 30-minute call on Tuesday or Wednesday?', 45],
+            [1, 'Wednesday afternoon works well for me.', 30],
+            [0, 'Perfect, I\'ll send an invite for 3pm. Talk soon!', 5],
+        ]);
+        $this->conversation($otherEmployerUser, $seekerUser, [
+            [0, 'Hello! We\'ve reviewed your application for the Node.js role.', 60 * 24 * 3],
+        ]);
+    }
+
+    /**
+     * @param  list<array{0: int, 1: string, 2: int}>  $lines  [0 = first user speaks / 1 = second, text, minutes ago]
+     */
+    private function conversation(User $a, User $b, array $lines): void
+    {
+        if (DirectMessage::between($a->id, $b->id)->exists()) {
+            return;
+        }
+
+        foreach ($lines as [$who, $text, $minutesAgo]) {
+            $m = new DirectMessage([
+                'sender_id' => $who === 0 ? $a->id : $b->id,
+                'receiver_id' => $who === 0 ? $b->id : $a->id,
+                'message' => $text,
+            ]);
+            $m->created_at = $m->updated_at = now()->subMinutes($minutesAgo);
+            $m->save();
+        }
+
+        // Everything except the newest message has been read.
+        DirectMessage::between($a->id, $b->id)->where('created_at', '<', now()->subMinutes(10))->update(['read_at' => now()]);
     }
 
     private function user(string $name, string $email, int $roleId): User

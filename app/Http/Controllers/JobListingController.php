@@ -8,6 +8,7 @@ use App\Actions\JobListing\UpdateJobListingAction;
 use App\Http\Requests\StoreJobListingRequest;
 use App\Http\Requests\UpdateJobListingRequest;
 use App\Models\JobListing;
+use App\Services\DashboardService;
 use App\Services\JobListingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,12 +26,20 @@ class JobListingController extends Controller
         return $user?->role?->name === 'Job Seeker' ? $user->jobseeker : null;
     }
 
-    public function index(Request $request)
+    /**
+     * Home: a role-specific dashboard.
+     */
+    public function index(Request $request, DashboardService $dashboard)
     {
-        $jobListings = $this->jobListingService->getJobListings($request->all(), $this->seeker($request));
-        return Inertia::render('Welcome', [
-            'jobListings' => $jobListings,
-        ]);
+        $user = $request->user();
+
+        $data = match (true) {
+            $user->role?->name === 'Employer' && $user->employer !== null => $dashboard->forEmployer($user),
+            $user->role?->name === 'Job Seeker' && $user->jobseeker !== null => $dashboard->forSeeker($user),
+            default => ['role' => 'other', 'name' => $user->full_name],
+        };
+
+        return Inertia::render('Dashboard', $data);
     }
 
     public function jobs(Request $request)

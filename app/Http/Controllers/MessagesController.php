@@ -73,6 +73,10 @@ class MessagesController extends Controller
             $user = null;
         }
 
+        if ($user) {
+            $this->directMessageService->markConversationRead($me, $user);
+        }
+
         return Inertia::render('Messages/Inbox', [
             'users'        => $this->directMessageService->getUsersForInbox($me, $user),
             'selectedUser' => $user ? $this->directMessageService->publicProfile($user->loadMissing('role')) : null,

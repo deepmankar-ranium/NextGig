@@ -1,20 +1,21 @@
 <template>
   <AppLayout>
-    <div class="py-12 bg-gray-50 min-h-screen">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-6">
-          <h1 class="text-3xl text-gray-900 font-semibold">Applied Jobs</h1>
-          <p class="mt-1 text-sm text-gray-500">Status updates appear here live — no need to refresh.</p>
-        </div>
+    <div class="page max-w-5xl">
+        <PageHeader title="My applications" subtitle="Status updates appear here live, no need to refresh.">
+          <template #tabs>
+            <Tabs v-model="activeTab" :tabs="tabs" label="Application status" />
+          </template>
+        </PageHeader>
 
-        <div v-if="!applications.length" class="rounded-xl bg-white p-10 text-center text-gray-500 shadow-sm">
-          You haven't applied to any jobs yet.
-          <Link href="/jobs" class="text-indigo-600 font-medium hover:underline">Browse jobs</Link>
-        </div>
+        <EmptyState v-if="!shown.length" :icon="ClipboardList"
+          :title="applications.length ? emptyTitle : 'No applications yet'"
+          :text="applications.length ? '' : 'Find a role that matches your skills and apply. You\'ll follow every step here.'">
+          <Link v-if="!applications.length" href="/jobs?sort=match" class="btn-primary">See your best matches</Link>
+        </EmptyState>
 
         <ul class="space-y-4">
-          <li v-for="app in applications" :key="app.id"
-              class="rounded-xl bg-white p-6 shadow-sm transition-shadow"
+          <li v-for="app in shown" :key="app.id"
+              class="card card-body transition-shadow"
               :class="{ 'ring-2 ring-indigo-400': flashId === app.id }">
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div>
@@ -43,7 +44,6 @@
             </p>
           </li>
         </ul>
-      </div>
     </div>
   </AppLayout>
 </template>
@@ -51,7 +51,11 @@
 <script setup>
 import AppLayout from '@/Layout/AppLayout.vue';
 import { Link } from '@inertiajs/vue3';
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
+import Tabs from '@/Components/UI/Tabs.vue';
+import EmptyState from '@/Components/UI/EmptyState.vue';
+import { ClipboardList } from 'lucide-vue-next';
 import { useNotificationStore } from '@/store/notifications';
 import { PIPELINE, STAGE_LABELS, stageBadgeClass } from '@/utils/stages';
 
@@ -61,6 +65,23 @@ const props = defineProps({
 
 const applications = ref(props.appliedJobs.map((a) => ({ ...a, timeline: [...a.timeline] })));
 const flashId = ref(null);
+
+// Tabs: Active (still in the pipeline) / Offers / Closed (not selected).
+const GROUPS = {
+  active: (s) => !['offer', 'rejected'].includes(s),
+  offers: (s) => s === 'offer',
+  closed: (s) => s === 'rejected',
+};
+const initialTab = new URLSearchParams(window.location.search).get('tab');
+const activeTab = ref(GROUPS[initialTab] ? initialTab : 'active');
+const countOf = (key) => applications.value.filter((a) => GROUPS[key](a.application_status)).length;
+const tabs = computed(() => [
+  { key: 'active', label: 'Active', count: countOf('active') },
+  { key: 'offers', label: 'Offers', count: countOf('offers') },
+  { key: 'closed', label: 'Closed', count: countOf('closed') },
+]);
+const shown = computed(() => applications.value.filter((a) => GROUPS[activeTab.value](a.application_status)));
+const emptyTitle = computed(() => ({ active: 'No active applications', offers: 'No offers yet', closed: 'Nothing closed' }[activeTab.value]));
 const store = useNotificationStore();
 
 onMounted(() => store.clearApplicationUpdates());

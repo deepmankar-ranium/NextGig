@@ -43,10 +43,10 @@ class GPTController extends Controller
         ]);
     }
 
-    public function clearChat(Request $request, ClearChatAction $action, CreateIntroMessageAction $createIntroMessageAction)
+    public function clearChat(Request $request, ClearChatAction $action)
     {
+        // The page shows its own welcome screen with suggestions once the history is empty.
         $action->execute($request->user());
-        $createIntroMessageAction->execute($request->user());
 
         return response()->json([
             'status' => 'success'
