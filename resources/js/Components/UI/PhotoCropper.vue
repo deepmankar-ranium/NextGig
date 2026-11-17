@@ -108,7 +108,7 @@ const save = () => {
       <h3 class="text-base font-semibold text-gray-900">Position your photo</h3>
       <p class="mt-1 text-sm text-gray-500">Drag to move, zoom to fit.</p>
 
-      <div class="mx-auto mt-4 select-none overflow-hidden rounded-xl bg-gray-900"
+      <div class="mx-auto mt-4 select-none overflow-hidden rounded-xl bg-white ring-1 ring-gray-200"
         :style="{ width: `${VIEW}px`, height: `${VIEW}px`, touchAction: 'none' }"
         tabindex="0" aria-label="Photo. Drag or use the arrow keys to move it."
         @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerUp" @pointercancel="onPointerUp" @wheel.prevent="onWheel">
@@ -116,7 +116,7 @@ const save = () => {
           <img ref="img" :src="src" alt="" draggable="false" @load="onLoad"
             class="pointer-events-none absolute left-0 top-0 max-w-none" :style="imgStyle" />
           <!-- Round preview: darken outside the circle -->
-          <div class="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.45)] ring-2 ring-white/80"></div>
+          <div class="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_0_9999px_rgba(255,255,255,0.7)] ring-2 ring-indigo-500/70"></div>
         </div>
       </div>
 
