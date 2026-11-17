@@ -34,7 +34,7 @@ const filtered = computed(() => {
           class="mx-2 flex items-center gap-3 rounded-lg px-3 py-3 transition-colors"
           :class="c.id === selectedId ? 'bg-indigo-50' : 'hover:bg-gray-50'"
           :aria-current="c.id === selectedId ? 'true' : undefined">
-          <Avatar :id="c.id" :name="c.name" />
+          <Avatar :id="c.id" :name="c.name" :src="c.photo_url" />
           <div class="min-w-0 flex-1">
             <div class="flex items-baseline justify-between gap-2">
               <p class="truncate text-sm" :class="c.unread ? 'font-semibold text-gray-900' : 'font-medium text-gray-900'">{{ c.name }}</p>

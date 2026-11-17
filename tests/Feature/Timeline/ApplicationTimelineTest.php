@@ -27,7 +27,7 @@ class ApplicationTimelineTest extends TestCase
     {
         parent::setUp();
 
-        \Illuminate\Support\Facades\Storage::fake('local');
+        \Illuminate\Support\Facades\Storage::fake('uploads');
         $this->owner = $this->employerUser();
         $this->seeker = $this->withResumeOnFile($this->seekerUser());
         $job = $this->jobFor($this->owner);

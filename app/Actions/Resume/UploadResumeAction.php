@@ -59,7 +59,7 @@ class UploadResumeAction
     private function store(Jobseeker $seeker, UploadedFile $file, string $text): void
     {
         $seeker->update([
-            'resume' => $file->storeAs('resumes', "seeker-{$seeker->id}.pdf", 'local'),
+            'resume' => $file->storeAs('resumes', "seeker-{$seeker->id}.pdf", 'uploads'),
             'resume_text' => $text,
         ]);
     }

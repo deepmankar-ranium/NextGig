@@ -135,7 +135,7 @@ watch(() => other.value?.id, () => { joinChannel(); store.fetchUnreadCount(); dr
             <Link href="/messages" class="-ml-1 rounded-full p-1.5 text-gray-500 hover:bg-gray-100 md:hidden" aria-label="All conversations">
               <ChevronLeft class="h-5 w-5" />
             </Link>
-            <Avatar :id="other.id" :name="other.name" />
+            <Avatar :id="other.id" :name="other.name" :src="other.photo_url" />
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-semibold text-gray-900">{{ other.name }}</p>
               <p class="text-xs text-gray-500">{{ other.role }}</p>

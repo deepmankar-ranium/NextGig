@@ -78,7 +78,7 @@ class JobListingService
      */
     private function resumeOnFile(Jobseeker $seeker): ?array
     {
-        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $disk = \Illuminate\Support\Facades\Storage::disk('uploads');
 
         if (blank($seeker->resume) || ! $disk->exists($seeker->resume)) {
             return null;

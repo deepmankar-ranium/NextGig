@@ -104,11 +104,18 @@ php artisan demo:reset        # optional: demo data + demo accounts
 npm run dev
 php artisan serve             # or Laravel Herd
 php artisan queue:work        # match recompute + emails
+docker compose up -d minio minio-setup   # local S3 for uploads
 ```
 
 **AI:** set `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`, default `gemini-3.1-flash-lite`).
 Without a key, AI features show a friendly "not configured" message; everything else works.
 `AI_PER_MINUTE` and `AI_DAILY_CAP` set the per-user limits.
+
+**Uploads (S3 / MinIO):** resumes, the PDF sent with each application and profile photos go
+to the private `uploads` disk. `UPLOADS_DISK=s3` stores them in `AWS_BUCKET`; locally that's MinIO
+(`docker compose up -d minio minio-setup`, or `brew install minio` and run it with the same
+credentials). `UPLOADS_DISK=local` keeps them in `storage/app/private`. Files are never public; they
+are streamed through authorised routes. Moving from local to S3: `php artisan uploads:copy-local`.
 
 **Real time:** set `BROADCAST_CONNECTION=pusher` and the `PUSHER_*` / `VITE_PUSHER_*` keys (or
 point Echo at Laravel Reverb). With the default `log` driver everything works; updates just appear

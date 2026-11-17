@@ -103,7 +103,7 @@ class RankedApplicantsTest extends TestCase
 
     public function test_every_status_change_is_audited_with_actor_and_time(): void
     {
-        \Illuminate\Support\Facades\Storage::fake('local');
+        \Illuminate\Support\Facades\Storage::fake('uploads');
         $owner = $this->employerUser();
         $job = $this->jobFor($owner);
         $seeker = $this->withResumeOnFile($this->seekerUser());

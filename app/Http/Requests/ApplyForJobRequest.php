@@ -30,7 +30,7 @@ class ApplyForJobRequest extends FormRequest
             function (Validator $validator) {
                 $onFile = $this->user()->jobseeker->resume;
 
-                if (! $this->hasFile('resume') && (blank($onFile) || ! Storage::disk('local')->exists($onFile))) {
+                if (! $this->hasFile('resume') && (blank($onFile) || ! Storage::disk('uploads')->exists($onFile))) {
                     $validator->errors()->add('resume', 'Add your resume (PDF) to apply.');
                 }
             },

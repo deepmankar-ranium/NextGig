@@ -37,7 +37,7 @@ class ResumeUploadTest extends TestCase
 
     public function test_upload_parses_and_stores_a_reviewable_profile(): void
     {
-        Storage::fake('local');
+        Storage::fake('uploads');
         $ai = $this->fakeAi()->pushJson($this->validProfile());
         $seeker = $this->seekerUser();
 
@@ -50,7 +50,7 @@ class ResumeUploadTest extends TestCase
         $this->assertSame(['php', 'laravel', 'vue.js', 'mysql', 'docker'], $js->profile['skills']);
         $this->assertSame(6.0, (float) $js->profile['years_experience']);
         $this->assertStringContainsString('Senior Laravel Developer', $js->resume_text);
-        Storage::disk('local')->assertExists($js->resume);
+        Storage::disk('uploads')->assertExists($js->resume);
 
         $this->actingAs($seeker)->get('/resume')->assertInertia(fn (Assert $p) => $p
             ->component('Resume/Edit')
@@ -66,7 +66,7 @@ class ResumeUploadTest extends TestCase
 
     public function test_bad_pdf_is_rejected_with_a_friendly_error(): void
     {
-        Storage::fake('local');
+        Storage::fake('uploads');
         $ai = $this->fakeAi();
         $seeker = $this->seekerUser();
 
@@ -82,7 +82,7 @@ class ResumeUploadTest extends TestCase
 
     public function test_provider_timeout_saves_nothing_and_shows_friendly_error(): void
     {
-        Storage::fake('local');
+        Storage::fake('uploads');
         $this->fakeAi()->pushFailure('timeout');
         $seeker = $this->seekerUser();
 
@@ -91,12 +91,12 @@ class ResumeUploadTest extends TestCase
             ->assertSessionHasErrors(['resume' => 'The AI service is busy right now. Please try again in a minute.']);
 
         $this->assertNull($seeker->jobseeker->fresh()->profile);
-        $this->assertEmpty(Storage::disk('local')->allFiles());
+        $this->assertEmpty(Storage::disk('uploads')->allFiles());
     }
 
     public function test_invalid_ai_output_is_never_shown_or_saved(): void
     {
-        Storage::fake('local');
+        Storage::fake('uploads');
         $this->fakeAi()->pushJson(['skills' => 'not-a-list', 'years_experience' => 'lots', 'roles' => [], 'summary' => '<script>']);
         $seeker = $this->seekerUser();
 

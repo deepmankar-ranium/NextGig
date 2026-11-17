@@ -47,6 +47,30 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Private user uploads: resumes, application snapshots, profile photos.
+         * UPLOADS_DISK=local keeps them in storage/app/private; UPLOADS_DISK=s3 puts them in the
+         * AWS_BUCKET (MinIO locally — see docker-compose.yml). Nothing here is publicly readable;
+         * files are always streamed through an authorised route.
+         */
+        'uploads' => env('UPLOADS_DISK', 'local') === 's3' ? [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => true,
+        ] : [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

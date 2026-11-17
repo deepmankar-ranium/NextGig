@@ -73,7 +73,7 @@ class DirectMessageService
     }
 
     /**
-     * @return array{id:int, name:string, role:string}
+     * @return array{id:int, name:string, role:string, photo_url:?string}
      */
     public function publicProfile(User $user): array
     {
@@ -81,6 +81,7 @@ class DirectMessageService
             'id' => $user->id,
             'name' => $user->full_name,
             'role' => $user->role->name ?? 'N/A',
+            'photo_url' => $user->photo_url,
         ];
     }
 }

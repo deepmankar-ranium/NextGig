@@ -3,7 +3,8 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { MessageSquare, ChevronDown, User, FileText, Tag, Info, LogOut } from 'lucide-vue-next';
 import { useNotificationStore } from '../store/notifications';
-import { primaryNav, isActive, initials, ROLE_EMPLOYER, ROLE_SEEKER } from '@/utils/nav';
+import Avatar from '@/Components/Chat/Avatar.vue';
+import { primaryNav, isActive, ROLE_EMPLOYER, ROLE_SEEKER } from '@/utils/nav';
 
 const page = usePage();
 const store = useNotificationStore();
@@ -70,9 +71,7 @@ const roleLabel = computed(() => (roleId.value === ROLE_EMPLOYER ? 'Employer' : 
           <div ref="menuRef" class="relative">
             <button type="button" @click="menuOpen = !menuOpen" :aria-expanded="menuOpen" aria-haspopup="menu"
               class="flex items-center gap-1 rounded-full p-0.5 pr-1.5 hover:bg-gray-100">
-              <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
-                {{ initials(user.full_name) }}
-              </span>
+              <Avatar :id="user.id" :name="user.full_name" :src="user.photo_url" size="sm" />
               <ChevronDown class="hidden h-4 w-4 text-gray-500 sm:block" />
             </button>
 

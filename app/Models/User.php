@@ -34,7 +34,13 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'photo_path',
     ];
+
+    /**
+     * @var list<string>
+     */
+    protected $appends = ['photo_url'];
 
     /**
      * Get the attributes that should be cast.
@@ -47,6 +53,16 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * URL of the profile photo (served through an authorised route), or null for initials.
+     */
+    protected function photoUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::get(fn () => $this->photo_path
+            ? route('users.photo', ['user' => $this->id, 'v' => substr(md5($this->photo_path), 0, 10)], false)
+            : null);
     }
 
     public function role()
