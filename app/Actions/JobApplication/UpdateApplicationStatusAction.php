@@ -4,14 +4,20 @@ namespace App\Actions\JobApplication;
 
 use App\Events\ApplicationStatusUpdated;
 use App\Models\Application;
+use App\Models\User;
 
 class UpdateApplicationStatusAction
 {
-    public function execute(Application $application, string $status): void
+    /**
+     * Status changes only happen through an explicit request by a person ($actor).
+     */
+    public function execute(Application $application, string $status, User $actor): void
     {
-        $application->update([
-            'application_status' => $status,
-        ]);
+        if ($application->application_status === $status) {
+            return;
+        }
+
+        $application->transitionTo($status, $actor);
 
         event(new ApplicationStatusUpdated($application));
     }

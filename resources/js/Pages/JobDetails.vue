@@ -201,6 +201,10 @@ const formattedSalary = computed(() => {
               </div>
               <div class="border-t border-gray-200 px-6 py-4">
                 <form @submit.prevent="submitApplication" class="space-y-6">
+                  <p class="rounded-md bg-blue-50 p-3 text-xs text-blue-800">
+                    Employers may sort applicants by a match score calculated from skills and experience only.
+                    It is a suggestion: a person reviews every application and makes every decision.
+                  </p>
                   <div>
                     <label for="resume_text" class="block text-sm font-medium text-gray-700">Resume</label>
                     <div class="mt-1">

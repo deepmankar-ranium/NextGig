@@ -1,5 +1,7 @@
 <script setup>
-import { computed, watch, onMounted } from 'vue';
+import { computed, watch, onMounted, ref } from 'vue';
+import axios from 'axios';
+import { Sparkles } from 'lucide-vue-next';
 import { useForm, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layout/AppLayout.vue';
 import { ChevronLeftIcon } from 'lucide-vue-next';
@@ -105,6 +107,35 @@ const submit = () => {
   });
 };
 
+// AI draft: fills the form only. The employer reviews and publishes it themselves.
+const draftNotes = ref('');
+const drafting = ref(false);
+const draftError = ref('');
+const draftNewSkills = ref([]);
+
+const draftWithAi = async () => {
+  if (!form.title.trim() || !draftNotes.value.trim()) {
+    draftError.value = 'Add a job title and a few notes first.';
+    return;
+  }
+  drafting.value = true;
+  draftError.value = '';
+  try {
+    const { data } = await axios.post('/Jobs/draft', {
+      title: form.title,
+      notes: draftNotes.value,
+      min_years_experience: form.min_years_experience || null,
+    });
+    form.description = data.draft.description;
+    form.tags = [...new Set([...form.tags, ...data.draft.tag_ids])];
+    draftNewSkills.value = data.draft.new_skills;
+  } catch (e) {
+    draftError.value = e.response?.data?.message || 'Could not draft right now. Please try again.';
+  } finally {
+    drafting.value = false;
+  }
+};
+
 // Check if we need to reconcile tags after component mounts
 onMounted(() => {
   // Make sure we only keep tags that still exist in the current tagsList
@@ -138,6 +169,21 @@ onMounted(() => {
         <!-- Form Card -->
         <div class="mt-8">
           <form @submit.prevent="submit" class="space-y-8">
+            <div class="bg-indigo-50 border border-indigo-100 p-6 rounded-xl">
+                <h2 class="text-sm font-semibold text-indigo-900 flex items-center gap-2"><Sparkles class="h-4 w-4" /> Draft with AI (optional)</h2>
+                <p class="text-xs text-indigo-800 mt-1">Enter the job title below, jot a few notes here, and we'll draft the description and suggest tags. Nothing is published until you review it and click submit.</p>
+                <textarea v-model="draftNotes" rows="3" class="mt-3 w-full rounded-md border-indigo-200 text-sm" placeholder="e.g. Laravel + Vue, build internal tools, mentor juniors, remote-friendly team"></textarea>
+                <div class="mt-2 flex items-center gap-3">
+                    <button type="button" @click="draftWithAi" :disabled="drafting" class="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+                        {{ drafting ? 'Drafting…' : 'Draft description' }}
+                    </button>
+                    <span v-if="draftError" class="text-sm text-red-600">{{ draftError }}</span>
+                </div>
+                <p v-if="draftNewSkills.length" class="mt-2 text-xs text-indigo-800">
+                    Suggested skills without a tag yet: <strong>{{ draftNewSkills.join(', ') }}</strong>. Create them in the <Link href="/tags" class="underline">Tag Manager</Link> if you want them used for matching.
+                </p>
+            </div>
+
             <div class="bg-white p-8 rounded-xl shadow-md">
                 <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                     <div class="sm:col-span-6">

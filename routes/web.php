@@ -15,6 +15,7 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\MessagesController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\JobMatchController;
+use App\Http\Controllers\JobDraftController;
 
 
 Route::get('/', function () {
@@ -26,6 +27,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/Home', [JobListingController::class, 'index'])->name('home');
     Route::get('/Jobs', [JobListingController::class, 'jobs'])->name('Jobs');
     Route::get('/Jobs/create', [JobListingController::class, 'create']);
+    Route::post('/Jobs/draft', [JobDraftController::class, 'store'])->middleware('throttle:ai')->name('jobs.draft');
     Route::post('/Jobs/create', [JobListingController::class, 'store'])->middleware('throttle:writes')->name('jobs.store');
     Route::get('/Jobs/job/{jobListing}', [JobListingController::class, 'show']);
     Route::get('/Jobs/job/{jobListing}/edit', [JobListingController::class, 'edit']);

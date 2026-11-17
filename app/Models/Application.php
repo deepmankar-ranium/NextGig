@@ -54,4 +54,28 @@ class Application extends Model
     {
         return $this->belongsTo(JobSeeker::class, 'jobSeeker_id');
     }
+
+    public function statusHistory()
+    {
+        return $this->hasMany(ApplicationStatusChange::class)->orderBy('id');
+    }
+
+    /**
+     * The only way to change a status: always records who did it and when.
+     */
+    public function transitionTo(string $status, ?User $actor): void
+    {
+        $from = $this->exists ? $this->getOriginal('application_status') : null;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($status, $actor, $from) {
+            $this->application_status = $status;
+            $this->save();
+
+            $this->statusHistory()->create([
+                'from_status' => $from,
+                'to_status' => $status,
+                'changed_by' => $actor?->id,
+            ]);
+        });
+    }
 }

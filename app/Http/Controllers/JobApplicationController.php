@@ -18,13 +18,15 @@ class JobApplicationController extends Controller
     {
     }
 
-    public function show()
+    public function show(Request $request)
     {
         $this->authorize('viewAny', Application::class);
-        $applications = $this->jobApplicationService->getApplicationsForEmployer();
+
+        $ranked = $request->query('ranked', '1') !== '0';
 
         return Inertia::render('Applications/ViewApplication', [
-            'applications' => $applications
+            'applications' => $this->jobApplicationService->getApplicationsForEmployer($request->user(), $ranked),
+            'ranked' => $ranked,
         ]);
     }
 
@@ -41,7 +43,7 @@ class JobApplicationController extends Controller
 
     public function update(UpdateApplicationStatusRequest $request, Application $application, UpdateApplicationStatusAction $action)
     {
-        $action->execute($application, $request->validated('application_status'));
+        $action->execute($application, $request->validated('application_status'), $request->user());
 
         return redirect()->back()->with('success', 'Application status updated successfully.');
     }
