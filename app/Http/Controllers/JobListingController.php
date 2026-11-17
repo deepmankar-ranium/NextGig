@@ -18,9 +18,16 @@ class JobListingController extends Controller
     {
     }
 
+    private function seeker(Request $request)
+    {
+        $user = $request->user();
+
+        return $user?->role?->name === 'Job Seeker' ? $user->jobseeker : null;
+    }
+
     public function index(Request $request)
     {
-        $jobListings = $this->jobListingService->getJobListings($request->all());
+        $jobListings = $this->jobListingService->getJobListings($request->all(), $this->seeker($request));
         return Inertia::render('Welcome', [
             'jobListings' => $jobListings,
         ]);
@@ -28,20 +35,21 @@ class JobListingController extends Controller
 
     public function jobs(Request $request)
     {
-        $jobListings = $this->jobListingService->getJobListings($request->all());
+        $jobListings = $this->jobListingService->getJobListings($request->all(), $this->seeker($request));
         $tags = $this->jobListingService->getTags();
         $isEmployer = auth()->user()?->role->name === 'Employer';
 
         return Inertia::render('Jobs', [
             'jobListings' => $jobListings,
             'isEmployer' => $isEmployer,
+            'isJobSeeker' => $this->seeker($request) !== null,
             'tags' => $tags,
         ]);
     }
 
     public function filterJobs(Request $request)
     {
-        $jobListings = $this->jobListingService->getJobListings($request->all());
+        $jobListings = $this->jobListingService->getJobListings($request->all(), $this->seeker($request));
         return response()->json([
             'jobListings' => $jobListings
         ]);
@@ -91,7 +99,7 @@ class JobListingController extends Controller
 
     public function search(Request $request)
     {
-        $searchResults = $this->jobListingService->getJobListings($request->all());
+        $searchResults = $this->jobListingService->getJobListings($request->all(), $this->seeker($request));
         return response()->json(['searchResults' => $searchResults]);
     }
 }

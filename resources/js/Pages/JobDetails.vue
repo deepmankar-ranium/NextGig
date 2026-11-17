@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layout/AppLayout.vue';
+import MatchPanel from '@/Components/MatchPanel.vue';
 
 // ✅ Import only icons that exist in lucide-vue-next
 import {
@@ -30,6 +31,10 @@ const props = defineProps({
   isOwner: {
     type: Boolean,
     default: false
+  },
+  match: {
+    type: Object,
+    default: null
   }
 });
 
@@ -135,7 +140,8 @@ const formattedSalary = computed(() => {
             </div>
 
             <!-- Right Column (Summary) -->
-            <div class="mt-8 lg:mt-0">
+            <div class="mt-8 lg:mt-0 space-y-6">
+                <MatchPanel v-if="match" :job-id="job.id" :match="match" />
                 <div class="bg-white p-6 rounded-xl shadow-md space-y-5">
                     <h3 class="text-lg font-bold text-gray-900">Job Overview</h3>
                     <div class="flex items-center">
@@ -151,6 +157,13 @@ const formattedSalary = computed(() => {
                         <div>
                             <p class="text-sm text-gray-500">Date Posted</p>
                             <p class="font-semibold text-gray-800">{{ new Date(job.created_at).toLocaleDateString() }}</p>
+                        </div>
+                    </div>
+                    <div v-if="job.min_years_experience" class="flex items-center">
+                        <CalendarIcon class="h-5 w-5 text-gray-400 mr-3" />
+                        <div>
+                            <p class="text-sm text-gray-500">Experience</p>
+                            <p class="font-semibold text-gray-800">{{ job.min_years_experience }}+ years</p>
                         </div>
                     </div>
                     <div v-if="job.tags.length > 0">

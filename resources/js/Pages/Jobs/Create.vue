@@ -44,6 +44,7 @@ const loadFormFromStorage = () => {
           employer_id: props.employer?.id,
           employer_name: employerName.value,
           salary: parsedData.salary || '',
+          min_years_experience: parsedData.min_years_experience ?? '',
           tags: parsedData.tags || [],
         };
       }
@@ -59,6 +60,7 @@ const loadFormFromStorage = () => {
     employer_id: props.employer?.id,
     employer_name: employerName.value,
     salary: '',
+    min_years_experience: '',
     tags: [],
   };
 };
@@ -74,6 +76,7 @@ const saveFormToStorage = () => {
       description: form.description,
       employer_id: form.employer_id,
       salary: form.salary,
+      min_years_experience: form.min_years_experience,
       tags: form.tags,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
@@ -171,6 +174,14 @@ onMounted(() => {
                             </div>
                         </div>
                         <p v-if="form.errors?.salary" class="text-red-500 text-sm mt-1">{{ form.errors.salary }}</p>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="min_years_experience" class="block text-sm font-medium text-gray-700">Minimum years of experience (optional)</label>
+                        <input type="number" min="0" max="40" v-model="form.min_years_experience" id="min_years_experience"
+                            class="mt-1 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g. 3" />
+                        <p class="text-xs text-gray-500 mt-1">Used with the job's tags to compute candidates' match scores.</p>
+                        <p v-if="form.errors?.min_years_experience" class="text-red-500 text-sm mt-1">{{ form.errors.min_years_experience }}</p>
                     </div>
 
                     <div class="sm:col-span-6">

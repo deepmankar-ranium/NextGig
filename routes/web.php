@@ -14,6 +14,7 @@ use App\Http\Controllers\GPTController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\MessagesController;
 use App\Http\Controllers\ResumeController;
+use App\Http\Controllers\JobMatchController;
 
 
 Route::get('/', function () {
@@ -30,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/Jobs/job/{jobListing}/edit', [JobListingController::class, 'edit']);
     Route::patch('/Jobs/job/{jobListing}', [JobListingController::class, 'update']);
     Route::delete('/Jobs/job/{jobListing}', [JobListingController::class, 'destroy']);
+    Route::post('/Jobs/job/{jobListing}/match/explain', [JobMatchController::class, 'explain'])->middleware('throttle:ai')->name('jobs.match.explain');
     Route::get('/search', [JobListingController::class, 'search'])->name('search');
     Route::get('/filter', [JobListingController::class, 'filterJobs']);
 

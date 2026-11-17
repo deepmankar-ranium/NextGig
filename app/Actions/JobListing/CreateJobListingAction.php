@@ -2,6 +2,7 @@
 
 namespace App\Actions\JobListing;
 
+use App\Jobs\RecomputeJobMatches;
 use App\Models\JobListing;
 
 class CreateJobListingAction
@@ -13,6 +14,8 @@ class CreateJobListingAction
         if (isset($data['tags'])) {
             $jobListing->tags()->sync($data['tags']);
         }
+
+        RecomputeJobMatches::dispatch($jobListing);
 
         return $jobListing;
     }
