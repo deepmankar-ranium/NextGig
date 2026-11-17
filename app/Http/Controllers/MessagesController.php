@@ -173,6 +173,6 @@ class MessagesController extends Controller
         InBetweenMessageDeleted::dispatch($message->sender_id, $message->receiver_id, $message->id);
 
 
-        return redirect()->back()->with('status', 'Message deleted successfully.');
+        return redirect()->back();
     }
 }

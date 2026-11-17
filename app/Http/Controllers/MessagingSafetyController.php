@@ -22,14 +22,14 @@ class MessagingSafetyController extends Controller
 
         UserBlock::firstOrCreate(['blocker_id' => $request->user()->id, 'blocked_id' => $user->id]);
 
-        return back()->with('status', "You blocked {$user->full_name}. They can't message you.");
+        return back()->with('success', "You blocked {$user->full_name}. They can't message you.");
     }
 
     public function unblock(Request $request, User $user): RedirectResponse
     {
         UserBlock::where('blocker_id', $request->user()->id)->where('blocked_id', $user->id)->delete();
 
-        return back()->with('status', "You unblocked {$user->full_name}.");
+        return back()->with('success', "You unblocked {$user->full_name}.");
     }
 
     public function report(Request $request, User $user): RedirectResponse
@@ -56,6 +56,6 @@ class MessagingSafetyController extends Controller
             UserBlock::firstOrCreate(['blocker_id' => $me->id, 'blocked_id' => $user->id]);
         }
 
-        return back()->with('status', 'Thanks, we\'ll review your report.'.($request->boolean('block', true) ? " {$user->full_name} is blocked." : ''));
+        return back()->with('success', 'Thanks, we\'ll review your report.'.($request->boolean('block', true) ? " {$user->full_name} is blocked." : ''));
     }
 }

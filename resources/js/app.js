@@ -8,8 +8,9 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
+import { TOAST_OPTIONS } from './utils/toast';
 import '../css/app.css';
-import { useNotificationStore } from './store/notifications';
+import GlobalNotifications from './Components/GlobalNotifications.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const pinia = createPinia();
@@ -22,19 +23,12 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        const app = createApp({ render: () => h(App, props) })
+        // GlobalNotifications sits beside every page: flash toasts + the live connection.
+        const app = createApp({ render: () => [h(App, props), h(GlobalNotifications)] })
             .use(plugin)
             .use(ZiggyVue)
-            .use(Toast)
+            .use(Toast, TOAST_OPTIONS)
             .use(pinia);
-
-        if (props.initialPage.props.auth?.user?.id) {
-            const notificationStore = useNotificationStore(pinia);
-            notificationStore.initializeWebSocket(
-                props.initialPage.props.auth.user.id,
-            );
-            notificationStore.fetchUnreadCount();
-        }
 
         return app.mount(el);
     },

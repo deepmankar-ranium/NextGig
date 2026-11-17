@@ -1,13 +1,12 @@
 import { defineStore } from 'pinia'
-import { useToast } from 'vue-toastification'
-import ChatMessageNotification from '../Components/ChatMessageNotification.vue'
+import { notify } from '../utils/toast'
 import axios from 'axios';
 import { STAGE_LABELS } from '../utils/stages';
 
 export const useNotificationStore = defineStore('notifications', {
     state: () => ({
         hasNewMessages: false,
-        _inited: false,
+        _userId: null,
         unreadCount: 0,
         unreadMessages: {},
         applicationUpdates: 0,
@@ -22,11 +21,14 @@ export const useNotificationStore = defineStore('notifications', {
             this.hasNewMessages = false
         },
 
-        initializeWebSocket(userId) {
-            if (this._inited) return
-            if (!userId || !window.Echo) return
-
-            const toast = useToast()
+        /**
+         * Listen on the signed-in user's private channel. Called whenever the user changes;
+         * switching users leaves the previous channel first.
+         */
+        connect(userId) {
+            if (!userId || !window.Echo || this._userId === userId) return
+            this.disconnect()
+            this._userId = userId
 
             window.Echo.private(`user.${userId}`)
                 .listen('ChatMessageSent', (event) => {
@@ -35,36 +37,38 @@ export const useNotificationStore = defineStore('notifications', {
                     if (window.location.pathname === `/messages/${event.message.sender_id}`) return
 
                     this.setHasNewMessages(true)
-                    this.fetchUnreadCount();
+                    this.fetchUnreadCount()
 
-                    // 🎉 Show toast popup
-                    toast({
-                        component: ChatMessageNotification,
-                        props: {
-                            user: event.user.full_name,
-                            message: event.message.message,
-                        }
-                    }, {
-                        timeout: 4000,
-                        position: 'top-right',
-                        closeButton: false,
-                        hideProgressBar: true,
-                        icon: false,
-                        toastClassName: '!p-0 !bg-transparent !shadow-none',
-                        bodyClassName: 'flex items-start space-x-3 bg-green-100 border border-green-300 px-4 py-3 rounded-lg shadow-md',
+                    notify({
+                        variant: 'message',
+                        title: event.user.full_name,
+                        body: event.message.message,
+                        href: `/messages/${event.message.sender_id}`,
+                        avatar: { id: event.user.id, name: event.user.full_name, src: event.user.photo_url ?? null },
+                        id: `dm-${event.message.id}`,
+                        timeout: 6000,
                     })
                 })
                 .listen('.application.status', (event) => {
                     this.applicationUpdates += 1
                     this.lastApplicationUpdate = event
-                    toast.info(`${event.job_title}: ${STAGE_LABELS[event.status] ?? event.status}`, {
-                        timeout: 5000,
-                        position: 'top-right',
+                    notify({
+                        variant: event.status === 'rejected' ? 'info' : 'success',
+                        title: event.job_title,
+                        body: `Your application moved to ${STAGE_LABELS[event.status] ?? event.status}.`,
+                        href: '/applied-jobs',
+                        id: `app-${event.application_id ?? ''}-${event.status}`,
                     })
                 })
                 .error((err) => console.error('Echo error:', err))
+        },
 
-            this._inited = true
+        disconnect() {
+            if (this._userId && window.Echo) window.Echo.leave(`user.${this._userId}`)
+            this._userId = null
+            this.unreadCount = 0
+            this.unreadMessages = {}
+            this.applicationUpdates = 0
         },
 
         clearApplicationUpdates() {

@@ -26,3 +26,18 @@
 
     .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium; }
 }
+
+/* Toasts: the library only positions them; AppToast draws the card. */
+.Vue-Toastification__toast.nextgig-toast {
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  box-shadow: none;
+  max-width: 380px;
+  overflow: visible;
+  font-family: inherit;
+}
+.Vue-Toastification__container.top-center { padding-left: 12px; padding-right: 12px; }
+/* Sit below the sticky header so toasts don't cover the inbox / profile buttons. */
+.Vue-Toastification__container.top-right,
+.Vue-Toastification__container.top-center { top: 4.5rem; }

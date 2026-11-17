@@ -65,7 +65,7 @@ class InboxConversationsTest extends TestCase
 
         $payload = (new ChatMessageSent($message, $sender))->broadcastWith();
 
-        $this->assertSame(['id' => $sender->id, 'full_name' => $sender->full_name], $payload['user']);
+        $this->assertSame(['id' => $sender->id, 'full_name' => $sender->full_name, 'photo_url' => null], $payload['user']);
         $this->assertStringNotContainsString($sender->email, json_encode($payload));
         $this->assertArrayNotHasKey('sender_hidden_at', $payload['message']);
     }

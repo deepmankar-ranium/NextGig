@@ -23,5 +23,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Inertia form submits that hit a limit, a permission check or an expired session go back
+        // to the page with a toast, instead of an error page in a modal.
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $e, \Illuminate\Http\Request $request) {
+            if (! $request->header('X-Inertia') || $request->isMethod('GET')) {
+                return $response;
+            }
+
+            $message = match ($response->getStatusCode()) {
+                429 => "You're doing that too often. Please wait a minute and try again.",
+                419 => 'Your session expired. Please try again.',
+                403 => "You don't have permission to do that.",
+                default => null,
+            };
+
+            return $message ? back()->with('error', $message) : $response;
+        });
     })->create();
