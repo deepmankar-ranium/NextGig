@@ -18,7 +18,7 @@ const deleteJob = () => {
 };
 
 const confirmDelete = () => {
-    form.delete(`/Jobs/job/${props.job.id}`);
+    form.delete(`/jobs/${props.job.id}`);
     showDeleteModal.value = false;
 };
 
@@ -47,7 +47,7 @@ const submit = () => {
 };
 
 const confirmEdit = () => {
-    form.patch(`/Jobs/job/${props.job.id}`);
+    form.patch(`/jobs/${props.job.id}`);
     showEditModal.value = false;
 };
 </script>

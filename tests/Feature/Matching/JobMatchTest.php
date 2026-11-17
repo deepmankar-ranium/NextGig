@@ -38,7 +38,7 @@ class JobMatchTest extends TestCase
         $seeker = $this->seekerWith(['php', 'laravel']);
         $job = $this->jobWithSkills(['php', 'laravel', 'aws', 'docker']);
 
-        $this->actingAs($seeker)->get("/Jobs/job/{$job->id}")
+        $this->actingAs($seeker)->get("/jobs/{$job->id}")
             ->assertInertia(fn (Assert $p) => $p
                 ->where('match.score', 50)
                 ->where('match.matched', ['laravel', 'php'])
@@ -87,7 +87,7 @@ class JobMatchTest extends TestCase
         $php = Tag::create(['name' => 'php']);
         $aws = Tag::create(['name' => 'aws']);
 
-        $this->actingAs($owner)->patch("/Jobs/job/{$job->id}", [
+        $this->actingAs($owner)->patch("/jobs/{$job->id}", [
             'title' => $job->title, 'description' => 'x', 'salary' => 1, 'employer_id' => $job->employer_id,
             'tags' => [$php->id, $aws->id],
         ])->assertRedirect();
@@ -111,14 +111,14 @@ class JobMatchTest extends TestCase
         $seeker = $this->seekerWith(['php', 'laravel']);
         $job = $this->jobWithSkills(['php', 'laravel', 'aws', 'docker']);
 
-        $this->actingAs($seeker)->postJson("/Jobs/job/{$job->id}/match/explain")
+        $this->actingAs($seeker)->postJson("/jobs/{$job->id}/match/explain")
             ->assertOk()
             ->assertJsonPath('score', 50)
             ->assertJsonPath('explanation.source', 'ai')
             ->assertJsonPath('explanation.tips', [['skill' => 'aws', 'tip' => 'Deploy a small Laravel app on AWS.']]);
 
         // Second request is served from cache: no new AI call.
-        $this->actingAs($seeker)->postJson("/Jobs/job/{$job->id}/match/explain")->assertOk();
+        $this->actingAs($seeker)->postJson("/jobs/{$job->id}/match/explain")->assertOk();
         $this->assertCount(1, $ai->calls);
     }
 
@@ -133,7 +133,7 @@ class JobMatchTest extends TestCase
         $seeker = $this->seekerWith(['php']);
         $job = $this->jobWithSkills(['php', 'laravel']);
 
-        $this->actingAs($seeker)->postJson("/Jobs/job/{$job->id}/match/explain")
+        $this->actingAs($seeker)->postJson("/jobs/{$job->id}/match/explain")
             ->assertOk()
             ->assertJsonPath('explanation.source', 'template')
             ->assertJsonPath('explanation.summary', 'You have 1 of the 2 skills this job lists. Missing: laravel.');
@@ -146,7 +146,7 @@ class JobMatchTest extends TestCase
         $seeker->jobseeker->update(['resume_text' => 'SECRET RESUME BODY']);
         $job = $this->jobWithSkills(['php']);
 
-        $this->actingAs($seeker)->postJson("/Jobs/job/{$job->id}/match/explain")->assertOk();
+        $this->actingAs($seeker)->postJson("/jobs/{$job->id}/match/explain")->assertOk();
 
         $sent = $ai->sentText();
         $this->assertStringNotContainsString($seeker->email, $sent);
@@ -160,7 +160,7 @@ class JobMatchTest extends TestCase
         $seeker = $this->seekerWith(['php']);
         $job = $this->jobWithSkills(['php', 'go']);
 
-        $this->actingAs($seeker)->postJson("/Jobs/job/{$job->id}/match/explain")
+        $this->actingAs($seeker)->postJson("/jobs/{$job->id}/match/explain")
             ->assertStatus(503)
             ->assertJson(['status' => 'error']);
     }
@@ -171,8 +171,8 @@ class JobMatchTest extends TestCase
         $employer = $this->employerUser();
         $job = $this->jobWithSkills(['php']);
 
-        $this->actingAs($employer)->postJson("/Jobs/job/{$job->id}/match/explain")->assertForbidden();
-        $this->actingAs($employer)->get("/Jobs/job/{$job->id}")->assertInertia(fn (Assert $p) => $p->where('match', null));
+        $this->actingAs($employer)->postJson("/jobs/{$job->id}/match/explain")->assertForbidden();
+        $this->actingAs($employer)->get("/jobs/{$job->id}")->assertInertia(fn (Assert $p) => $p->where('match', null));
     }
 
     public function test_each_seeker_only_sees_their_own_scores(): void
@@ -182,8 +182,8 @@ class JobMatchTest extends TestCase
         $alice = $this->seekerWith(['php', 'laravel']);
         $bob = $this->seekerWith(['go']);
 
-        $this->actingAs($alice)->get("/Jobs/job/{$job->id}")->assertInertia(fn (Assert $p) => $p->where('match.score', 100));
-        $this->actingAs($bob)->get("/Jobs/job/{$job->id}")->assertInertia(fn (Assert $p) => $p->where('match.score', 0));
+        $this->actingAs($alice)->get("/jobs/{$job->id}")->assertInertia(fn (Assert $p) => $p->where('match.score', 100));
+        $this->actingAs($bob)->get("/jobs/{$job->id}")->assertInertia(fn (Assert $p) => $p->where('match.score', 0));
         $this->actingAs($bob)->getJson('/filter')->assertJsonPath('jobListings.data.0.match_score', 0);
     }
 }

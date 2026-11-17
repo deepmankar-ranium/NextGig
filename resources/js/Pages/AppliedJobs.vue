@@ -9,7 +9,7 @@
 
         <div v-if="!applications.length" class="rounded-xl bg-white p-10 text-center text-gray-500 shadow-sm">
           You haven't applied to any jobs yet.
-          <Link href="/Jobs" class="text-indigo-600 font-medium hover:underline">Browse jobs</Link>
+          <Link href="/jobs" class="text-indigo-600 font-medium hover:underline">Browse jobs</Link>
         </div>
 
         <ul class="space-y-4">
@@ -18,7 +18,7 @@
               :class="{ 'ring-2 ring-indigo-400': flashId === app.id }">
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div>
-                <Link :href="`/Jobs/job/${app.job_listing.id}`" class="text-lg font-semibold text-gray-900 hover:text-indigo-600">
+                <Link :href="`/jobs/${app.job_listing.id}`" class="text-lg font-semibold text-gray-900 hover:text-indigo-600">
                   {{ app.job_listing.title }}
                 </Link>
                 <p class="text-sm text-gray-500">{{ app.job_listing.employer?.name }}</p>

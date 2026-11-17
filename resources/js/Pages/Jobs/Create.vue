@@ -121,7 +121,7 @@ const draftWithAi = async () => {
   drafting.value = true;
   draftError.value = '';
   try {
-    const { data } = await axios.post('/Jobs/draft', {
+    const { data } = await axios.post('/jobs/draft', {
       title: form.title,
       notes: draftNotes.value,
       min_years_experience: form.min_years_experience || null,

@@ -4,7 +4,7 @@ namespace App\Actions\Auth;
 
 use App\Models\User;
 use App\Models\Employer;
-use App\Models\JobSeeker;
+use App\Models\Jobseeker;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -37,7 +37,7 @@ class HandleGoogleCallbackAction
                         'description' => null,
                     ]);
                 } elseif ($role_id == 3) {
-                    JobSeeker::create([
+                    Jobseeker::create([
                         'user_id' => $user->id,
                         'name' => $googleUser->getName(),
                         'email' => $googleUser->getEmail(),

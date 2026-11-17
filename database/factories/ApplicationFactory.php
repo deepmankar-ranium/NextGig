@@ -3,7 +3,7 @@
 namespace Database\Factories;
 use App\Models\Application;
 use App\Models\JobListing;
-use App\Models\JobSeeker;
+use App\Models\Jobseeker;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ApplicationFactory extends Factory
@@ -14,7 +14,7 @@ class ApplicationFactory extends Factory
     {
         return [
             'jobListing_id' => JobListing::factory(),
-            'jobSeeker_id' => JobSeeker::factory(),
+            'jobSeeker_id' => Jobseeker::factory(),
             'resume_text' => $this->faker->paragraphs(3, true),
             'cover_letter' => $this->faker->paragraphs(5, true),
         ];

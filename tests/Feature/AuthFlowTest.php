@@ -17,7 +17,7 @@ class AuthFlowTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->get('/Home')->assertRedirect('/login');
+        $this->get('/home')->assertRedirect('/login');
     }
 
     public function test_user_can_log_in_and_out(): void
@@ -25,7 +25,7 @@ class AuthFlowTest extends TestCase
         $user = $this->seekerUser();
 
         $this->post('/login', ['email' => $user->email, 'password' => 'password'])
-            ->assertRedirect('/Home');
+            ->assertRedirect('/home');
         $this->assertAuthenticatedAs($user);
 
         $this->post('/logout')->assertRedirect('/');
@@ -52,7 +52,7 @@ class AuthFlowTest extends TestCase
             'email' => 'asha@example.com',
             'password' => 'secret-password',
             'password_confirmation' => 'secret-password',
-        ])->assertRedirect('/Home');
+        ])->assertRedirect('/home');
 
         $user = User::where('email', 'asha@example.com')->firstOrFail();
         $this->assertSame('Job Seeker', $user->role->name);
@@ -72,7 +72,7 @@ class AuthFlowTest extends TestCase
             'password' => 'secret-password',
             'password_confirmation' => 'secret-password',
             'name' => 'Acme Ltd',
-        ])->assertRedirect('/Home');
+        ])->assertRedirect('/home');
 
         $user = User::where('email', 'ravi@example.com')->firstOrFail();
         $this->assertSame('Employer', $user->role->name);

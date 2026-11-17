@@ -24,7 +24,7 @@ import Navbar from '@/Layout/Navbar.vue';
 
             <div class="mt-8 flex justify-center gap-4">
                 <Link
-                href="/Jobs"
+                href="/jobs"
                 class="inline-block bg-indigo-600 text-white px-8 py-3 rounded-lg shadow-lg font-semibold hover:bg-indigo-700 transform hover:-translate-y-1 transition-all duration-300"
                 >
                 Browse All Jobs

@@ -18,7 +18,7 @@ class GoogleAuthController extends Controller
         $user = $action->execute();
 
         if ($user) {
-            return redirect('/Home');
+            return redirect('/home');
         } else {
             return redirect('/register')->with('error', 'Something went wrong. Please try again.');
         }

@@ -48,7 +48,7 @@ watch(searchQuery, (newValue) => {
 });
 
 const viewAllJobs = () => {
-    router.get('/Jobs');
+    router.get('/jobs');
 }
 </script>
 
@@ -90,7 +90,7 @@ const viewAllJobs = () => {
               <div v-else-if="searchResults.length > 0">
                 <ul class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
                   <li v-for="job in searchResults" :key="job.id">
-                    <Link :href="`/Jobs/job/${job.id}`" class="block p-4 hover:bg-gray-50">
+                    <Link :href="`/jobs/${job.id}`" class="block p-4 hover:bg-gray-50">
                       <h3 class="font-semibold text-gray-900">{{ job.title }}</h3>
                       <p class="text-sm text-gray-600">{{ job.description.substring(0, 70) }}...</p>
                     </Link>
@@ -115,7 +115,7 @@ const viewAllJobs = () => {
             <Link
               v-for="job in jobListings.data"
               :key="job.id"
-              :href="`/Jobs/job/${job.id}`"
+              :href="`/jobs/${job.id}`"
               class="block"
             >
               <JobCard :job="job" />
