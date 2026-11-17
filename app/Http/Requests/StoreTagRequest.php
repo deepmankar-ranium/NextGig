@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Tag;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTagRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->role->name === 'Employer';
+        return $this->user()->can('create', Tag::class);
     }
 
     public function rules(): array

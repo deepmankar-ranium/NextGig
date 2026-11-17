@@ -2,65 +2,43 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Application;
-use Illuminate\Auth\Access\Response;
+use App\Models\User;
 
 class JobApplicationPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * The "view applications" page lists applications to the employer's own jobs.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->role?->name === 'Employer' && $user->employer !== null;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * The applicant, or the employer who owns the job.
      */
     public function view(User $user, Application $application): bool
     {
-        return true;
+        return $this->ownsJob($user, $application)
+            || $application->jobSeeker?->user_id === $user->id;
     }
 
     /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return true;
-    }
-
-    /**
-     * Determine whether the user can update the model.
+     * Only the employer who owns the application's job may change its status.
      */
     public function update(User $user, Application $application): bool
     {
-        return true;
+        return $user->role?->name === 'Employer' && $this->ownsJob($user, $application);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Application $application): bool
     {
-        return true;
+        return false;
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Application $application): bool
+    private function ownsJob(User $user, Application $application): bool
     {
-        return true;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Application $application): bool
-    {
-        return true;
+        return $application->jobListing?->employer?->user_id === $user->id;
     }
 }

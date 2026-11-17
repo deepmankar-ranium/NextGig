@@ -27,7 +27,8 @@ class RegisterUserController extends Controller
     public function storeRole(Request $request)
     {
         $request->validate([
-            'role_id' => 'required|integer|in:1,2,3',
+            // Admin (1) cannot be self-assigned.
+            'role_id' => 'required|integer|in:2,3',
         ]);
 
         session(['user_role' => $request->role_id]);

@@ -70,10 +70,16 @@ class MessagesController extends Controller
     public function show(User $user = null): Response
     {
         // Render the Inertia view with necessary data from the service.
+        $me = auth()->user();
+
+        if ($user && $user->is($me)) {
+            $user = null;
+        }
+
         return Inertia::render('Messages/Inbox', [
-            'users'        => $this->directMessageService->getUsersForInbox(),
-            'selectedUser' => $user,
-            'messages'     => $user ? $this->directMessageService->getMessagesBetween(auth()->user(), $user) : [],
+            'users'        => $this->directMessageService->getUsersForInbox($me, $user),
+            'selectedUser' => $user ? $this->directMessageService->publicProfile($user->loadMissing('role')) : null,
+            'messages'     => $user ? $this->directMessageService->getMessagesBetween($me, $user) : [],
         ]);
     }
 
@@ -99,12 +105,17 @@ class MessagesController extends Controller
         return redirect()->route('messages.show', ['user' => $request->validated('receiver_id')]);
     }
 
+    /**
+     * Hide the conversation for the current user only; the other participant keeps it.
+     */
     public function deleteMessages(DeleteDirectMessageRequest $request, $sender_id, $receiver_id): RedirectResponse
     {
-        $request->authorize();
-        $this->DeleteDirectMessagesAction->deleteMessages($sender_id, $receiver_id);
+        $me = (int) $request->user()->id;
+        $other = $me === (int) $sender_id ? (int) $receiver_id : (int) $sender_id;
 
-        return redirect()->route('messages.show', ['user' => $receiver_id]);
+        $this->DeleteDirectMessagesAction->hideConversationFor($me, $other);
+
+        return redirect()->route('messages.show', ['user' => $other]);
     }
 
 

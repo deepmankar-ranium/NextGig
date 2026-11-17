@@ -16,6 +16,7 @@ class DirectMessageController extends Controller
     {
         $unreadMessages = DirectMessage::where('receiver_id', Auth::id())
             ->whereNull('read_at')
+            ->whereNull('receiver_hidden_at')
             ->get();
 
         $groupedMessages = $unreadMessages->groupBy('sender_id');

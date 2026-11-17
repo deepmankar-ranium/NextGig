@@ -6,9 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateJobListingRequest extends FormRequest
 {
+    /**
+     * Only the owner may update, and the listing cannot be moved to another employer.
+     */
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('jobListing'));
+        $jobListing = $this->route('jobListing');
+
+        return $this->user()->can('update', $jobListing)
+            && (int) $this->input('employer_id') === $jobListing->employer_id;
     }
 
     public function rules(): array

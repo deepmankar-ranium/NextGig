@@ -8,7 +8,7 @@ One file per milestone. Each is a ship-gate: finish it before starting the next.
 
 | # | Milestone | Status | Depends on |
 | --- | --- | --- | --- |
-| [M1](m01-security-fixes.md) | Security fixes + tests | ☐ | — |
+| [M1](m01-security-fixes.md) | Security fixes + tests | ☑ (PR pending) | — |
 | [M2](m02-ai-foundation.md) | AI foundation (replace generic chatbot) | ☐ | M1 |
 | [M3](m03-explainable-job-match.md) | Explainable job match (seekers) | ☐ | M2 |
 | [M4](m04-employer-ai.md) | Employer AI: JD writer + ranked applicants | ☐ | M3 |

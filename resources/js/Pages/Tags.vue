@@ -106,7 +106,9 @@ const deleteTags = () => {
                             <label :for="'tag-' + tag.id" class="w-full flex items-center justify-between p-4 cursor-pointer">
                                 <div class="flex items-center space-x-4">
                                     <input type="checkbox" :id="'tag-' + tag.id" v-model="selectedTags" :value="tag.id"
-                                        class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+                                        :disabled="!tag.can_delete"
+                                        :title="tag.can_delete ? '' : 'You can only delete tags you created that no other employer uses'"
+                                        class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed" />
                                     <span class="text-gray-900 text-sm font-medium truncate">
                                         {{ tag.name }}
                                     </span>

@@ -2,13 +2,20 @@
 
 namespace App\Http\Requests;
 
+use App\Models\JobListing;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreJobListingRequest extends FormRequest
 {
+    /**
+     * Employers only, and only for their own employer profile.
+     */
     public function authorize(): bool
     {
-        return $this->user()->role->name === 'Employer';
+        $user = $this->user();
+
+        return $user->can('create', JobListing::class)
+            && (int) $this->input('employer_id') === $user->employer->id;
     }
 
     public function rules(): array

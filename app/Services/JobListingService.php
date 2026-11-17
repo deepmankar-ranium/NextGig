@@ -32,7 +32,7 @@ class JobListingService
 
     public function getJobListing(JobListing $jobListing)
     {
-        return $jobListing->load(['employer.user', 'tags']);
+        return $jobListing->load(['employer', 'tags']);
     }
 
     public function getJobDetails(JobListing $jobListing)

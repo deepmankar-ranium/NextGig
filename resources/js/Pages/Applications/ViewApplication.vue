@@ -72,7 +72,19 @@
                 >
                   <td class="px-6 py-4 font-medium text-gray-900">#{{ application.id }}</td>
                   <td class="px-6 py-4 font-medium text-gray-900">{{ application.job_listing?.title || 'N/A' }}</td>
-                  <td class="px-6 py-4 font-medium text-gray-900">{{ application.job_seeker?.name || 'N/A' }}</td>
+                  <td class="px-6 py-4 font-medium text-gray-900">
+                    <div class="flex items-center gap-2">
+                      <span>{{ application.job_seeker?.name || 'N/A' }}</span>
+                      <Link
+                        v-if="application.job_seeker?.user_id"
+                        :href="`/messages/${application.job_seeker.user_id}`"
+                        class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md"
+                        title="Message applicant"
+                      >
+                        <MessageSquare class="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </td>
                   <td class="px-6 py-4">
                     <button
                       @click="openPopup('resume', application.resume_text)"
@@ -223,11 +235,11 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, Link } from '@inertiajs/vue3'
 import VueMultiselect from 'vue-multiselect'
 import AppLayout from '@/Layout/AppLayout.vue'
 import 'vue-multiselect/dist/vue-multiselect.css'
-import { Check, X, FileText, Search, ChevronLeftIcon } from 'lucide-vue-next'
+import { Check, X, FileText, Search, ChevronLeftIcon, MessageSquare } from 'lucide-vue-next'
 import { onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
@@ -331,9 +343,6 @@ const handleEscKey = (event) => {
   }
 }
 
-const handleBack = () => {
-  router.back()
-}
 
 onMounted(() => {
   document.addEventListener('keydown', handleEscKey)
