@@ -37,7 +37,8 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URL'),
+        // Relative by default, so it follows whatever host the app runs on (nextgig.test, production…).
+        'redirect' => env('GOOGLE_REDIRECT_URL', '/auth/google/callback'),
     ],
 
     'gemini' => [
