@@ -6,29 +6,26 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreMessageRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize(): bool
     {
-        // For now, we'll authorize everyone. 
-        // You can add your authorization logic here, for example:
-        // return $this->user() != null;
-        return true;
+        return $this->user() !== null;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string',
+            'receiver_id' => ['required', 'exists:users,id', 'not_in:'.$this->user()->id],
+            'message' => 'required|string|max:5000',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'receiver_id.not_in' => 'You cannot send a message to yourself.',
         ];
     }
 }

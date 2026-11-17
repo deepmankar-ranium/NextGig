@@ -2,47 +2,57 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\DirectMessage;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class DirectMessageService
 {
     /**
-     * Get all users formatted for the inbox.
-     * In a real-world application, you might want to paginate this
-     * or only show users with recent conversations.
-     *
-     * @return \Illuminate\Support\Collection
+     * People the user has a visible conversation with, plus the user they are about to
+     * message (if any). Only public fields are returned: no emails.
      */
-    public function getUsersForInbox(): Collection
+    public function getUsersForInbox(User $me, ?User $selected = null): Collection
     {
+        $partnerIds = DirectMessage::query()
+            ->visibleTo($me->id)
+            ->where(fn ($q) => $q->where('sender_id', $me->id)->orWhere('receiver_id', $me->id))
+            ->get(['sender_id', 'receiver_id'])
+            ->toBase()
+            ->map(fn (DirectMessage $m) => $m->sender_id === $me->id ? $m->receiver_id : $m->sender_id)
+            ->unique();
+
+        if ($selected && $selected->id !== $me->id) {
+            $partnerIds->push($selected->id);
+        }
+
         return User::with('role')
-            ->select('id', 'full_name', 'email', 'role_id')
+            ->whereIn('id', $partnerIds->unique()->values())
+            ->orderBy('full_name')
             ->get()
-            ->map(fn(User $user) => [
-                'id' => $user->id,
-                'name' => $user->full_name,
-                'email' => $user->email,
-                'role' => $user->role->name ?? 'N/A',
-            ]);
+            ->map(fn (User $user) => $this->publicProfile($user));
     }
 
     /**
-     * Get messages between two users.
-     *
-     * @param \App\Models\User $user1
-     * @param \App\Models\User $user2
-     * @return \Illuminate\Support\Collection
+     * Messages between two users that $viewer has not hidden.
      */
-    public function getMessagesBetween(User $user1, User $user2): Collection
+    public function getMessagesBetween(User $viewer, User $other): Collection
     {
-        return DirectMessage::where(function ($query) use ($user1, $user2) {
-            $query->where('sender_id', $user1->id)
-                  ->where('receiver_id', $user2->id);
-        })->orWhere(function ($query) use ($user1, $user2) {
-            $query->where('sender_id', $user2->id)
-                  ->where('receiver_id', $user1->id);
-        })->orderBy('created_at', 'asc')->get();
+        return DirectMessage::between($viewer->id, $other->id)
+            ->visibleTo($viewer->id)
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * @return array{id:int, name:string, role:string}
+     */
+    public function publicProfile(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->full_name,
+            'role' => $user->role->name ?? 'N/A',
+        ];
     }
 }

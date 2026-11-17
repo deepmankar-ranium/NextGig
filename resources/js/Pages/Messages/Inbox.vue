@@ -32,7 +32,7 @@
   <ConfirmationModal
     :show="isConfirmDeleteModalOpen"
     title="Delete Conversation"
-    message="Are you sure you want to delete this entire conversation? All messages will be permanently removed. This action cannot be undone."
+    message="Delete this conversation from your inbox? The other person will still see it. If they message you again, the conversation will reappear."
     @confirm="handleDeleteConfirm"
     @cancel="handleDeleteCancel"
   />
@@ -138,16 +138,6 @@ const setupEchoChannel = (user) => {
                     localMessages.value.push(e.message);
                 }
             })
-            .listen('MessagesDeleted', (e) => {
-                console.log('Messages deleted event received:', e);
-                // Check if the deletion event is for the current conversation
-                const userIds = [e.sender_id, e.receiver_id].sort();
-                const currentUserIds = [currentUser.value.id, selectedUser.value.id].sort();
-
-                if (JSON.stringify(userIds) === JSON.stringify(currentUserIds)) {
-                    localMessages.value = [];
-                }
-            })
             .listen('InBetweenMessageDeleted', (e) => {
                 console.log('In-between message deleted event received:', e);
                 const index = localMessages.value.findIndex(m => m.id === e.message_id);
@@ -170,7 +160,6 @@ const cleanupEchoChannel = () => {
         try {
             // Stop listening to all events on the channel before leaving
             currentChannel.stopListening('ChatMessageSent');
-            currentChannel.stopListening('MessagesDeleted');
             currentChannel.stopListening('InBetweenMessageDeleted');
             window.Echo.leave(currentChannel.name);
             currentChannel = null;
@@ -291,10 +280,9 @@ const deleteMessages = () => {
     }
 
     try {
-        router.post(route('messages.delete', { sender_id: currentUser.value.id, receiver_id: selectedUser.value.id }), {
+        router.post(route('messages.delete', { sender_id: currentUser.value.id, receiver_id: selectedUser.value.id }), {}, {
             onSuccess: () => {
                 localMessages.value = [];
-
             },
             preserveState: true,
             preserveScroll: true,

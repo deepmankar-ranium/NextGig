@@ -6,9 +6,12 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateApplicationStatusRequest extends FormRequest
 {
+    /**
+     * Only the employer who owns the application's job (see JobApplicationPolicy::update).
+     */
     public function authorize(): bool
     {
-        return $this->user()->role->name === 'Employer';
+        return $this->user()->can('update', $this->route('application'));
     }
 
     public function rules(): array

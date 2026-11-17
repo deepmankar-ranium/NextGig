@@ -4,10 +4,11 @@ namespace App\Providers;
 
 use App\Models\Application;
 use App\Models\JobListing;
+use App\Models\Tag;
 use App\Policies\JobApplicationPolicy;
 use App\Policies\JobPolicy;
+use App\Policies\TagPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -19,11 +20,9 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         JobListing::class => JobPolicy::class,
         Application::class => JobApplicationPolicy::class,
+        Tag::class => TagPolicy::class,
     ];
 
-    /**
-     * Register any authentication / authorization services.
-     */
     public function boot(): void
     {
         $this->registerPolicies();

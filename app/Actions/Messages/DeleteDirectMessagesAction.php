@@ -2,30 +2,27 @@
 
 namespace App\Actions\Messages;
 
-use App\Events\MessagesDeleted;
 use App\Models\DirectMessage;
+use Illuminate\Support\Facades\DB;
 
 class DeleteDirectMessagesAction
 {
     /**
-     * Delete direct messages between two users and broadcast an event.
-     *
-     * @param int $sender_id
-     * @param int $receiver_id
-     * @return void
+     * Hide the conversation with $otherId for $userId only. The other participant keeps
+     * their copy. Hidden incoming messages are marked read so they stop counting as unread.
      */
-    public function deleteMessages(int $sender_id, int $receiver_id): void
+    public function hideConversationFor(int $userId, int $otherId): void
     {
-        DirectMessage::where(function ($query) use ($sender_id, $receiver_id) {
-            $query->where('sender_id', $sender_id)
-                ->where('receiver_id', $receiver_id);
-        })->orWhere(function ($query) use ($sender_id, $receiver_id) {
-            $query->where('sender_id', $receiver_id)
-                ->where('receiver_id', $sender_id);
-        })->delete();
+        $now = now();
 
-        broadcast(new MessagesDeleted($sender_id, $receiver_id))->toOthers();
+        DirectMessage::where('sender_id', $userId)
+            ->where('receiver_id', $otherId)
+            ->whereNull('sender_hidden_at')
+            ->update(['sender_hidden_at' => $now]);
+
+        DirectMessage::where('sender_id', $otherId)
+            ->where('receiver_id', $userId)
+            ->whereNull('receiver_hidden_at')
+            ->update(['receiver_hidden_at' => $now, 'read_at' => DB::raw('COALESCE(read_at, CURRENT_TIMESTAMP)')]);
     }
 }
-
-
