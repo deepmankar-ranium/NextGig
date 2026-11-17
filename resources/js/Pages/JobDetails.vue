@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layout/AppLayout.vue';
 import MatchPanel from '@/Components/MatchPanel.vue';
+import { STAGE_LABELS } from '@/utils/stages';
 
 // ✅ Import only icons that exist in lucide-vue-next
 import {
@@ -92,21 +93,19 @@ const formattedSalary = computed(() => {
                 <div class="mt-5 flex lg:mt-0 lg:ml-4 space-x-3">
                     <button
                       v-if="isJobSeeker"
-                      :disabled="applicationStatus === 'approved' || applicationStatus === 'pending'"
+                      :disabled="!!applicationStatus && applicationStatus !== 'rejected'"
                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white"
                       :class="{
-                        'bg-gray-400 cursor-not-allowed': applicationStatus === 'pending' || applicationStatus === 'approved',
-                        'bg-green-600': applicationStatus === 'approved',
-                        'bg-yellow-500': applicationStatus === 'pending',
+                        'bg-gray-400 cursor-not-allowed': applicationStatus && applicationStatus !== 'rejected' && applicationStatus !== 'offer',
+                        'bg-green-600 cursor-not-allowed': applicationStatus === 'offer',
                         'bg-indigo-600 hover:bg-indigo-700': !applicationStatus || applicationStatus === 'rejected'
                       }"
                       @click="handleApplyClick"
                     >
                       {{
-                        applicationStatus === 'pending' ? 'Application Pending'
-                        : applicationStatus === 'approved' ? 'Approved'
+                        !applicationStatus ? 'Apply Now'
                         : applicationStatus === 'rejected' ? 'Apply Again'
-                        : 'Apply Now'
+                        : `Application: ${STAGE_LABELS[applicationStatus] ?? applicationStatus}`
                       }}
                     </button>
 

@@ -12,7 +12,7 @@ One file per milestone. Each is a ship-gate: finish it before starting the next.
 | [M2](m02-ai-foundation.md) | AI foundation (replace generic chatbot) | ☑ (PR pending) | M1 |
 | [M3](m03-explainable-job-match.md) | Explainable job match (seekers) | ☑ (PR pending) | M2 |
 | [M4](m04-employer-ai.md) | Employer AI: JD writer + ranked applicants | ☑ (PR pending) | M3 |
-| [M5](m05-realtime-application-timeline.md) | Real-time application timeline | ☐ | M1 |
+| [M5](m05-realtime-application-timeline.md) | Real-time application timeline | ☑ (PR pending) | M1 |
 | [M6](m06-polish-deploy.md) | Polish + deploy | ☐ | M1–M5 |
 
 **Stand-out threshold:** M1 + M3 + M6. M4 and M5 are strong extras.

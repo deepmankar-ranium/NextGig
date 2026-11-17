@@ -97,7 +97,7 @@ class RankedApplicantsTest extends TestCase
         $this->actingAs($owner)->get('/view-applications');
         app(\App\Matching\MatchService::class)->recomputeForJob($job);
 
-        $this->assertSame('pending', $application->fresh()->application_status);
+        $this->assertSame('applied', $application->fresh()->application_status);
         $this->assertSame(0, ApplicationStatusChange::count());
     }
 
@@ -109,14 +109,14 @@ class RankedApplicantsTest extends TestCase
 
         $this->actingAs($seeker)->post("/apply/{$job->id}", ['resume_text' => 'r', 'cover_letter' => 'c'])->assertRedirect();
         $application = Application::firstOrFail();
-        $this->assertSame('pending', $application->application_status);
+        $this->assertSame('applied', $application->application_status);
 
-        $this->actingAs($owner)->put("/applications/{$application->id}", ['application_status' => 'approved']);
+        $this->actingAs($owner)->put("/applications/{$application->id}", ['application_status' => 'shortlisted']);
 
         $history = $application->statusHistory()->get();
         $this->assertCount(2, $history);
-        $this->assertSame([null, 'pending', $seeker->id], [$history[0]->from_status, $history[0]->to_status, $history[0]->changed_by]);
-        $this->assertSame(['pending', 'approved', $owner->id], [$history[1]->from_status, $history[1]->to_status, $history[1]->changed_by]);
+        $this->assertSame([null, 'applied', $seeker->id], [$history[0]->from_status, $history[0]->to_status, $history[0]->changed_by]);
+        $this->assertSame(['applied', 'shortlisted', $owner->id], [$history[1]->from_status, $history[1]->to_status, $history[1]->changed_by]);
         $this->assertNotNull($history[1]->created_at);
     }
 
@@ -124,7 +124,7 @@ class RankedApplicantsTest extends TestCase
     {
         $owner = $this->employerUser();
         $application = $this->applicant($this->jobFor($owner), ['php']);
-        $application->transitionTo('approved', $owner);
+        $application->transitionTo('shortlisted', $owner);
         $row = ApplicationStatusChange::firstOrFail();
 
         $this->expectException(LogicException::class);

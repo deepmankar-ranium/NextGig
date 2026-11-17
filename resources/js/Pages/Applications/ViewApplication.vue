@@ -103,7 +103,7 @@
                   </td>
                   <td class="px-6 py-4">
                     <button
-                      @click="openPopup('resume', application.resume_text)"
+                      @click="openPopup('resume', application.resume_text, application)"
                       class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                     >
                       <FileText class="w-4 h-4 mr-2" />
@@ -112,7 +112,7 @@
                   </td>
                   <td class="px-6 py-4">
                     <button
-                      @click="openPopup('coverLetter', application.cover_letter)"
+                      @click="openPopup('coverLetter', application.cover_letter, application)"
                       class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                     >
                       <FileText class="w-4 h-4 mr-2" />
@@ -125,28 +125,26 @@
                       :class="statusClasses(application.application_status)"
                     >
                       <span class="w-2 h-2 rounded-full mr-1.5" :class="statusDotClasses(application.application_status)" />
-                      {{ application.application_status }}
+                      {{ STAGE_LABELS[application.application_status] ?? application.application_status }}
                     </span>
                   </td>
                   <td class="px-6 py-4">
-                    <div class="flex items-center gap-2" v-if="application.application_status === 'pending'">
+                    <div class="flex flex-wrap items-center gap-1" v-if="nextStages(application.application_status).length">
                       <button
-                       @click="showConfirmPopup(application.id, 'approved')"
-                        class="p-2 text-green-600 hover:bg-green-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        v-for="stage in nextStages(application.application_status)"
+                        :key="stage"
+                        @click="showConfirmPopup(application.id, stage)"
                         :disabled="isProcessing"
-                        title="Approve"
+                        class="px-2 py-1 text-xs font-medium rounded-md border transition-colors disabled:opacity-50"
+                        :class="stage === 'rejected' ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'"
                       >
-                        <Check class="w-5 h-5" />
-                      </button>
-                      <button
-                        @click="showConfirmPopup(application.id, 'rejected')"
-                        class="p-2 text-red-600 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="isProcessing"
-                        title="Reject"
-                      >
-                        <X class="w-5 h-5" />
+                        {{ stage === 'rejected' ? 'Reject' : STAGE_LABELS[stage] }}
                       </button>
                     </div>
+                    <button v-else @click="showConfirmPopup(application.id, 'shortlisted', true)"
+                      class="px-2 py-1 text-xs font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50">
+                      Reopen…
+                    </button>
                   </td>
                 </tr>
                 <tr v-if="ranked && expanded === application.id && application.match" class="bg-indigo-50/40 border-b">
@@ -217,13 +215,14 @@
           @click.stop
         >
           <div class="p-6 text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full" :class="confirmStatus === 'approved' ? 'bg-green-100' : 'bg-red-100'">
-                <Check v-if="confirmStatus === 'approved'" class="h-6 w-6 text-green-600" />
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full" :class="confirmStatus !== 'rejected' ? 'bg-green-100' : 'bg-red-100'">
+                <Check v-if="confirmStatus !== 'rejected'" class="h-6 w-6 text-green-600" />
                 <X v-else class="h-6 w-6 text-red-600" />
             </div>
             <h3 class="text-lg font-medium mt-5">Confirm Status Update</h3>
             <p class="text-gray-500 text-sm mt-2 mb-6">
-              Are you sure you want to mark this application as <span class="font-semibold">{{ confirmStatus }}</span>?
+              <template v-if="confirmReopen">Reopen this application and move it back to <span class="font-semibold">{{ STAGE_LABELS[confirmStatus] }}</span>? This is recorded in the history.</template>
+              <template v-else>Move this application to <span class="font-semibold">{{ STAGE_LABELS[confirmStatus] }}</span>? The applicant is notified{{ ['shortlisted','interview','offer'].includes(confirmStatus) ? ' by email and' : '' }} in real time.</template>
             </p>
             <div class="flex justify-center gap-4">
               <button
@@ -235,7 +234,7 @@
               <button
                 @click="updateStatus(confirmApplicationId, confirmStatus)"
                 class="px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium"
-                :class="confirmStatus === 'approved' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'"
+:class="confirmStatus !== 'rejected' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'"
                 :disabled="isProcessing"
               >
                 {{ isProcessing ? 'Processing...' : 'Confirm' }}
@@ -283,6 +282,8 @@ import AppLayout from '@/Layout/AppLayout.vue'
 import 'vue-multiselect/dist/vue-multiselect.css'
 import { Check, X, FileText, Search, ChevronLeftIcon, MessageSquare } from 'lucide-vue-next'
 import { onMounted, onUnmounted } from 'vue'
+import axios from 'axios'
+import { STAGE_LABELS, stageBadgeClass, nextStages } from '@/utils/stages'
 
 const props = defineProps({
   applications: {
@@ -310,9 +311,7 @@ const tableHeaders = computed(() => props.ranked
   : ['ID', 'Job Listing', 'Applicant', 'Resume', 'Cover Letter', 'Status', 'Actions'])
 const statusOptions = ref([
   { text: "All", value: "" },
-  { text: "Pending", value: "pending" },
-  { text: "Approved", value: "approved" },
-  { text: "Rejected", value: "rejected" }
+  ...['applied', 'viewed', 'shortlisted', 'interview', 'offer', 'rejected'].map(v => ({ text: STAGE_LABELS[v], value: v }))
 ])
 
 // Search and filter states
@@ -340,22 +339,27 @@ const filteredApplications = computed(() => {
 })
 
 // Status styling helpers
-const statusClasses = status => ({
-  'bg-yellow-100 text-yellow-800': status === 'pending',
-  'bg-green-100 text-green-800': status === 'approved',
-  'bg-red-100 text-red-800': status === 'rejected'
-})
+const statusClasses = status => stageBadgeClass(status)
 
 const statusDotClasses = status => ({
-  'bg-yellow-400': status === 'pending',
-  'bg-green-400': status === 'approved',
+  'bg-gray-400': status === 'applied',
+  'bg-blue-400': status === 'viewed',
+  'bg-indigo-400': status === 'shortlisted',
+  'bg-amber-400': status === 'interview',
+  'bg-green-400': status === 'offer',
   'bg-red-400': status === 'rejected'
 })
 
 // Content popup handlers
-const openPopup = (type, content) => {
+const openPopup = (type, content, application) => {
   popupContent.value = content
   isPopupVisible.value = true
+  // First time the employer opens an application, record "viewed" (notifies the applicant live).
+  if (application?.application_status === 'applied') {
+    axios.post(`/applications/${application.id}/viewed`)
+      .then(() => { application.application_status = 'viewed' })
+      .catch(() => {})
+  }
 }
 
 const closePopup = () => {
@@ -368,9 +372,12 @@ const confirmApplicationId = ref(null);
 const confirmStatus = ref('');
 const isProcessing = ref(false);
 
-const showConfirmPopup = (applicationId, status) => {
+const confirmReopen = ref(false);
+
+const showConfirmPopup = (applicationId, status, reopen = false) => {
   confirmApplicationId.value = applicationId;
   confirmStatus.value = status;
+  confirmReopen.value = reopen;
   isConfirmPopupVisible.value = true;
 };
 
@@ -379,7 +386,7 @@ const closeConfirmPopup = () => {
 };
 
 const updateStatus = (applicationId, status) => {
-  router.put(`/applications/${applicationId}`, { application_status: status }, {
+  router.put(`/applications/${applicationId}`, { application_status: status, reopen: confirmReopen.value }, {
     preserveScroll: true,
     onStart: () => isProcessing.value = true,
     onFinish: () => isProcessing.value = false,

@@ -16,7 +16,7 @@ const navItems = computed(() => [
   { name: 'Jobs', href: '/Jobs', icon: Briefcase },
   { name: 'Profile', href: '/profile', icon: User },
   ...(isEmployer.value ? [{ name: 'Posted Jobs', href: '/posted-jobs', icon: Briefcase }] : []),
-  ...(isJobSeeker.value ? [{ name: 'Applied Jobs', href: '/applied-jobs', icon: Briefcase }] : []),
+  ...(isJobSeeker.value ? [{ name: 'Applied Jobs', href: '/applied-jobs', icon: Briefcase, badge: notificationStore.applicationUpdates > 0 ? notificationStore.applicationUpdates : null }] : []),
   ...(isJobSeeker.value ? [{ name: 'Resume', href: '/resume', icon: FileText }] : []),
   { name: 'Inbox', href: '/messages', icon: MessageSquare , badge: notificationStore.unreadCount > 0 ? notificationStore.unreadCount : null},
   { name: 'About', href: '/about', icon: Info },
