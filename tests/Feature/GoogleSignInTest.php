@@ -93,4 +93,23 @@ class GoogleSignInTest extends TestCase
 
         $this->assertStringContainsString(urlencode(url('/auth/google/callback')), $location);
     }
+
+    public function test_sign_in_moves_to_the_callback_host_before_going_to_google(): void
+    {
+        // e.g. the app was opened at 127.0.0.1:8000 but Google returns to localhost:8000.
+        config(['services.google.redirect' => 'http://localhost:8000/auth/google/callback', 'services.google.client_id' => 'x', 'services.google.client_secret' => 'y']);
+
+        $this->get('http://127.0.0.1:8000/auth/google')
+            ->assertRedirect('http://localhost:8000/auth/google');
+    }
+
+    public function test_sign_in_goes_straight_to_google_when_already_on_the_callback_host(): void
+    {
+        config(['services.google.redirect' => 'http://localhost:8000/auth/google/callback', 'services.google.client_id' => 'x', 'services.google.client_secret' => 'y']);
+
+        $location = $this->get('http://localhost:8000/auth/google')->headers->get('Location');
+
+        $this->assertStringStartsWith('https://accounts.google.com/', $location);
+        $this->assertStringContainsString(urlencode('http://localhost:8000/auth/google/callback'), $location);
+    }
 }
