@@ -36,12 +36,12 @@ trait CreatesUsers
     }
 
     /**
-     * Give a seeker a resume on file (call Storage::fake('local') first).
+     * Give a seeker a resume on file (call Storage::fake('uploads') first).
      */
     protected function withResumeOnFile(User $seekerUser, string $text = "Asha Rao\nLaravel developer\nSkills: PHP, Laravel"): User
     {
         $path = "resumes/seeker-{$seekerUser->jobseeker->id}.pdf";
-        \Illuminate\Support\Facades\Storage::disk('local')->put($path, \Tests\Support\Pdf::withText(explode("\n", $text)));
+        \Illuminate\Support\Facades\Storage::disk('uploads')->put($path, \Tests\Support\Pdf::withText(explode("\n", $text)));
         $seekerUser->jobseeker->update(['resume' => $path, 'resume_text' => $text]);
 
         return $seekerUser;

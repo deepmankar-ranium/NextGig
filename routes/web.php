@@ -70,7 +70,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/delete-tags', [TagController::class, 'destroy'])->middleware('throttle:writes');
 
     // Profile routes
-    Route::get('/profile', [ProfileController::class,'profile']);
+    Route::get('/profile', [ProfileController::class, 'profile'])->name('profile');
+    Route::post('/profile', [ProfileController::class, 'update'])->middleware('throttle:writes')->name('profile.update');
+    Route::get('/users/{user}/photo', [ProfileController::class, 'photo'])->name('users.photo');
 
     // Resume + parsed profile (job seekers, own data only)
     Route::get('/resume', [ResumeController::class, 'show'])->name('resume.show');

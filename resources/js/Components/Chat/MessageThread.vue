@@ -34,7 +34,7 @@ const copy = async (m) => {
 <template>
   <div ref="scroller" class="flex-1 overflow-y-auto bg-gray-50 px-3 py-4 sm:px-6" aria-live="polite">
     <div v-if="!messages.length" class="flex h-full flex-col items-center justify-center text-center">
-      <Avatar :id="other.id" :name="other.name" size="lg" />
+      <Avatar :id="other.id" :name="other.name" :src="other.photo_url" size="lg" />
       <p class="mt-3 text-sm font-medium text-gray-900">Start your conversation with {{ other.name }}</p>
       <p class="mt-1 text-xs text-gray-500">Messages are private between the two of you.</p>
     </div>
@@ -45,7 +45,7 @@ const copy = async (m) => {
       </div>
 
       <div v-for="(run, ri) in day.runs" :key="ri" class="flex items-end gap-2" :class="run.senderId === me.id ? 'justify-end' : 'justify-start'">
-        <Avatar v-if="run.senderId !== me.id" :id="other.id" :name="other.name" size="sm" class="mb-5 hidden sm:flex" />
+        <Avatar v-if="run.senderId !== me.id" :id="other.id" :name="other.name" :src="other.photo_url" size="sm" class="mb-5 hidden sm:flex" />
 
         <div class="flex max-w-[85%] flex-col gap-1 sm:max-w-[70%]" :class="run.senderId === me.id ? 'items-end' : 'items-start'">
           <div v-for="(m, mi) in run.messages" :key="m.id" class="group flex items-center gap-1" :class="run.senderId === me.id ? 'flex-row-reverse' : ''">

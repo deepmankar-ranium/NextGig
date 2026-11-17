@@ -19,7 +19,7 @@ class ApplyWithResumeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Storage::fake('local');
+        Storage::fake('uploads');
     }
 
     private function pdf(string ...$lines): UploadedFile
@@ -37,7 +37,7 @@ class ApplyWithResumeTest extends TestCase
         $application = Application::firstOrFail();
         $this->assertSame('', $application->cover_letter);
         $this->assertStringContainsString('Laravel developer', $application->resume_text);
-        Storage::disk('local')->assertExists($application->resume_path);
+        Storage::disk('uploads')->assertExists($application->resume_path);
     }
 
     public function test_seeker_without_a_resume_must_upload_one(): void
@@ -60,7 +60,7 @@ class ApplyWithResumeTest extends TestCase
         $this->actingAs($seeker)->post("/apply/{$job->id}", ['resume' => $this->pdf()])->assertSessionHasNoErrors();
 
         $js = $seeker->jobseeker->fresh();
-        Storage::disk('local')->assertExists($js->resume);
+        Storage::disk('uploads')->assertExists($js->resume);
         $this->assertStringContainsString('Backend developer', $js->resume_text);
         $this->assertNull($js->profile, 'AI was down, so no parsed profile, but the application still went through');
         $this->assertSame(1, Application::count());
@@ -95,11 +95,11 @@ class ApplyWithResumeTest extends TestCase
         $seeker = $this->withResumeOnFile($this->seekerUser(), "Version one\nOld resume text here");
         $this->actingAs($seeker)->post("/apply/{$this->jobFor($this->employerUser())->id}");
         $application = Application::firstOrFail();
-        $original = Storage::disk('local')->get($application->resume_path);
+        $original = Storage::disk('uploads')->get($application->resume_path);
 
         $this->withResumeOnFile($seeker, "Version two\nCompletely new resume");
 
-        $this->assertSame($original, Storage::disk('local')->get($application->fresh()->resume_path));
+        $this->assertSame($original, Storage::disk('uploads')->get($application->fresh()->resume_path));
         $this->assertStringContainsString('Version one', $application->fresh()->resume_text);
     }
 

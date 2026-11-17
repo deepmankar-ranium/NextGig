@@ -51,9 +51,9 @@ class ApplyForJobAction
 
         // Snapshot the PDF so later resume changes don't alter what this employer received.
         $snapshot = "applications/application-{$application->id}.pdf";
-        if ($seeker->resume && Storage::disk('local')->exists($seeker->resume)) {
-            Storage::disk('local')->delete($snapshot);
-            Storage::disk('local')->copy($seeker->resume, $snapshot);
+        if ($seeker->resume && Storage::disk('uploads')->exists($seeker->resume)) {
+            Storage::disk('uploads')->delete($snapshot);
+            Storage::disk('uploads')->copy($seeker->resume, $snapshot);
             $application->forceFill(['resume_path' => $snapshot])->save();
         }
 

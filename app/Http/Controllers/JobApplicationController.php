@@ -73,7 +73,7 @@ class JobApplicationController extends Controller
         $user = $request->user();
         $isOwner = $user->can('update', $application);
         abort_unless($isOwner || $application->jobSeeker?->user_id === $user->id, 403);
-        abort_unless($application->resume_path && Storage::disk('local')->exists($application->resume_path), 404);
+        abort_unless($application->resume_path && Storage::disk('uploads')->exists($application->resume_path), 404);
 
         if ($isOwner) {
             $action->markViewed($application, $user);
@@ -81,7 +81,7 @@ class JobApplicationController extends Controller
 
         $name = str($application->jobSeeker?->name ?? 'applicant')->slug().'-resume.pdf';
 
-        return Storage::disk('local')->response($application->resume_path, $name, [
+        return Storage::disk('uploads')->response($application->resume_path, $name, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.$name.'"',
             'X-Content-Type-Options' => 'nosniff',
