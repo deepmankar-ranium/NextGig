@@ -19,8 +19,9 @@ use App\Http\Controllers\JobMatchController;
 use App\Http\Controllers\JobDraftController;
 
 
+// Landing page for visitors; signed-in users go straight to their dashboard.
 Route::get('/', function () {
-    return Inertia::render('Landing');
+    return auth()->check() ? redirect('/home') : Inertia::render('Landing');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -92,20 +93,25 @@ Route::permanentRedirect('/Jobs/create', '/jobs/create');
 Route::get('/Jobs/job/{id}', fn (string $id) => redirect("/jobs/{$id}", 301))->whereNumber('id');
 Route::get('/Jobs/job/{id}/edit', fn (string $id) => redirect("/jobs/{$id}/edit", 301))->whereNumber('id');
 
-// Authentication routes (throttled, no auth middleware)
-Route::get('/register', [RegisterUserController::class, 'show']);
-Route::post('/register/store-role', [RegisterUserController::class, 'storeRole'])->middleware('throttle:auth');
-Route::get('/register-2', [RegisterUserController::class, 'showRegisterDetails'])->name('register-2');
-Route::post('/register-2/register', [RegisterUserController::class, 'register'])->middleware('throttle:auth');
-Route::get('/login', [RegisterUserController::class, 'logIn']);
-Route::post('/login', [RegisterUserController::class, 'authenticate'])->middleware('throttle:login')->name('login');
-Route::post('/logout', [RegisterUserController::class, 'logout'])->name('logout');
-Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
+// Sign-in / sign-up / password reset: guests only. Signed-in users are sent to /home
+// (bootstrap/app.php: redirectUsersTo).
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [RegisterUserController::class, 'show']);
+    Route::post('/register/store-role', [RegisterUserController::class, 'storeRole'])->middleware('throttle:auth');
+    Route::get('/register-2', [RegisterUserController::class, 'showRegisterDetails'])->name('register-2');
+    Route::post('/register-2/register', [RegisterUserController::class, 'register'])->middleware('throttle:auth');
+    Route::get('/login', [RegisterUserController::class, 'logIn']);
+    Route::post('/login', [RegisterUserController::class, 'authenticate'])->middleware('throttle:login')->name('login');
+    Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
+    Route::get('/forgot-password', [ForgetPassword::class, 'show']);
+    Route::post('/send-reset-link', [ForgetPassword::class, 'sendResetLinkEmail'])->middleware('throttle:auth')->name('password.email');
+    Route::get('/reset-password/{token}', [ForgetPassword::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [ForgetPassword::class, 'reset'])->middleware('throttle:auth')->name('password.update');
+});
+
+// The callback stays outside `guest`: it checks the OAuth state itself.
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
-Route::get('/forgot-password',[ForgetPassword::class,'show']);
-Route::post('/send-reset-link',[ForgetPassword::class,'sendResetLinkEmail'])->middleware('throttle:auth')->name('password.email');
-Route::get('/reset-password/{token}', [ForgetPassword::class, 'showResetForm'])->name('password.reset');
-Route::post('/reset-password', [ForgetPassword::class, 'reset'])->middleware('throttle:auth')->name('password.update');
+Route::post('/logout', [RegisterUserController::class, 'logout'])->middleware('auth')->name('logout');
 
 
 // Static Pages
