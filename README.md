@@ -4,7 +4,7 @@
 job and what's missing. Employers get a ranked, explainable shortlist and live application
 timelines. A person makes every hiring decision.
 
-Built with Laravel 11, Inertia.js + Vue 3, Tailwind CSS, MySQL, Pusher (Laravel Echo) and Google
+Built with Laravel 12, Inertia.js + Vue 3, Tailwind CSS, MySQL, Pusher (Laravel Echo) and Google
 Gemini.
 
 ## Features
@@ -91,7 +91,7 @@ The seeker has applications at different stages; the employer has a role with ra
 
 ## Running locally
 
-Requirements: PHP 8.2–8.4, Composer, Node 20+, MySQL.
+Requirements: PHP 8.2+ (8.3 recommended), Composer, Node 20+, MySQL.
 
 ```bash
 composer install
