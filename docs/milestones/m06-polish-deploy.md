@@ -56,8 +56,10 @@ Done:
 - `.env` is not tracked (checked).
 
 Not done / follow-ups:
-- `composer audit` reports 66 advisories in existing dependencies; run `composer update` and
-  re-test before deploying.
+- ~~`composer audit` reports 66 advisories~~ Done on `chore/dependency-upgrade`: Laravel 11 →
+  12.72 (every Laravel 11 release was affected; fixes only exist in 12.71+), all PHP deps updated,
+  `composer audit` clean, `npm audit --omit=dev` clean. 3 moderate advisories remain in Tailwind's
+  build tooling (not shipped to browsers).
 - `config/app.php` still has a Laravel 10-style `providers` list, so `RouteServiceProvider` loads
   `routes/web.php` a second time on top of `bootstrap/app.php`. Harmless today; clean up when
   convenient.
