@@ -50,9 +50,10 @@ class ChatMessageSent implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
+        // Only public fields: never the sender's email or other account data.
         return [
-            'message' => $this->message,
-            'user' => $this->user,
+            'message' => $this->message->only(['id', 'sender_id', 'receiver_id', 'message', 'read_at', 'created_at']),
+            'user' => ['id' => $this->user->id, 'full_name' => $this->user->full_name],
         ];
     }
 }

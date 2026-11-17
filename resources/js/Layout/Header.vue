@@ -58,7 +58,7 @@ const roleLabel = computed(() => (roleId.value === ROLE_EMPLOYER ? 'Employer' : 
       <div class="ml-auto flex items-center gap-2">
         <template v-if="user">
           <!-- Inbox -->
-          <Link href="/messages" class="relative rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+          <Link href="/messages" class="relative hidden rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 md:block"
             :class="{ 'text-indigo-600': isActive($page.url, '/messages') }" aria-label="Inbox">
             <MessageSquare class="h-5 w-5" />
             <span v-if="badges.inbox" class="absolute -right-0.5 -top-0.5 min-w-[1.1rem] rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[1.1rem] text-white">

@@ -18,7 +18,7 @@ const items = computed(() => mobileNav(page.props.auth?.user?.role_id, {
     <ul class="grid grid-cols-5">
       <li v-for="item in items" :key="item.href">
         <Link :href="item.href"
-          class="relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium"
+          class="relative flex h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-medium"
           :class="isActive($page.url, item.href) ? 'text-indigo-600' : 'text-gray-500'"
           :aria-current="isActive($page.url, item.href) ? 'page' : undefined">
           <component :is="item.icon" class="h-5 w-5" />

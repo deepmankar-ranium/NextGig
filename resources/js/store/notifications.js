@@ -12,6 +12,7 @@ export const useNotificationStore = defineStore('notifications', {
         unreadMessages: {},
         applicationUpdates: 0,
         lastApplicationUpdate: null,
+        lastIncomingMessage: null,
     }),
     actions: {
         setHasNewMessages(status) {
@@ -29,6 +30,10 @@ export const useNotificationStore = defineStore('notifications', {
 
             window.Echo.private(`user.${userId}`)
                 .listen('ChatMessageSent', (event) => {
+                    this.lastIncomingMessage = event
+                    // Already looking at this conversation: no toast, the thread updates itself.
+                    if (window.location.pathname === `/messages/${event.message.sender_id}`) return
+
                     this.setHasNewMessages(true)
                     this.fetchUnreadCount();
 
