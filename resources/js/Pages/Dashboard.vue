@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import { useNotificationStore } from '@/store/notifications';
 import AppLayout from '@/Layout/AppLayout.vue';
 import StageBadge from '@/Components/UI/StageBadge.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
@@ -21,6 +22,11 @@ const props = defineProps({
   recentApplicants: { type: Array, default: () => [] },
   roles: { type: Array, default: () => [] },
 });
+
+// A live status change (toast) also refreshes the counts and recent list here.
+const store = useNotificationStore();
+watch(() => store.lastApplicationUpdate, (e) => { if (e) router.reload({ preserveScroll: true }); });
+
 
 const firstName = computed(() => (props.name || '').split(' ')[0]);
 const greeting = computed(() => {

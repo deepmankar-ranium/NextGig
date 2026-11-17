@@ -34,9 +34,18 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'flash' => [
-                'status' => fn () => $request->session()->get('status'),
-            ],
+            // status: shown inline by the page. success / error: shown as a toast by AppLayout;
+            // `id` changes with every new message so the same text twice still toasts twice.
+            'flash' => function () use ($request) {
+                $flash = [
+                    'status' => $request->session()->get('status'),
+                    'success' => $request->session()->get('success'),
+                    'error' => $request->session()->get('error'),
+                ];
+                $flash['id'] = ($flash['success'] || $flash['error']) ? (string) str()->uuid() : null;
+
+                return $flash;
+            },
         ];
     }
 }

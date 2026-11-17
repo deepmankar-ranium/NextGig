@@ -56,7 +56,7 @@ class ChatMessageSent implements ShouldBroadcast
                 ...$this->message->only(['id', 'sender_id', 'receiver_id', 'job_listing_id', 'message', 'read_at', 'created_at']),
                 'job_listing' => $this->message->jobListing?->only(['id', 'title']),
             ],
-            'user' => ['id' => $this->user->id, 'full_name' => $this->user->full_name],
+            'user' => ['id' => $this->user->id, 'full_name' => $this->user->full_name, 'photo_url' => $this->user->photo_url],
         ];
     }
 }
