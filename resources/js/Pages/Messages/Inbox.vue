@@ -1,10 +1,20 @@
 <template>
-  <div class="flex h-screen bg-slate-50">
-    <!-- Sidebar -->
-    <ChatSidebar :users="users" @user-selected="handleUserSelected" />
+  <AppLayout full-height>
+  <div class="flex h-[calc(100dvh-8rem)] bg-slate-50 md:h-[calc(100dvh-4rem)]">
+    <!-- Sidebar: full width on phones until a conversation is open -->
+    <div class="w-full shrink-0 md:block md:w-72 lg:w-80" :class="selectedUser ? 'hidden' : 'block'">
+      <ChatSidebar :users="users" @user-selected="handleUserSelected" />
+    </div>
 
     <!-- Main Chat Area -->
-    <div class="flex flex-1 flex-col">
+    <div class="min-w-0 flex-1 flex-col md:flex" :class="selectedUser ? 'flex' : 'hidden'">
+      <Link href="/messages" class="flex items-center gap-1 border-b border-slate-200 bg-white px-4 py-2 text-sm text-gray-600 md:hidden">
+        <ChevronLeft class="h-4 w-4" /> All conversations
+      </Link>
+      <div v-if="!selectedUser" class="hidden flex-1 items-center justify-center text-sm text-gray-500 md:flex">
+        Select a conversation, or message someone from a job or applicant page.
+      </div>
+      <template v-if="selectedUser">
       <ChatHeader :user="selectedUser" :has-messages="messages.length > 0" @delete-messages="confirmDeleteMessages" />
 
       <!-- Messages Area -->
@@ -23,10 +33,13 @@
       </div>
 
       <MessageInput v-model="newMessage" :disabled="isLoading || !selectedUser" :is-loading="isLoading" :can-send-message="canSendMessage" @send="sendMessage" />
+      </template>
     </div>
 
-    <!-- Right Sidebar -->
-    <UserProfileSidebar :user="selectedUser" />
+    <!-- Right Sidebar (wide screens only) -->
+    <div class="hidden xl:block">
+      <UserProfileSidebar :user="selectedUser" />
+    </div>
   </div>
 
   <ConfirmationModal
@@ -53,6 +66,7 @@
     @confirm="handleDeleteConfirmMessage"
     @cancel="deleteConfirmModal = false"
   />
+  </AppLayout>
 </template>
 
 
@@ -67,7 +81,8 @@ import UserProfileSidebar from '@/Components/Chat/UserProfileSidebar.vue';
 import ConfirmationModal from '@/Components/Chat/ConfirmationModal.vue';
 import ConfirmDeleteMessage from '@/Components/ConfirmDeleteMessage.vue';
 import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, Link } from '@inertiajs/vue3';
+import { ChevronLeft } from 'lucide-vue-next';
 import { getMessageText } from '@/utils/helpers';
 
 const props = defineProps({

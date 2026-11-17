@@ -12,9 +12,13 @@ class EmployerJobListingService
         $user = Auth::user();
         $employerId = $user->employer->id;
 
-        return JobListing::with(['employer'])
+        return JobListing::with(['employer', 'tags'])
+            ->withCount([
+                'applications',
+                'applications as new_count' => fn ($q) => $q->where('application_status', \App\Models\Application::STATUS_APPLIED),
+            ])
             ->where('employer_id', $employerId)
             ->latest()
-            ->paginate(6);
+            ->paginate(9);
     }
 }

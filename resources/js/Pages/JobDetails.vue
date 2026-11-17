@@ -71,17 +71,17 @@ const formattedSalary = computed(() => {
 
 <template>
   <AppLayout>
-    <div class="bg-gray-50 min-h-screen">
-      <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div>
+      <div class="page">
         <!-- Page Header -->
-        <div class="pb-8 border-b border-gray-200">
-            <button @click="handleBack" class="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-                <ChevronLeftIcon class="h-5 w-5 mr-1" />
-                Back
-            </button>
+        <div class="pb-6 border-b border-gray-200">
+            <Link :href="isOwner ? '/posted-jobs' : '/jobs'" class="mb-3 inline-flex items-center text-sm text-gray-500 hover:text-gray-800">
+                <ChevronLeftIcon class="h-4 w-4 mr-1" />
+                {{ isOwner ? 'My postings' : 'All jobs' }}
+            </Link>
             <div class="lg:flex lg:items-center lg:justify-between">
                 <div class="min-w-0 flex-1">
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">{{ job.title }}</h1>
+                    <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{{ job.title }}</h1>
                     <div class="mt-2 flex items-center text-sm text-gray-500">
                         <!-- FIXED Building icon -->
                         <Building2 class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />

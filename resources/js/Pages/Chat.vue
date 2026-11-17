@@ -1,7 +1,7 @@
 <template>
-  <AppLayout>
-    <div class="bg-gray-50 py-8">
-      <div class="max-w-4xl mx-auto h-[calc(100vh-10rem)] flex flex-col bg-white rounded-2xl shadow-lg border border-gray-200"
+  <AppLayout full-height>
+    <div class="px-0 sm:px-4 sm:py-6">
+      <div class="max-w-4xl mx-auto h-[calc(100dvh-8rem)] sm:h-[calc(100dvh-11rem)] md:h-[calc(100dvh-7rem)] flex flex-col bg-white sm:rounded-2xl shadow-sm border-y sm:border border-gray-200"
            :class="{ 'blur-sm pointer-events-none': isModalOpen }">
         <!-- Header -->
         <header class="sticky top-0 z-10 bg-white/70 backdrop-blur-lg rounded-t-2xl border-b border-gray-200">
@@ -10,7 +10,7 @@
               <div class="p-2 bg-indigo-100 rounded-full">
                 <MessageCircle class="w-6 h-6 text-indigo-600" />
               </div>
-              <h2 class="text-xl font-bold text-gray-800">Chat Assistant</h2>
+              <h2 class="text-lg font-bold text-gray-800">Career assistant</h2>
             </div>
             <button @click="showClearChatModal"
                     class="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors">

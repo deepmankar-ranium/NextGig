@@ -1,5 +1,7 @@
 <script setup>
 import AppLayout from '@/Layout/AppLayout.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
+import AccountTabs from '@/Components/UI/AccountTabs.vue';
 import { computed, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { FileText, Upload, Sparkles, X } from 'lucide-vue-next';
@@ -50,19 +52,16 @@ const saveProfile = () => form.put('/resume/profile', { preserveScroll: true });
 
 <template>
   <AppLayout>
-    <div class="bg-gray-50 min-h-screen">
-      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
-        <div>
-          <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Your resume</h1>
-          <p class="mt-2 text-gray-600">
-            Upload a PDF and we'll pull out your skills and experience. You can edit everything before it's used for job matching.
-          </p>
-        </div>
+    <div>
+      <div class="page-narrow space-y-6">
+        <PageHeader title="Account" subtitle="Upload a PDF and we'll pull out your skills and experience. You can edit everything before it's used for matching.">
+          <template #tabs><AccountTabs /></template>
+        </PageHeader>
 
         <div v-if="status" class="rounded-md bg-green-50 p-4 text-sm text-green-800">{{ status }}</div>
 
         <!-- Upload -->
-        <section class="bg-white rounded-xl shadow-sm p-6">
+        <section class="card card-body">
           <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <FileText class="h-5 w-5 text-indigo-600" /> {{ hasResume ? 'Replace resume' : 'Upload resume' }}
           </h2>
@@ -85,7 +84,7 @@ const saveProfile = () => form.put('/resume/profile', { preserveScroll: true });
         </section>
 
         <!-- Parsed profile -->
-        <section v-if="profile" class="bg-white rounded-xl shadow-sm p-6">
+        <section v-if="profile" class="card card-body">
           <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Sparkles class="h-5 w-5 text-indigo-600" /> Parsed profile
           </h2>

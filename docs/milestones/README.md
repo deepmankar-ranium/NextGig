@@ -15,6 +15,8 @@ One file per milestone. Each is a ship-gate: finish it before starting the next.
 | [M5](m05-realtime-application-timeline.md) | Real-time application timeline | ☑ (PR pending) | M1 |
 | [M6](m06-polish-deploy.md) | Polish + deploy | ◐ polish done, deploy deferred (PR pending) | M1–M5 |
 
+| M7 | UI/UX pass (nav, dashboard, tabs, mobile) | ☑ (PR pending) | M6 |
+
 **Stand-out threshold:** M1 + M3 + M6. M4 and M5 are strong extras.
 
 ## Rules for every milestone
