@@ -24,3 +24,22 @@ export const nextStages = (status) => {
   const i = PIPELINE.indexOf(status);
   return [...PIPELINE.slice(i + 1).filter((s) => s !== 'viewed'), 'rejected'];
 };
+
+/**
+ * "Ask the assistant" link for an application: the question depends on where it stands.
+ */
+export const assistantLinkFor = (jobId, title, status) => {
+  const q = {
+    applied: `How can I follow up on my application for ${title} without being pushy?`,
+    viewed: `The employer viewed my application for ${title}. What can I do to stand out now?`,
+    shortlisted: `I've been shortlisted for ${title}. How should I prepare for the next step?`,
+    interview: `Help me prepare for my interview for ${title}. What questions should I expect?`,
+    offer: `I got an offer for ${title}. What should I check before accepting, and how do I negotiate?`,
+    rejected: `I wasn't selected for ${title}. What should I work on for similar roles?`,
+  }[status] ?? `Help me with my application for ${title}.`;
+  const label = {
+    shortlisted: 'Prepare for the next step', interview: 'Prepare for the interview', offer: 'Review the offer',
+    rejected: 'What to work on next',
+  }[status] ?? 'Ask how to stand out';
+  return { href: `/chat?job=${jobId}&q=${encodeURIComponent(q)}`, label };
+};

@@ -154,15 +154,36 @@ class JobMatchTest extends TestCase
         $this->assertStringNotContainsString('SECRET RESUME BODY', $sent);
     }
 
-    public function test_ai_failure_returns_friendly_error(): void
+    public function test_ai_failure_falls_back_to_the_plain_explanation(): void
     {
         $this->fakeAi()->pushFailure('unavailable');
         $seeker = $this->seekerWith(['php']);
         $job = $this->jobWithSkills(['php', 'go']);
 
         $this->actingAs($seeker)->postJson("/jobs/{$job->id}/match/explain")
-            ->assertStatus(503)
-            ->assertJson(['status' => 'error']);
+            ->assertOk()
+            ->assertJsonPath('explanation.source', 'template')
+            ->assertJsonPath('explanation.tips.0.skill', 'go')
+            ->assertJsonStructure(['notice']);
+
+        // Not cached: the AI is tried again next time.
+        $this->assertNull(\App\Models\JobMatch::first()->explanation);
+    }
+
+    public function test_seeker_can_add_a_missing_skill_and_gets_the_new_score(): void
+    {
+        $this->fakeAi();
+        $seeker = $this->seekerWith(['php']);
+        $job = $this->jobWithSkills(['php', 'go']);
+
+        $this->actingAs($seeker)->postJson("/jobs/{$job->id}/match/skills", ['skill' => 'go'])
+            ->assertOk()
+            ->assertJsonPath('match.score', 100);
+
+        $this->assertContains('go', $seeker->jobseeker->fresh()->profile['skills']);
+
+        // Only skills this job is missing can be added this way.
+        $this->actingAs($seeker)->postJson("/jobs/{$job->id}/match/skills", ['skill' => 'cobol'])->assertUnprocessable();
     }
 
     public function test_employers_cannot_use_seeker_match_endpoint_and_see_no_match_panel(): void

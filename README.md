@@ -16,7 +16,9 @@ Gemini.
   on-demand AI explanation with 2–3 concrete tips. "Best matches for you" sorts the job list.
 - **Live application timeline.** Applied → Viewed → Shortlisted → Interview → Offer. Updates arrive
   in real time (toast + badge), and important stages also send an email.
-- **Career assistant** chat that knows your profile.
+- **Career assistant** that knows your skills, applications (stage, match, missing skills) and best
+  matches. "Ask the assistant" links on jobs and applications open it focused on that job.
+- **"I have this"** on a missing skill adds it to your profile and updates the score straight away.
 
 **For employers**
 - **Job-description writer.** Turn a title and a few notes into a structured draft with suggested
@@ -24,7 +26,17 @@ Gemini.
 - **Ranked applicants** with a "why?" panel (matched / missing skills, status history). Ranking can
   be switched off.
 - **Audit trail** of every status change: who, what, when.
+- **Assistant** that knows your postings and applicant counts per stage (never applicants' names or
+  resumes); pick a posting to focus on.
 - Tags, job posting, direct messages with applicants.
+
+**Messages**
+- Conversations need a reason: seekers can message employers who've posted a job, employers can
+  message people who applied to them, and existing conversations continue (`app/Messaging`).
+- Each thread shows the applications that link the two people; messages can be tagged with the job
+  they're about.
+- Block and report from any conversation. Unread messages are emailed after 15 minutes (at most once
+  every 6 hours per person).
 
 ## How matching works
 

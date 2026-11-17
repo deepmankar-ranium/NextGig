@@ -1,20 +1,49 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import axios from 'axios';
-import { Sparkles, Check, X } from 'lucide-vue-next';
+import { Sparkles, Check, X, Plus, MessageCircleQuestion } from 'lucide-vue-next';
 
 const props = defineProps({
   jobId: { type: Number, required: true },
+  jobTitle: { type: String, default: '' },
   match: { type: Object, required: true },
 });
 
+// Local copy: adding a skill updates the score without reloading the page.
+const match = ref({ ...props.match });
+watch(() => props.match, (v) => { match.value = { ...v }; explanation.value = v.explanation; });
+
 const explanation = ref(props.match.explanation);
+const notice = ref('');
 const loading = ref(false);
 const error = ref('');
+const adding = ref(null);
+
+const addSkill = async (skill) => {
+  adding.value = skill;
+  error.value = '';
+  try {
+    const { data } = await axios.post(`/jobs/${props.jobId}/match/skills`, { skill });
+    match.value = data.match;
+    explanation.value = data.match.explanation;
+    notice.value = `Added ${skill} to your skills.`;
+  } catch (e) {
+    error.value = e.response?.data?.message || 'Could not update your skills right now.';
+  } finally {
+    adding.value = null;
+  }
+};
+
+const askHref = computed(() => {
+  if (!match.value.missing.length) return `/chat?job=${props.jobId}`;
+  const skills = match.value.missing.slice(0, 3).join(', ');
+  const q = `I'm missing ${skills} for the ${props.jobTitle || 'job I\'m looking at'}. What's the fastest way to learn enough to apply, and how should I show it?`;
+  return `/chat?job=${props.jobId}&q=${encodeURIComponent(q)}`;
+});
 
 const scoreClass = computed(() => {
-  const s = props.match.score;
+  const s = match.value.score;
   if (s === null) return 'text-gray-400';
   if (s >= 75) return 'text-green-600';
   if (s >= 50) return 'text-amber-600';
@@ -27,6 +56,7 @@ const explain = async () => {
   try {
     const { data } = await axios.post(`/jobs/${props.jobId}/match/explain`);
     explanation.value = data.explanation;
+    notice.value = data.notice || '';
   } catch (e) {
     error.value = e.response?.data?.message || 'Could not load an explanation right now.';
   } finally {
@@ -63,11 +93,20 @@ const explain = async () => {
     <div v-if="match.missing.length && match.hasProfile">
       <h4 class="text-sm font-medium text-gray-500 mb-2">Missing</h4>
       <div class="flex flex-wrap gap-2">
-        <span v-for="s in match.missing" :key="s" class="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full">
+        <span v-for="s in match.missing" :key="s" class="inline-flex items-center gap-1 rounded-full bg-red-50 py-1 pl-2 pr-1 text-xs font-medium text-red-700">
           <X class="h-3 w-3" /> {{ s }}
+          <button type="button" @click="addSkill(s)" :disabled="!!adding"
+            class="ml-0.5 inline-flex items-center gap-0.5 rounded-full bg-white px-1.5 py-0.5 text-[11px] text-gray-700 ring-1 ring-gray-200 hover:bg-green-50 hover:text-green-700 disabled:opacity-50"
+            :title="`I have ${s}: add it to my skills`">
+            <Plus class="h-3 w-3" /> {{ adding === s ? '…' : 'I have this' }}
+          </button>
         </span>
       </div>
     </div>
+    <Link v-if="match.hasProfile" :href="askHref" class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:underline">
+      <MessageCircleQuestion class="h-4 w-4" /> {{ match.missing.length ? 'Ask the assistant how to close the gap' : 'Ask the assistant about this job' }}
+    </Link>
+    <p v-if="notice" class="text-xs text-gray-500">{{ notice }}</p>
 
     <div v-if="explanation" class="border-t pt-4 space-y-3">
       <p class="text-sm text-gray-700">{{ explanation.summary }}</p>

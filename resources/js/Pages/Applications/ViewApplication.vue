@@ -7,7 +7,7 @@ import PageHeader from '@/Components/UI/PageHeader.vue';
 import Tabs from '@/Components/UI/Tabs.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
 import StageBadge from '@/Components/UI/StageBadge.vue';
-import { Check, X, FileText, Search, MessageSquare, Users, ChevronDown } from 'lucide-vue-next';
+import { Check, X, FileText, Search, MessageSquare, Users, ChevronDown, Mail } from 'lucide-vue-next';
 import { STAGE_LABELS, nextStages } from '@/utils/stages';
 
 const props = defineProps({
@@ -174,7 +174,7 @@ const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, {
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-2">
                     <span class="font-medium text-gray-900">{{ a.job_seeker?.name || 'Applicant' }}</span>
-                    <Link v-if="a.job_seeker?.user_id" :href="`/messages/${a.job_seeker.user_id}`" class="text-gray-400 hover:text-indigo-600" title="Message applicant">
+                    <Link v-if="a.job_seeker?.user_id" :href="`/messages/${a.job_seeker.user_id}?job=${a.jobListing_id}`" class="text-gray-400 hover:text-indigo-600" title="Message applicant">
                       <MessageSquare class="h-4 w-4" />
                     </Link>
                   </div>
@@ -192,7 +192,7 @@ const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, {
                 <td class="px-4 py-3">
                   <div class="flex gap-1">
                     <button type="button" class="btn-ghost btn-sm" @click="openResume(a)"><FileText class="h-4 w-4" /> Resume</button>
-                    <button v-if="a.cover_letter" type="button" class="btn-ghost btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)">Letter</button>
+                    <button v-if="a.cover_letter" type="button" class="btn-ghost btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)"><Mail class="h-4 w-4" /> Letter</button>
                   </div>
                 </td>
                 <td class="px-4 py-3">
@@ -259,8 +259,8 @@ const formatDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, {
 
           <div class="flex flex-wrap gap-2">
             <button type="button" class="btn-secondary btn-sm" @click="openResume(a)"><FileText class="h-4 w-4" /> Resume</button>
-            <button v-if="a.cover_letter" type="button" class="btn-secondary btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)">Letter</button>
-            <Link v-if="a.job_seeker?.user_id" :href="`/messages/${a.job_seeker.user_id}`" class="btn-secondary btn-sm"><MessageSquare class="h-4 w-4" /> Message</Link>
+            <button v-if="a.cover_letter" type="button" class="btn-secondary btn-sm" @click="openDoc('Cover letter', a.cover_letter, a)"><Mail class="h-4 w-4" /> Letter</button>
+            <Link v-if="a.job_seeker?.user_id" :href="`/messages/${a.job_seeker.user_id}?job=${a.jobListing_id}`" class="btn-secondary btn-sm"><MessageSquare class="h-4 w-4" /> Message</Link>
           </div>
 
           <div class="flex flex-wrap gap-2 border-t border-gray-100 pt-3">

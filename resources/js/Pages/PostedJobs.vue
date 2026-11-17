@@ -4,7 +4,7 @@ import AppLayout from '@/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
 import { router } from '@inertiajs/vue3';
-import { Plus, Tag, Users, Pencil, Eye, FolderKanban } from 'lucide-vue-next';
+import { Plus, Tag, Users, Pencil, Eye, FolderKanban, Sparkles } from 'lucide-vue-next';
 
 defineProps({
   jobListings: Object,
@@ -44,6 +44,9 @@ const goToPage = (url) => url && router.get(url, {}, { preserveScroll: true });
           <div class="flex divide-x divide-gray-100 border-t border-gray-100 text-sm">
             <Link :href="`/view-applications?job=${job.id}`" class="flex flex-1 items-center justify-center gap-1 py-2.5 font-medium text-indigo-600 hover:bg-indigo-50">
               <Users class="h-4 w-4" /> Applicants
+            </Link>
+            <Link :href="`/chat?job=${job.id}`" class="flex flex-1 items-center justify-center gap-1 py-2.5 text-gray-600 hover:bg-gray-50" :title="`Ask the assistant about ${job.title}`">
+              <Sparkles class="h-4 w-4" /> Ask AI
             </Link>
             <Link :href="`/jobs/${job.id}/edit`" class="flex flex-1 items-center justify-center gap-1 py-2.5 text-gray-600 hover:bg-gray-50">
               <Pencil class="h-4 w-4" /> Edit

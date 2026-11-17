@@ -2,12 +2,17 @@
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { Sparkles, RotateCcw, Copy, Check, AlertCircle } from 'lucide-vue-next';
+import { Sparkles, RotateCcw, Copy, Check, AlertCircle, Briefcase, X } from 'lucide-vue-next';
 import AppLayout from '@/Layout/AppLayout.vue';
 import Composer from '@/Components/Chat/Composer.vue';
-import Avatar from '@/Components/Chat/Avatar.vue';
 import ConfirmDialog from '@/Components/UI/ConfirmDialog.vue';
 import { formatAssistant, timeLabel } from '@/utils/chat';
+
+const props = defineProps({
+  focusJob: { type: Object, default: null }, // { id, title } from ?job=
+  prefill: { type: String, default: '' }, // from ?q=
+  myJobs: { type: Array, default: () => [] }, // employers: their postings
+});
 
 const page = usePage();
 const me = computed(() => page.props.auth.user);
@@ -27,10 +32,23 @@ const SUGGESTIONS = {
     'How do I give helpful feedback to rejected candidates?',
   ],
 };
-const suggestions = computed(() => SUGGESTIONS[isEmployer.value ? 'employer' : 'seeker']);
+// The job the assistant should focus on; sent with every message while set.
+const focusId = ref(props.focusJob?.id ?? '');
+const focusTitle = computed(() => props.focusJob?.id === focusId.value
+  ? props.focusJob.title
+  : props.myJobs.find((j) => j.id === focusId.value)?.title);
+
+const FOCUSED = {
+  seeker: (t) => [`What am I missing for ${t}?`, `Help me prepare for an interview for ${t}`, `Write a cover letter opening for ${t}`, `Is ${t} a good fit for me?`],
+  employer: (t) => [`Write 6 interview questions for ${t}`, `How can I make the ${t} post more inclusive?`, `Design a fair take-home task for ${t}`, `How do I move ${t} applicants forward faster?`],
+};
+const suggestions = computed(() => {
+  const key = isEmployer.value ? 'employer' : 'seeker';
+  return focusTitle.value ? FOCUSED[key](focusTitle.value) : SUGGESTIONS[key];
+});
 
 const messages = ref([]); // { role: 'user'|'bot', content, at, error? }
-const draft = ref('');
+const draft = ref(props.prefill || '');
 const loading = ref(true);
 const thinking = ref(false);
 const confirmClear = ref(false);
@@ -62,7 +80,7 @@ const send = async (text = draft.value) => {
   scrollToBottom();
 
   try {
-    const { data } = await axios.post('/chat', { message: content });
+    const { data } = await axios.post('/chat', { message: content, job_id: focusId.value || null });
     if (typeof data?.response !== 'string' || !data.response.trim()) throw new Error('Empty reply');
     messages.value.push({ role: 'bot', content: data.response, at: new Date().toISOString() });
   } catch (e) {
@@ -101,8 +119,15 @@ onMounted(load);
           <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100"><Sparkles class="h-4 w-4 text-indigo-600" /></span>
           <div class="min-w-0 flex-1">
             <h1 class="text-sm font-semibold text-gray-900">Career assistant</h1>
-            <p class="truncate text-xs text-gray-500">AI suggestions only. Double-check anything important.</p>
+            <p class="truncate text-xs text-gray-500">
+              {{ isEmployer ? 'Knows your postings and applicant counts.' : 'Knows your skills, applications and matches.' }} AI suggestions only.
+            </p>
           </div>
+          <select v-if="isEmployer && myJobs.length" v-model="focusId" aria-label="Which job to talk about"
+            class="hidden max-w-[14rem] rounded-lg border-gray-300 py-1.5 pl-2 pr-8 text-xs text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 sm:block">
+            <option value="">All my postings</option>
+            <option v-for="j in myJobs" :key="j.id" :value="j.id">{{ j.title }}</option>
+          </select>
           <button v-if="messages.length" type="button" @click="confirmClear = true" class="btn-ghost btn-sm" title="Start a new conversation">
             <RotateCcw class="h-4 w-4" /><span class="hidden sm:inline">New chat</span>
           </button>
@@ -119,7 +144,7 @@ onMounted(load);
             <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600"><Sparkles class="h-6 w-6 text-white" /></span>
             <h2 class="mt-4 text-xl font-semibold text-gray-900">How can I help{{ me?.full_name ? `, ${me.full_name.split(' ')[0]}` : '' }}?</h2>
             <p class="mt-1 max-w-md text-sm text-gray-500">
-              {{ isEmployer ? 'Ask about job posts, interviews or hiring fairly.' : 'Ask about your job search, resume, cover letters or interviews. I know the skills on your profile.' }}
+              {{ isEmployer ? 'Ask about your job posts, interviews or hiring fairly. I can see your postings and how many people are at each stage.' : 'Ask about your job search, resume, cover letters or interviews. I can see your skills, your applications and your best matches.' }}
             </p>
             <div class="mt-8 grid w-full gap-2 sm:grid-cols-2">
               <button v-for="s in suggestions" :key="s" type="button" @click="send(s)"
@@ -168,6 +193,11 @@ onMounted(load);
       <!-- Composer -->
       <div class="shrink-0">
         <div class="mx-auto max-w-3xl">
+          <div v-if="focusTitle" class="flex items-center gap-2 px-4 pt-2 text-xs text-gray-600">
+            <Briefcase class="h-3.5 w-3.5 text-gray-400" />
+            <span class="truncate">Talking about <span class="font-medium text-gray-900">{{ focusTitle }}</span></span>
+            <button type="button" class="rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700" aria-label="Stop focusing on this job" @click="focusId = ''"><X class="h-3.5 w-3.5" /></button>
+          </div>
           <Composer ref="composer" v-model="draft" :busy="thinking" :max-length="1000" placeholder="Ask about jobs, resumes, interviews…" autofocus class="border-t-0 sm:pb-4" @send="send()" />
         </div>
       </div>

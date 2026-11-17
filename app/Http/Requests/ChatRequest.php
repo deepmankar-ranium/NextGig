@@ -15,6 +15,7 @@ class ChatRequest extends FormRequest
     {
         return [
             'message' => 'required|string|max:1000',
+            'job_id' => 'nullable|integer|exists:job_listings,id',
         ];
     }
 }

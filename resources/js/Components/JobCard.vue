@@ -55,7 +55,7 @@ import { IndianRupeeIcon } from 'lucide-vue-next';
 
 const formatSalary = (salary) => {
   if (!salary) return 'Salary not specified';
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0

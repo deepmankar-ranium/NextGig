@@ -122,6 +122,22 @@ TXT;
         return ['summary' => $this->templateSummary($match), 'tips' => $tips, 'source' => 'template'];
     }
 
+    /**
+     * Plain explanation built from the score alone, used when the AI is unavailable.
+     * Not cached, so the AI is tried again next time.
+     *
+     * @return array{summary: string, tips: list<array{skill: string, tip: string}>, source: 'template'}
+     */
+    public function templateExplanation(JobMatch $match): array
+    {
+        $tips = collect($match->missing)->take(3)->map(fn ($skill) => [
+            'skill' => $skill,
+            'tip' => "If you already use {$skill}, add it to your skills. If not, a small project with it is the quickest way to show it.",
+        ])->values()->all();
+
+        return ['summary' => $this->templateSummary($match), 'tips' => $tips, 'source' => 'template'];
+    }
+
     public function templateSummary(JobMatch $match): string
     {
         $have = count($match->matched);

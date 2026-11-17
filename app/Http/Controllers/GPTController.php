@@ -8,6 +8,9 @@ use App\Actions\Chat\SendMessageAction;
 use App\Http\Requests\ChatRequest;
 use App\Services\ChatService;
 use Illuminate\Http\Request;
+use App\Assistant\AssistantContext;
+use App\Models\JobListing;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class GPTController extends Controller
@@ -16,9 +19,12 @@ class GPTController extends Controller
     {
     }
 
-    public function chat(ChatRequest $request, SendMessageAction $action)
+    public function chat(ChatRequest $request, SendMessageAction $action, AssistantContext $context)
     {
-        $response = $action->execute($request->user(), $request->validated('message'));
+        $focus = $request->validated('job_id') ? JobListing::find($request->validated('job_id')) : null;
+        abort_if($focus && ! $context->canFocus($request->user(), $focus), 403);
+
+        $response = $action->execute($request->user(), $request->validated('message'), $focus);
 
         if ($response) {
             return response()->json([
@@ -53,9 +59,22 @@ class GPTController extends Controller
         ]);
     }
 
-    public function getChat()
+    /**
+     * ?job= focuses the assistant on a job (from "Ask the assistant" links); ?q= pre-fills the box.
+     * Employers also get their postings to pick from.
+     */
+    public function getChat(Request $request, AssistantContext $context)
     {
-        return Inertia::render('Chat');
+        $user = $request->user();
+        $focus = $request->integer('job') ? JobListing::find($request->integer('job')) : null;
+
+        return Inertia::render('Chat', [
+            'focusJob' => $focus && $context->canFocus($user, $focus) ? $focus->only(['id', 'title']) : null,
+            'prefill' => Str::limit((string) $request->query('q', ''), 1000, ''),
+            'myJobs' => $user->employer
+                ? JobListing::where('employer_id', $user->employer->id)->latest('id')->get(['id', 'title'])
+                : [],
+        ]);
     }
 
     public function createIntroMessage(Request $request, CreateIntroMessageAction $action)

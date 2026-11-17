@@ -95,7 +95,7 @@ const handleBack = () => {
 };
 
 const formattedSalary = computed(() => {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(props.job.salary);
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(props.job.salary);
 });
 </script>
 
@@ -116,8 +116,10 @@ const formattedSalary = computed(() => {
                         <!-- FIXED Building icon -->
                         <Building2 class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" />
                         <span>{{ job.employer.name }}</span>
-                        <MapPinIcon class="flex-shrink-0 ml-4 mr-1.5 h-5 w-5 text-gray-400" />
-                        <span>{{ job.location }}</span>
+                        <template v-if="job.location">
+                            <MapPinIcon class="flex-shrink-0 ml-4 mr-1.5 h-5 w-5 text-gray-400" />
+                            <span>{{ job.location }}</span>
+                        </template>
                     </div>
                 </div>
                 <div class="mt-5 flex lg:mt-0 lg:ml-4 space-x-3">
@@ -141,7 +143,7 @@ const formattedSalary = computed(() => {
 
                     <Link
                       v-if="isJobSeeker && job.employer?.user_id"
-                      :href="`/messages/${job.employer.user_id}`"
+                      :href="`/messages/${job.employer.user_id}?job=${job.id}`"
                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
                     >
                       Message Employer
@@ -170,7 +172,7 @@ const formattedSalary = computed(() => {
 
             <!-- Right Column (Summary) -->
             <div class="mt-8 lg:mt-0 space-y-6">
-                <MatchPanel v-if="match" :job-id="job.id" :match="match" />
+                <MatchPanel v-if="match" :job-id="job.id" :job-title="job.title" :match="match" />
                 <div class="bg-white p-6 rounded-xl shadow-md space-y-5">
                     <h3 class="text-lg font-bold text-gray-900">Job Overview</h3>
                     <div class="flex items-center">

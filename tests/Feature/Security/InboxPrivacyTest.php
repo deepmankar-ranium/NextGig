@@ -37,6 +37,7 @@ class InboxPrivacyTest extends TestCase
     {
         $me = $this->seekerUser();
         $employer = $this->employerUser();
+        $this->jobFor($employer);
 
         $this->actingAs($me)
             ->get("/messages/{$employer->id}")

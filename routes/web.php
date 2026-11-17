@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JobListingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MessagingSafetyController;
 use App\Http\Controllers\RegisterUserController;
 use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\EmployerJobListingController;
@@ -34,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/jobs/{jobListing}', [JobListingController::class, 'update'])->whereNumber('jobListing');
     Route::delete('/jobs/{jobListing}', [JobListingController::class, 'destroy'])->whereNumber('jobListing');
     Route::post('/jobs/{jobListing}/match/explain', [JobMatchController::class, 'explain'])->middleware('throttle:ai')->whereNumber('jobListing')->name('jobs.match.explain');
+    Route::post('/jobs/{jobListing}/match/skills', [JobMatchController::class, 'addSkill'])->middleware('throttle:writes')->whereNumber('jobListing')->name('jobs.match.skills');
     Route::get('/search', [JobListingController::class, 'search'])->name('search');
     Route::get('/filter', [JobListingController::class, 'filterJobs']);
 
@@ -63,6 +65,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/messages', [MessagesController::class, 'store'])->middleware('throttle:writes')->name('messages.store');
     Route::post('/messages/delete/{sender_id}/{receiver_id}', [MessagesController::class, 'deleteMessages'])->middleware('throttle:writes')->name('messages.delete');
     Route::delete('/messages/{message_id}', [MessagesController::class, 'destroy'])->middleware('throttle:writes')->name('message.destroy');
+    Route::post('/users/{user}/block', [MessagingSafetyController::class, 'block'])->middleware('throttle:writes')->name('users.block');
+    Route::delete('/users/{user}/block', [MessagingSafetyController::class, 'unblock'])->middleware('throttle:writes')->name('users.unblock');
+    Route::post('/users/{user}/report', [MessagingSafetyController::class, 'report'])->middleware('throttle:writes')->name('users.report');
 
     // Tag routes
     Route::get('/tags', [TagController::class, 'index']);
