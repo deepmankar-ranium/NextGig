@@ -23,6 +23,7 @@ class UpdateJobListingRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'salary' => 'required|numeric|min:0',
+            'min_years_experience' => 'nullable|integer|min:0|max:40',
             'employer_id' => 'required|exists:employers,id',
             'tags' => 'nullable|array',
             'tags.*' => 'exists:tags,id',

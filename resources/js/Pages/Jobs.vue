@@ -18,6 +18,10 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  isJobSeeker: {
+    type: Boolean,
+    default: false
+  },
   tags: {
     type: Array,
     default: () => []
@@ -29,10 +33,9 @@ const searchJobs =async(e)=>{
   isLoading.value = true;
   try {
     const response = await axios.get('/search', {
-      params: { q: searchQuery.value },
+      params: { q: searchQuery.value, ...sortParam() },
     });
     jobListingsData.value=response.data.searchResults;
-    console.log(jobListingsData.value);
   } catch (error) {
       console.error('Search request failed:', error);
   } finally {
@@ -56,6 +59,16 @@ const handleBack = () => {
 const jobListingsData = ref(props.jobListings);
 const isLoading = ref(false);
 const selectedTag = ref('');
+const sortByMatch = ref(new URLSearchParams(window.location.search).get('sort') === 'match');
+const sortParam = () => (sortByMatch.value ? { sort: 'match' } : {});
+
+const toggleMatchSort = async () => {
+  sortByMatch.value = !sortByMatch.value;
+  const url = new URL(window.location);
+  sortByMatch.value ? url.searchParams.set('sort', 'match') : url.searchParams.delete('sort');
+  window.history.replaceState({}, '', url);
+  await filterJobs(selectedTag.value);
+};
 
 // API calls
 const filterJobs = async (tag) => {
@@ -65,7 +78,7 @@ const filterJobs = async (tag) => {
     selectedTag.value = tag;
 
     const response = await axios.get('/filter', {
-      params: { tag }
+      params: { tag, ...sortParam() }
     });
 
     jobListingsData.value = response.data.jobListings;
@@ -84,7 +97,8 @@ const handlePageChange = async (page) => {
     const response = await axios.get('/filter', {
       params: {
         tag: selectedTag.value,
-        page
+        page,
+        ...sortParam()
       }
     });
 
@@ -182,6 +196,18 @@ const showPagination = computed(() =>
                 </div>
             </form>
             
+            <!-- Best matches -->
+            <div v-if="isJobSeeker" class="pt-6 border-t border-gray-200 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-700">Best matches for you</h3>
+                    <p class="text-xs text-gray-500">Sort by your match score. AI suggestion, not a hiring decision.</p>
+                </div>
+                <button type="button" @click="toggleMatchSort" :disabled="isLoading"
+                    :class="['px-3 py-1 text-sm rounded-full transition-colors', sortByMatch ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300']">
+                    {{ sortByMatch ? 'On' : 'Off' }}
+                </button>
+            </div>
+
             <!-- Tags Filter -->
             <div v-if="tags?.length" class="pt-6 border-t border-gray-200">
                 <div class="flex items-center justify-between">

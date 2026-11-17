@@ -3,6 +3,12 @@
     <div class="p-6">
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-lg font-semibold text-gray-900">{{ job.title }}</h2>
+        <span v-if="job.match_score !== undefined && job.match_score !== null"
+          class="ml-2 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+          :class="job.match_score >= 75 ? 'bg-green-100 text-green-700' : job.match_score >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'"
+          title="Your match score (AI suggestion, not a hiring decision)">
+          {{ job.match_score }}% match
+        </span>
 
       </div>
 
