@@ -36,7 +36,7 @@ class ApplyForJobAction
             'resume_text' => $data['resume_text'],
             'cover_letter' => $data['cover_letter'],
         ]);
-        $application->transitionTo(Application::STATUS_PENDING, $user);
+        $application->transitionTo(Application::STATUS_APPLIED, $user);
 
         event(new JobApplied($application));
 

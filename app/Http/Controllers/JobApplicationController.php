@@ -43,8 +43,18 @@ class JobApplicationController extends Controller
 
     public function update(UpdateApplicationStatusRequest $request, Application $application, UpdateApplicationStatusAction $action)
     {
-        $action->execute($application, $request->validated('application_status'), $request->user());
+        $action->execute($application, $request->validated('application_status'), $request->user(), $request->boolean('reopen'));
 
         return redirect()->back()->with('success', 'Application status updated successfully.');
+    }
+
+    /**
+     * The employer opened an application (resume / cover letter): record "viewed" once.
+     */
+    public function markViewed(Request $request, Application $application, UpdateApplicationStatusAction $action)
+    {
+        abort_unless($request->user()->can('update', $application), 403);
+
+        return response()->json(['viewed' => $action->markViewed($application, $request->user())]);
     }
 }

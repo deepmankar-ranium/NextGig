@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { useToast } from 'vue-toastification'
 import ChatMessageNotification from '../Components/ChatMessageNotification.vue'
 import axios from 'axios';
+import { STAGE_LABELS } from '../utils/stages';
 
 export const useNotificationStore = defineStore('notifications', {
     state: () => ({
@@ -9,6 +10,8 @@ export const useNotificationStore = defineStore('notifications', {
         _inited: false,
         unreadCount: 0,
         unreadMessages: {},
+        applicationUpdates: 0,
+        lastApplicationUpdate: null,
     }),
     actions: {
         setHasNewMessages(status) {
@@ -47,9 +50,21 @@ export const useNotificationStore = defineStore('notifications', {
                         bodyClassName: 'flex items-start space-x-3 bg-green-100 border border-green-300 px-4 py-3 rounded-lg shadow-md',
                     })
                 })
+                .listen('.application.status', (event) => {
+                    this.applicationUpdates += 1
+                    this.lastApplicationUpdate = event
+                    toast.info(`${event.job_title}: ${STAGE_LABELS[event.status] ?? event.status}`, {
+                        timeout: 5000,
+                        position: 'top-right',
+                    })
+                })
                 .error((err) => console.error('Echo error:', err))
 
             this._inited = true
+        },
+
+        clearApplicationUpdates() {
+            this.applicationUpdates = 0
         },
 
         async fetchUnreadCount() {
